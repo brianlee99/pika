@@ -21,7 +21,6 @@ public enum Keyword implements Lextant {
 		this.lexeme = lexeme;
 		this.prototype = LextantToken.make(null, lexeme, this);
 		
-		System.out.println("Test!");
 	}
 	public String getLexeme() {
 		return lexeme;

@@ -8,6 +8,7 @@ import inputHandler.LocatedChar;
 import inputHandler.LocatedCharStream;
 import inputHandler.PushbackCharStream;
 import inputHandler.TextLocation;
+import tokens.CommentToken;
 import tokens.IdentifierToken;
 import tokens.LextantToken;
 import tokens.NullToken;
@@ -41,12 +42,19 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		else if(ch.isLowerCase()) {
 			return scanIdentifier(ch);
 		}
+		else if(isCommentStart(ch)) {
+			return scanComment(ch);
+		}
+		else if(isStringStart(ch)) {
+			return scanString(ch);
+		}
 		else if(isPunctuatorStart(ch)) {
 			return PunctuatorScanner.scan(ch, input);
 		}
 		else if(isEndOfInput(ch)) {
 			return NullToken.make(ch.getLocation());
 		}
+
 		else {
 			lexicalError(ch);
 			return findNextToken();
@@ -140,9 +148,33 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			throw new IllegalArgumentException("bad LocatedChar " + ch + "in scanOperator");
 		}
 	}
+	//////////////////////////////////////////////////////////////////////////////
+	// Comment lexical analysis
+	private boolean isCommentStart(LocatedChar lc) {
+		char c = lc.getCharacter();
+		return c == '#';
+	}
 
+	private Token scanComment(LocatedChar firstChar) {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(firstChar.getCharacter());
+		appendToComment(buffer);
+		
+		return CommentToken.make(firstChar.getLocation(), buffer.toString());
+	}
 	
-
+	private void appendToComment(StringBuffer buffer) {
+		LocatedChar c = input.next();
+		while(c.getCharacter() != '#' && c.getCharacter() != '\n') {
+			buffer.append(c.getCharacter());
+			c = input.next();
+		}
+		input.pushback(c);
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////
+	// String lexical analysis
+	
 	//////////////////////////////////////////////////////////////////////////////
 	// Character-classification routines specific to Pika scanning.	
 
