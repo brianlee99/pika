@@ -7,13 +7,24 @@ import tokens.Token;
 public enum Punctuator implements Lextant {
 	ADD("+"),
 	MULTIPLY("*"),
+	SUBTRACT("-"),
+	DIVIDE("/"),
 	GREATER(">"),
+	GREATER_EQUALS(">="),
+	LESS("<"),
+	LESS_EQUALS(">="),
+	EQUALS("=="),
+	NOT_EQUALS("!="),
 	ASSIGN(":="),
 	SEPARATOR(","),
 	SPACE(";"),
 	TERMINATOR("."), 
 	OPEN_BRACE("{"),
 	CLOSE_BRACE("}"),
+	OPEN_PARENTHESES("("),
+	CLOSE_PARENTHESES(")"),
+	OPEN_BRACKET("["),
+	CLOSE_BRACKET("]"),
 	NULL_PUNCTUATOR("");
 
 	private String lexeme;

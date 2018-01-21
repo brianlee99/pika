@@ -2,15 +2,18 @@ package parseTree;
 
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
+import parseTree.nodeTypes.FloatingConstantNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
+import parseTree.nodeTypes.TabNode;
 
 // Visitor pattern with pre- and post-order visits
 public interface ParseNodeVisitor {
@@ -41,8 +44,12 @@ public interface ParseNodeVisitor {
 	void visit(ErrorNode node);
 	void visit(IdentifierNode node);
 	void visit(IntegerConstantNode node);
+	void visit(FloatingConstantNode node);
+	void visit(CharacterConstantNode node);
 	void visit(NewlineNode node);
 	void visit(SpaceNode node);
+	// pika-1
+	void visit(TabNode node);
 
 	
 	public static class Default implements ParseNodeVisitor
@@ -108,6 +115,16 @@ public interface ParseNodeVisitor {
 		public void visit(IntegerConstantNode node) {
 			defaultVisitForLeaf(node);
 		}
+		public void visit(FloatingConstantNode node) {
+			defaultVisitForLeaf(node);
+		}
+		public void visit(CharacterConstantNode node) {
+			defaultVisitForLeaf(node);
+		}
+		public void visit(TabNode node) {
+			defaultVisitForLeaf(node);
+		}
+		// end new
 		public void visit(NewlineNode node) {
 			defaultVisitForLeaf(node);
 		}	

@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import semanticAnalyzer.types.PrimitiveType;
+import asmCodeGenerator.FloatingDivideCodeGenerator;
+import asmCodeGenerator.IntegerDivideCodeGenerator;
+import asmCodeGenerator.codeStorage.ASMOpcode;
+import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
 
 
@@ -67,10 +72,50 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
 		// for this to work, you should statically import PrimitiveType.*
 
-//		new FunctionSignatures(Punctuator.ADD,
-//		    new FunctionSignature(ASMOpcode.Add, INTEGER, INTEGER, INTEGER),
-//		    new FunctionSignature(ASMOpcode.FAdd, FLOAT, FLOAT, FLOAT)
-//		);
+		new FunctionSignatures(Punctuator.ADD,
+		    new FunctionSignature(ASMOpcode.Add, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+		    new FunctionSignature(ASMOpcode.FAdd, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		);
+		
+		new FunctionSignatures(Punctuator.SUBTRACT,
+			    new FunctionSignature(ASMOpcode.Subtract, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+			    new FunctionSignature(ASMOpcode.FSubtract, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		);
+		
+		new FunctionSignatures(Punctuator.MULTIPLY,
+			new FunctionSignature(ASMOpcode.Multiply, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+			new FunctionSignature(ASMOpcode.FMultiply, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		);
+		
+		new FunctionSignatures(Punctuator.DIVIDE,
+			new FunctionSignature(new IntegerDivideCodeGenerator(), PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+			new FunctionSignature(new FloatingDivideCodeGenerator(), PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		);
+		
+		Punctuator[] comparisons = {
+			Punctuator.GREATER,
+			Punctuator.LESS,
+			Punctuator.EQUALS,
+			Punctuator.NOT_EQUALS,
+			Punctuator.GREATER_EQUALS,
+			Punctuator.LESS_EQUALS
+		};
+		
+		for (Punctuator comparison : comparisons) {
+			FunctionSignature iSignature = new FunctionSignature(1, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN);
+			FunctionSignature cSignature = new FunctionSignature(1, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER, PrimitiveType.BOOLEAN);
+			FunctionSignature fSignature = new FunctionSignature(1, PrimitiveType.FLOATING, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN);
+			FunctionSignature bSignature = new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN);
+			
+			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature);
+			}
+			else {
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature);
+			}
+		}
+		
+
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

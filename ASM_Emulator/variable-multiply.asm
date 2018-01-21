@@ -16,6 +16,6 @@ DLabel newline-string
 DataC	10						// \n
 DataC	0						// <null>
 DLabel argument1
-DataI	13
+DataI	16
 DLabel argument2
-DataI	14
+DataI	15

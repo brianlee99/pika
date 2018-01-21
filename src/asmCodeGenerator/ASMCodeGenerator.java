@@ -13,12 +13,14 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
+import parseTree.nodeTypes.FloatingConstantNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
+import parseTree.nodeTypes.TabNode;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
@@ -138,6 +140,9 @@ public class ASMCodeGenerator {
 			if(node.getType() == PrimitiveType.INTEGER) {
 				code.add(LoadI);
 			}	
+			else if(node.getType() == PrimitiveType.FLOATING) {
+				code.add(LoadF);
+			}
 			else if(node.getType() == PrimitiveType.BOOLEAN) {
 				code.add(LoadC);
 			}	
@@ -184,6 +189,12 @@ public class ASMCodeGenerator {
 			code.add(PushD, RunTime.NEWLINE_PRINT_FORMAT);
 			code.add(Printf);
 		}
+		public void visit(TabNode node) {
+			newVoidCode(node);
+			code.add(PushD, RunTime.TAB_PRINT_FORMAT);
+			code.add(Printf);
+		}
+		
 		public void visit(SpaceNode node) {
 			newVoidCode(node);
 			code.add(PushD, RunTime.SPACE_PRINT_FORMAT);
@@ -206,6 +217,9 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.INTEGER) {
 				return StoreI;
 			}
+			if(type == PrimitiveType.FLOATING) {
+				return StoreF;
+			}
 			if(type == PrimitiveType.BOOLEAN) {
 				return StoreC;
 			}
@@ -218,8 +232,13 @@ public class ASMCodeGenerator {
 		// expressions
 		public void visitLeave(BinaryOperatorNode node) {
 			Lextant operator = node.getOperator();
-
-			if(operator == Punctuator.GREATER) {
+			
+			if(operator == Punctuator.GREATER ||
+					operator == Punctuator.LESS ||
+					operator == Punctuator.EQUALS ||
+					operator == Punctuator.NOT_EQUALS ||
+					operator == Punctuator.GREATER_EQUALS ||
+					operator == Punctuator.LESS_EQUALS ) {
 				visitComparisonOperatorNode(node, operator);
 			}
 			else {
@@ -269,8 +288,27 @@ public class ASMCodeGenerator {
 			code.append(arg1);
 			code.append(arg2);
 			
-			ASMOpcode opcode = opcodeForOperator(node.getOperator());
-			code.add(opcode);							// type-dependent! (opcode is different for floats and for ints)
+			Object variant = node.getSignature().getVariant();
+			if(variant instanceof ASMOpcode) {
+				ASMOpcode opcode = (ASMOpcode) variant;
+				code.add(opcode);
+			}
+			else if (variant instanceof SimpleCodeGenerator) {
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+				
+			}
+			else {
+				// TODO: throw an exception
+			}
+			
+//			ASMOpcode opcode = opcodeForOperator(node.getOperator());
+//			code.add(opcode);							// type-dependent! (opcode is different for floats and for ints)
 		}
 		private ASMOpcode opcodeForOperator(Lextant lextant) {
 			assert(lextant instanceof Punctuator);
@@ -300,6 +338,11 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			
 			code.add(PushI, node.getValue());
+		}
+		public void visit(FloatingConstantNode node) {
+			newValueCode(node);
+			
+			code.add(PushF, node.getValue());
 		}
 	}
 

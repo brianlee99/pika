@@ -59,4 +59,16 @@ public class LocatedChar {
 	public boolean isWhitespace() {
 		return Character.isWhitespace(character);
 	}
+	public boolean isIdentifierStart() {
+		return Character.isLowerCase(character) || Character.isUpperCase(character) || (character == '_');
+	}
+	public boolean isIdentifierContinue() {
+		return isIdentifierStart() || isDigit() || (character == '$');
+	}
+	public boolean isNumberStart() {
+		return isDigit() || (character == '+') || (character == '-');
+	}
+	public boolean isCharacterStart() {
+		return character == '^';
+	}
 }
