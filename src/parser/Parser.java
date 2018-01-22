@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import logging.PikaLogger;
 import parseTree.*;
+import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -103,6 +104,9 @@ public class Parser {
 		if(startsDeclaration(nowReading)) {
 			return parseDeclaration();
 		}
+		if(startsAssignment(nowReading)) {
+			return parseAssignment();
+		}
 		if(startsPrintStatement(nowReading)) {
 			return parsePrintStatement();
 		}
@@ -110,7 +114,8 @@ public class Parser {
 	}
 	private boolean startsStatement(Token token) {
 		return startsPrintStatement(token) ||
-			   startsDeclaration(token);
+			   startsDeclaration(token) ||
+			   startsAssignment(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
@@ -163,7 +168,7 @@ public class Parser {
 		// else we interpret the printExpression as epsilon, and do nothing
 	}
 	private boolean startsPrintExpression(Token token) {
-		return startsExpression(token) || token.isLextant(Keyword.NEWLINE) ;
+		return startsExpression(token) || token.isLextant(Keyword.NEWLINE, Keyword.TAB) ;
 	}
 	
 	
@@ -195,7 +200,7 @@ public class Parser {
 	}
 	
 	
-	// declaration -> CONST identifier := expression .
+	// declaration -> CONST (or VAR) identifier := expression .
 	private ParseNode parseDeclaration() {
 		if(!startsDeclaration(nowReading)) {
 			return syntaxErrorNode("declaration");
@@ -213,6 +218,26 @@ public class Parser {
 	private boolean startsDeclaration(Token token) {
 		return token.isLextant(Keyword.CONST, Keyword.VAR);
 	}
+
+	// assignment -> identifier := expression .
+	private ParseNode parseAssignment() {
+		if (!startsAssignment(nowReading)) {
+			return syntaxErrorNode("assignment");
+		}
+		Token assignmentToken = nowReading;
+		//readToken();
+		
+		ParseNode identifier = parseIdentifier();
+		expect(Punctuator.ASSIGN);
+		ParseNode initializer = parseExpression();
+		expect(Punctuator.TERMINATOR);
+		
+		return AssignmentNode.withChildren(assignmentToken, identifier, initializer);
+	}
+	private boolean startsAssignment(Token token) {
+		return token instanceof IdentifierToken;
+	}
+	
 
 
 	
@@ -243,8 +268,14 @@ public class Parser {
 		}
 		
 		ParseNode left = parseAdditiveExpression();
-		if(nowReading.isLextant(Punctuator.GREATER, Punctuator.LESS, Punctuator.EQUALS,
-				Punctuator.NOT_EQUALS, Punctuator.GREATER_EQUALS, Punctuator.LESS_EQUALS)) {
+		if(nowReading.isLextant(
+				Punctuator.GREATER,
+				Punctuator.LESS,
+				Punctuator.EQUALS,
+				Punctuator.NOT_EQUALS,
+				Punctuator.GREATER_EQUALS,
+				Punctuator.LESS_EQUALS)
+		) {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseAdditiveExpression();

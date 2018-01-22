@@ -7,6 +7,7 @@ import lexicalAnalyzer.Lextant;
 import logging.PikaLogger;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -76,6 +77,18 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		IdentifierNode identifier = (IdentifierNode) node.child(0);
 		ParseNode initializer = node.child(1);
 		
+		Type declarationType = initializer.getType();
+		node.setType(declarationType);
+		
+		identifier.setType(declarationType);
+		addBinding(identifier, declarationType);
+	}
+	// TODO: Fix this later
+	@Override
+	public void visitLeave(AssignmentNode node) {
+		IdentifierNode identifier = (IdentifierNode) node.child(0);
+		ParseNode initializer = node.child(1);
+
 		Type declarationType = initializer.getType();
 		node.setType(declarationType);
 		

@@ -11,6 +11,7 @@ import lexicalAnalyzer.Punctuator;
 import parseTree.*;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.FloatingConstantNode;
@@ -143,7 +144,8 @@ public class ASMCodeGenerator {
 			else if(node.getType() == PrimitiveType.FLOATING) {
 				code.add(LoadF);
 			}
-			else if(node.getType() == PrimitiveType.BOOLEAN) {
+			else if(node.getType() == PrimitiveType.BOOLEAN ||
+					node.getType() == PrimitiveType.CHARACTER) {
 				code.add(LoadC);
 			}	
 			else {
@@ -220,9 +222,11 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.FLOATING) {
 				return StoreF;
 			}
-			if(type == PrimitiveType.BOOLEAN) {
+			if(type == PrimitiveType.BOOLEAN ||
+			   type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
+
 			assert false: "Type " + type + " unimplemented in opcodeForStore()";
 			return null;
 		}
@@ -247,6 +251,8 @@ public class ASMCodeGenerator {
 		}
 		private void visitComparisonOperatorNode(BinaryOperatorNode node,
 				Lextant operator) {
+			
+			Type leftNodeType = node.child(0).getType();
 
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));
@@ -266,10 +272,74 @@ public class ASMCodeGenerator {
 			code.add(Label, arg2Label);
 			code.append(arg2);
 			code.add(Label, subLabel);
-			code.add(Subtract);
 			
-			code.add(JumpPos, trueLabel);
-			code.add(Jump, falseLabel);
+			// THIS PART NOT OWKRING
+			if (leftNodeType == PrimitiveType.INTEGER ||
+					leftNodeType == PrimitiveType.CHARACTER)
+				code.add(Subtract);
+			else if (leftNodeType == PrimitiveType.FLOATING)
+				code.add(FSubtract);
+			
+			// we need to check the signature of node, to see if it takes two integers,
+			// two floating, etc.
+			
+			if (operator == Punctuator.GREATER) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpPos, trueLabel);
+				else if (leftNodeType == PrimitiveType.FLOATING)
+					code.add(JumpFPos, trueLabel);
+				
+				code.add(Jump, falseLabel);
+			}
+			else if (operator == Punctuator.LESS) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpNeg, trueLabel);
+				else if (leftNodeType == PrimitiveType.FLOATING)
+					code.add(JumpFNeg, trueLabel);
+				
+				code.add(Jump, falseLabel);
+			}
+			else if (operator == Punctuator.EQUALS) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType == PrimitiveType.FLOATING)
+					code.add(JumpFZero, trueLabel);
+				
+				code.add(Jump, falseLabel);
+			}
+			else if (operator == Punctuator.NOT_EQUALS) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType == PrimitiveType.FLOATING) {
+					code.add(JumpFZero, falseLabel);
+					code.add(Jump, trueLabel);
+				}
+				
+			}
+			else if (operator == Punctuator.GREATER_EQUALS) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpNeg, falseLabel);
+				else if (leftNodeType == PrimitiveType.FLOATING) 
+					code.add(JumpFNeg, falseLabel);
+				
+				code.add(Jump, trueLabel);
+			}
+			else if (operator == Punctuator.LESS_EQUALS) {
+				if (leftNodeType == PrimitiveType.INTEGER ||
+						leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpPos, falseLabel);
+				else if (leftNodeType == PrimitiveType.FLOATING) 
+					code.add(JumpFPos, falseLabel);
+				
+				code.add(Jump, trueLabel);
+			}
 
 			code.add(Label, trueLabel);
 			code.add(PushI, 1);
@@ -343,6 +413,10 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			
 			code.add(PushF, node.getValue());
+		}
+		public void visit(CharacterConstantNode node) {
+			newValueCode(node);
+			code.add(PushI, node.getValue());
 		}
 	}
 

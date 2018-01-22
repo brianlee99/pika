@@ -12,7 +12,7 @@ public enum Punctuator implements Lextant {
 	GREATER(">"),
 	GREATER_EQUALS(">="),
 	LESS("<"),
-	LESS_EQUALS(">="),
+	LESS_EQUALS("<="),
 	EQUALS("=="),
 	NOT_EQUALS("!="),
 	ASSIGN(":="),

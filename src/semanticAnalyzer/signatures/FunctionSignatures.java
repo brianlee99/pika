@@ -78,8 +78,8 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		);
 		
 		new FunctionSignatures(Punctuator.SUBTRACT,
-			    new FunctionSignature(ASMOpcode.Subtract, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-			    new FunctionSignature(ASMOpcode.FSubtract, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		    new FunctionSignature(ASMOpcode.Subtract, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+		    new FunctionSignature(ASMOpcode.FSubtract, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
 		);
 		
 		new FunctionSignatures(Punctuator.MULTIPLY,
@@ -104,7 +104,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		for (Punctuator comparison : comparisons) {
 			FunctionSignature iSignature = new FunctionSignature(1, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN);
 			FunctionSignature cSignature = new FunctionSignature(1, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER, PrimitiveType.BOOLEAN);
-			FunctionSignature fSignature = new FunctionSignature(1, PrimitiveType.FLOATING, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN);
+			FunctionSignature fSignature = new FunctionSignature(1, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.BOOLEAN);
 			FunctionSignature bSignature = new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {

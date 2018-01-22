@@ -38,7 +38,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	protected Token findNextToken() {
 		LocatedChar ch = nextNonWhitespaceChar();
 
-		if(ch.isDigit()) {
+		if(isNumberStart(ch)) {
 			return scanNumber(ch);
 		}
 		else if(ch.isIdentifierStart()) {
@@ -79,107 +79,91 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	
 	//////////////////////////////////////////////////////////////////////////////
 	// Integer/floating lexical analysis
+	public boolean isNumberStart(LocatedChar firstChar) {
+		char ch = firstChar.getCharacter();
+		if (firstChar.isDigit())
+			return true;
+		else if (ch == '+' || ch == '-')
+			return numberFollows() || decimalFollows();
+		else if (ch == '.')
+			return numberFollows();
+		else
+			return false;
+	}
+	
+	public boolean decimalFollows() {
+		LocatedChar c = input.next();
+		boolean isDecimal = (c.getCharacter() == '.');
+		boolean hasNumberAfterDecimal = false;
+		if (isDecimal) {
+			hasNumberAfterDecimal = numberFollows();
+		}
+		input.pushback(c);
+		return isDecimal && hasNumberAfterDecimal;
+	}
+	
+	public boolean numberFollows() {
+		LocatedChar c = input.next();
+		boolean result = c.isDigit();
+		input.pushback(c);
+		return result;
+	}
+	
 	private Token scanNumber(LocatedChar firstChar) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(firstChar.getCharacter());
-		appendSubsequentDigits(buffer);
+		boolean isFloating = false;
+		LocatedChar c;
 		
-		return IntegerToken.make(firstChar.getLocation(), buffer.toString());
+		if (firstChar.getCharacter() != '.') {
+			// phase 1: append everything before the first decimal point
+			buffer.append(firstChar.getCharacter());
+			appendSubsequentDigits(buffer);
+			c = input.next();
+		} else {
+			c = firstChar;
+		}
+
+		// phase 2: handle the decimal point (if it exists)
+		if (c.getCharacter() == '.') {
+			LocatedChar c2 = input.next();
+			if (c2.isDigit()) {
+				isFloating = true;
+				buffer.append('.');
+				buffer.append(c2.getCharacter());
+				appendSubsequentDigits(buffer);
+			}
+			else {
+				input.pushback(c2);
+				input.pushback(c);
+			}
+			// phase 3: handle the E notation (if it exists)
+			c = input.next();
+			if (c.getCharacter() == 'E') {
+				c = input.next();
+				buffer.append('E');
+				buffer.append(c.getCharacter());
+				appendSubsequentDigits(buffer);
+			}
+			else {
+				input.pushback(c);
+			}
+		}
+		else {
+			input.pushback(c);
+		}
+		
+		// return the correct type of Token
+		if (isFloating) {
+			return FloatingToken.make(firstChar.getLocation(), buffer.toString());
+		}
+		else {
+			return IntegerToken.make(firstChar.getLocation(), buffer.toString());
+		}
+		
 		
 	}
+	
 
-//	private Token scanNumber(LocatedChar firstChar) {
-//		StringBuffer buffer = new StringBuffer();
-//		char ch = firstChar.getCharacter();
-//		buffer.append(ch);
-//		
-//		if (ch == '.') {
-//			LocatedChar c = firstChar;
-//			LocatedChar c2 = input.next();
-//			if (c2.isWhitespace()) {
-//				input.pushback(c2);
-//				input.pushback(c);
-//				return PunctuatorScanner.scan(firstChar, input);
-//			} else {
-//				
-//			}
-//		}
-//		
-//		// step 1: finish reading all digits to the left of the decimal
-//		if (ch == '+' || ch == '-' || firstChar.isDigit()) {
-//			appendSubsequentDigits(buffer);
-//			LocatedChar c = input.next();
-//		}
-//		
-//		
-//		if (c.getCharacter() == '.') {
-//			LocatedChar c2 = input.next();
-//			if (c2.isDigit()) {
-//				buffer.append('.');
-//				buffer.append(c2.getCharacter());
-//				appendSubsequentDigits(buffer);
-//			}
-//			else {
-//				input.pushback(c2);
-//				input.pushback(c);
-//				return IntegerToken.make(firstChar.getLocation(), buffer.toString());
-//			}
-//		}
-//		else {
-//			input.pushback(c);
-//			return IntegerToken.make(firstChar.getLocation(), buffer.toString());
-//		}
-//		
-//		// step 3. look for the E
-//		c = input.next();
-//		if (c.getCharacter() == 'E') {
-//			c = input.next();
-//			ch = c.getCharacter();
-//			if (c.isDigit()) {
-//				buffer.append('E');
-//				buffer.append(c.getCharacter());
-//				appendSubsequentDigits(buffer);
-//			}
-//			else if (ch == '+' || ch == '-') {
-//				c = input.next();
-//				if (c.isDigit()) {
-//					buffer.append('E');
-//					buffer.append(ch);
-//					buffer.append(c.getCharacter());
-//					appendSubsequentDigits(buffer);
-//				}
-//			}
-//			return FloatingToken.make(firstChar.getLocation(), buffer.toString());
-//		}
-//		else {
-//			input.pushback(c);
-//			return FloatingToken.make(firstChar.getLocation(), buffer.toString());
-//		}
-//
-////		buffer.append(firstChar.getCharacter());
-////		appendSubsequentDigits(buffer);					// may append 0 digits
-////		
-////		// look for a decimal point
-////		LocatedChar c = input.next();
-////		if (c.getCharacter() == '.') {
-////			c = input.next();
-////			if (c.isDigit()) {
-////				// do valid digit stuff
-////				buffer.append('.');
-////				buffer.append(c.getCharacter());
-////				appendSubsequentDigits(buffer);
-////				
-////				return FloatingToken.make(firstChar.getLocation(), buffer.toString());
-////			} else {
-////				// do nonvalid stuff
-////				input.pushback(c);
-////				return IntegerToken.make(firstChar.getLocation(), buffer.toString());
-////			}
-////		} else {
-////			input.pushback(c);
-////			return IntegerToken.make(firstChar.getLocation(), buffer.toString());
-////		}
-//	}
 	
 	private void appendSubsequentDigits(StringBuffer buffer) {
 		LocatedChar c = input.next();
