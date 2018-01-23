@@ -44,14 +44,15 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		else if(ch.isIdentifierStart()) {
 			return scanIdentifier(ch);
 		}
-		else if(isCommentStart(ch)) {
+		// simply scan by all characters; don't make a token
+		else if(ch.isCommentStart()) {
 			scanComment(ch);
 			return findNextToken();
 		}
-		else if(isStringStart(ch)) {
+		else if(ch.isStringStartOrEnd()) {
 			return scanString(ch);
 		}
-		else if(ch.isCharacterStart()) {
+		else if(ch.isCharacterStartOrEnd()) {
 			return scanCharacter(ch);
 		}
 		else if(isPunctuatorStart(ch)) {
@@ -60,7 +61,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		else if(isEndOfInput(ch)) {
 			return NullToken.make(ch.getLocation());
 		}
-
 		else {
 			lexicalError(ch);
 			return findNextToken();
@@ -84,20 +84,18 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		if (firstChar.isDigit())
 			return true;
 		else if (ch == '+' || ch == '-')
-			return numberFollows() || decimalFollows();
+			return numberFollows() || decimalNumberFollows();
 		else if (ch == '.')
 			return numberFollows();
 		else
 			return false;
 	}
 	
-	public boolean decimalFollows() {
+	public boolean decimalNumberFollows() {
+		// peek at the next character
 		LocatedChar c = input.next();
-		boolean isDecimal = (c.getCharacter() == '.');
-		boolean hasNumberAfterDecimal = false;
-		if (isDecimal) {
-			hasNumberAfterDecimal = numberFollows();
-		}
+		boolean isDecimal = c.isDecimal();
+		boolean hasNumberAfterDecimal = isDecimal ? numberFollows() : false;
 		input.pushback(c);
 		return isDecimal && hasNumberAfterDecimal;
 	}
@@ -111,56 +109,52 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	
 	private Token scanNumber(LocatedChar firstChar) {
 		StringBuffer buffer = new StringBuffer();
-		boolean isFloating = false;
-		LocatedChar c;
+		LocatedChar c = firstChar;
 		
-		if (firstChar.getCharacter() != '.') {
-			// phase 1: append everything before the first decimal point
-			buffer.append(firstChar.getCharacter());
+		// Append everything to the left of the first decimal
+		if (!c.isDecimal()) {
+			buffer.append(c.getCharacter());
 			appendSubsequentDigits(buffer);
 			c = input.next();
-		} else {
-			c = firstChar;
-		}
-
-		// phase 2: handle the decimal point (if it exists)
-		if (c.getCharacter() == '.') {
-			LocatedChar c2 = input.next();
-			if (c2.isDigit()) {
-				isFloating = true;
-				buffer.append('.');
-				buffer.append(c2.getCharacter());
-				appendSubsequentDigits(buffer);
-			}
-			else {
-				input.pushback(c2);
-				input.pushback(c);
-			}
-			// phase 3: handle the E notation (if it exists)
-			c = input.next();
-			if (c.getCharacter() == 'E') {
-				c = input.next();
-				buffer.append('E');
-				buffer.append(c.getCharacter());
-				appendSubsequentDigits(buffer);
-			}
-			else {
-				input.pushback(c);
-			}
-		}
-		else {
-			input.pushback(c);
 		}
 		
-		// return the correct type of Token
-		if (isFloating) {
-			return FloatingToken.make(firstChar.getLocation(), buffer.toString());
-		}
-		else {
+		if (!c.isDecimal() || !numberFollows()) {
+			input.pushback(c);
 			return IntegerToken.make(firstChar.getLocation(), buffer.toString());
 		}
 		
+		// Append the decimal point (and all digits after)
+		buffer.append(c.getCharacter());
+		appendSubsequentDigits(buffer);
+
+		c = input.next();
+		if (!c.isExponent()) {
+			input.pushback(c);
+			return FloatingToken.make(firstChar.getLocation(), buffer.toString());
+		}
 		
+		// Append the E
+		buffer.append(c.getCharacter());
+		c = input.next();
+		if (c.isSign()) {
+			// Append the sign (if there is one)
+			buffer.append(c.getCharacter());
+			c = input.next();
+		}
+		
+		if (!c.isDigit()) {
+			// ERROR: the exponent must have a number or sign following E
+			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
+			log.severe("Lexical error: E must be followed by a number or sign");
+			return findNextToken();
+		}
+		
+		// Append the first digit after the E
+		buffer.append(c.getCharacter());
+		appendSubsequentDigits(buffer);
+
+		return FloatingToken.make(firstChar.getLocation(), buffer.toString());
+
 	}
 	
 
@@ -189,6 +183,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			log.severe("Lexical error: identifier must be at most 32 characters");
 			return findNextToken();
 		}
+		
 		if(Keyword.isAKeyword(lexeme)) {
 			return LextantToken.make(firstChar.getLocation(), lexeme, Keyword.forLexeme(lexeme));
 		}
@@ -240,51 +235,65 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	}
 	//////////////////////////////////////////////////////////////////////////////
 	// Comment lexical analysis
-	private boolean isCommentStart(LocatedChar lc) {
-		return lc.getCharacter() == '#';
-	}
-
 	private void scanComment(LocatedChar firstChar) {
+		// firstChar should be a #, so skip it
 		LocatedChar c = input.next();
-		while(c.getCharacter() != '#' && c.getCharacter() != '\n') {
+		while (c.isCommentContinue()) {
 			c = input.next();
 		}
-		input.pushback(c);
+		// skip the \n or # (which ends a comment)
+		input.next();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
 	// String lexical analysis
-	private boolean isStringStart(LocatedChar lc) {
-		return lc.getCharacter() == '"';
-	}
-	
 	private Token scanString(LocatedChar firstChar) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(firstChar.getCharacter());
-		appendToString(buffer);
-		
-		return StringToken.make(firstChar.getLocation(), buffer.toString());
-	}
-	
-	private void appendToString(StringBuffer buffer) {
 		LocatedChar c = input.next();
-		while(c.getCharacter() != '"' && c.getCharacter() != '\n') {
+		while (c.isStringContinue()) {
 			buffer.append(c.getCharacter());
 			c = input.next();
 		}
-		input.pushback(c);
+		
+		// valid string
+		if (c.isStringStartOrEnd()) {
+			return StringToken.make(firstChar.getLocation(), buffer.toString());
+		}
+		// invalid string, wasn't terminated with "
+		else {
+			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
+			log.severe("Lexical error: string must terminate with \"");
+			return findNextToken();
+		}
+		
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
 	// Character lexical analysis
 	private Token scanCharacter(LocatedChar firstChar) {
-		StringBuffer buffer = new StringBuffer();
-		char ch = input.next().getCharacter();
-		assert (ch >= 32 && ch <= 126);
-		buffer.append(ch);
-		input.next(); // read the ^ symbol
 		
-		return CharacterToken.make(firstChar.getLocation(), buffer.toString());
+		StringBuffer buffer = new StringBuffer();
+		LocatedChar c = input.next();
+		
+		if (!c.isValidCharacter()) {
+			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
+			log.severe("Lexical error: character must be between ASCII 32 and 126");
+			return findNextToken();
+		}
+		
+		char ch = c.getCharacter();
+		c = input.next();
+		if (c.isCharacterStartOrEnd()) {
+			buffer.append(ch);
+			return CharacterToken.make(firstChar.getLocation(), buffer.toString());
+		}
+		else {
+			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
+			log.severe("Lexical error: character must terminate with ^");
+			return findNextToken();
+		}
+		
+
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////

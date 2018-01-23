@@ -9,6 +9,7 @@ import asmCodeGenerator.runtime.RunTime;
 import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
 import parseTree.*;
+import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -21,6 +22,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
+import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -138,9 +140,10 @@ public class ASMCodeGenerator {
 			}	
 		}
 		private void turnAddressIntoValue(ASMCodeFragment code, ParseNode node) {
-			if(node.getType() == PrimitiveType.INTEGER) {
+			if(node.getType() == PrimitiveType.INTEGER ||
+			   node.getType() == PrimitiveType.STRING) {
 				code.add(LoadI);
-			}	
+			}
 			else if(node.getType() == PrimitiveType.FLOATING) {
 				code.add(LoadF);
 			}
@@ -196,7 +199,6 @@ public class ASMCodeGenerator {
 			code.add(PushD, RunTime.TAB_PRINT_FORMAT);
 			code.add(Printf);
 		}
-		
 		public void visit(SpaceNode node) {
 			newVoidCode(node);
 			code.add(PushD, RunTime.SPACE_PRINT_FORMAT);
@@ -215,8 +217,22 @@ public class ASMCodeGenerator {
 			Type type = node.getType();
 			code.add(opcodeForStore(type));
 		}
+		
+		public void visitLeave(AssignmentNode node) {
+			newVoidCode(node);
+			ASMCodeFragment lvalue = removeAddressCode(node.child(0));	
+			ASMCodeFragment rvalue = removeValueCode(node.child(1));
+			code.append(lvalue);
+			code.append(rvalue);
+			
+			Type type = node.child(0).getType();
+			code.add(opcodeForStore(type));
+		}
+		
+		
 		private ASMOpcode opcodeForStore(Type type) {
-			if(type == PrimitiveType.INTEGER) {
+			if(type == PrimitiveType.INTEGER ||
+			   type == PrimitiveType.STRING) {
 				return StoreI;
 			}
 			if(type == PrimitiveType.FLOATING) {
@@ -406,15 +422,18 @@ public class ASMCodeGenerator {
 		}		
 		public void visit(IntegerConstantNode node) {
 			newValueCode(node);
-			
 			code.add(PushI, node.getValue());
 		}
 		public void visit(FloatingConstantNode node) {
 			newValueCode(node);
-			
 			code.add(PushF, node.getValue());
 		}
 		public void visit(CharacterConstantNode node) {
+			newValueCode(node);
+			code.add(PushI, node.getValue());
+		}
+		// for now, it's like pushI (since Strings are 4 bytes anyway).
+		public void visit(StringConstantNode node) {
 			newValueCode(node);
 			code.add(PushI, node.getValue());
 		}

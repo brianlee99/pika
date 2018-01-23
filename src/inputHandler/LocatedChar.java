@@ -60,15 +60,38 @@ public class LocatedChar {
 		return Character.isWhitespace(character);
 	}
 	public boolean isIdentifierStart() {
-		return Character.isLowerCase(character) || Character.isUpperCase(character) || (character == '_');
+		return isLowerCase() || Character.isUpperCase(character) || (character == '_');
 	}
 	public boolean isIdentifierContinue() {
 		return isIdentifierStart() || isDigit() || (character == '$');
 	}
-	public boolean isNumberStart() {
-		return isDigit() || (character == '+') || (character == '-');
-	}
-	public boolean isCharacterStart() {
+
+	public boolean isCharacterStartOrEnd() {
 		return character == '^';
 	}
+	public boolean isValidCharacter() {
+		return (character >= 32) && (character <= 126);
+	}
+	public boolean isStringStartOrEnd() {
+		return character == '"';
+	}
+	public boolean isStringContinue() {
+		return (character != '"') && (character != '\n');
+	}
+	public boolean isCommentStart() {
+		return character == '#';
+	}
+	public boolean isCommentContinue() {
+		return (character != '#') && (character != '\n');
+	}
+	public boolean isDecimal() {
+		return character == '.';
+	}
+	public boolean isSign() {
+		return (character == '+') || (character == '-');
+	}
+	public boolean isExponent() {
+		return character == 'E';
+	}
+	
 }

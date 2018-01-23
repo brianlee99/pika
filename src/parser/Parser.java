@@ -18,6 +18,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
+import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import tokens.*;
 import lexicalAnalyzer.Keyword;
@@ -248,8 +249,28 @@ public class Parser {
 	// additiveExpression       -> multiplicativeExpression [+ multiplicativeExpression]*  (left-assoc)
 	// multiplicativeExpression -> atomicExpression [MULT atomicExpression]*  (left-assoc)
 	// atomicExpression         -> literal
-	// literal                  -> intNumber | identifier | booleanConstant
+	// literal                  -> intNumber | identifier | booleanConstant (among others)
 
+	
+	// parsing square brackets (Casting)
+//	private ParseNode parseCastingExpression() {
+//		if(!startsCastingExpression(nowReading)) {
+//			return syntaxErrorNode("casting");
+//		}
+//		Token declarationToken = nowReading;
+//		readToken();
+//		
+//		ParseNode identifier = parseIdentifier();
+//		expect(Punctuator.ASSIGN);
+//		ParseNode initializer = parseExpression();
+//		expect(Punctuator.TERMINATOR);
+//		
+//		return DeclarationNode.withChildren(declarationToken, identifier, initializer);
+//	}
+//	private boolean startsCastingExpression(Token token) {
+//		return (token.isLextant(Punctuator.OPEN_BRACKET));
+//	}
+	
 	// expr  -> comparisonExpression
 	private ParseNode parseExpression() {		
 		if(!startsExpression(nowReading)) {
@@ -356,6 +377,9 @@ public class Parser {
 		if(startsCharacter(nowReading)) {
 			return parseCharacter();
 		}
+		if(startsString(nowReading)) {
+			return parseString();
+		}
 		if(startsIdentifier(nowReading)) {
 			return parseIdentifier();
 		}
@@ -365,10 +389,12 @@ public class Parser {
 
 		return syntaxErrorNode("literal");
 	}
+	
 	private boolean startsLiteral(Token token) {
 		return startsIntNumber(token) ||
 				startsFloatNumber(token) ||
 				startsCharacter(token) ||
+				startsString(token) ||
 				startsIdentifier(token) ||
 				startsBooleanConstant(token);
 	}
@@ -407,6 +433,18 @@ public class Parser {
 	}
 	private boolean startsCharacter(Token token) {
 		return token instanceof CharacterToken;
+	}
+	
+	// character (terminal)
+	private ParseNode parseString() {
+		if(!startsString(nowReading)) {
+			return syntaxErrorNode("string constant");
+		}
+		readToken();
+		return new StringConstantNode(previouslyRead);
+	}
+	private boolean startsString(Token token) {
+		return token instanceof StringToken;
 	}
 	
 	// identifier (terminal)

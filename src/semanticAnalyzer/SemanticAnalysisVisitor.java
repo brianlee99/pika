@@ -21,6 +21,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
+import parseTree.nodeTypes.StringConstantNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
 import semanticAnalyzer.types.PrimitiveType;
@@ -81,19 +82,35 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		node.setType(declarationType);
 		
 		identifier.setType(declarationType);
+		// if node is CONST, then set mutable to FALSE
+		// if node is VAR, then set mutable to TRUE
+		// identifier.setMutable(node.isMutable());
+
 		addBinding(identifier, declarationType);
 	}
-	// TODO: Fix this later
+	
 	@Override
 	public void visitLeave(AssignmentNode node) {
 		IdentifierNode identifier = (IdentifierNode) node.child(0);
 		ParseNode initializer = node.child(1);
+		
+//		if (!identifier.isMutable()) {
+//			System.err.println("Error: the identifier is a const.");
+//			return;
+//		}
 
 		Type declarationType = initializer.getType();
-		node.setType(declarationType);
+		Type identifierType = identifier.getType();
 		
-		identifier.setType(declarationType);
-		addBinding(identifier, declarationType);
+		if (declarationType != identifierType) {
+			System.err.println("Error: the declared type and the initializing type are not the same.");
+			return;
+		}
+		
+//		node.setType(declarationType);
+//		
+//		identifier.setType(declarationType);
+//		addBinding(identifier, declarationType);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -146,6 +163,10 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visit(CharacterConstantNode node) {
 		node.setType(PrimitiveType.CHARACTER);
+	}
+	@Override
+	public void visit(StringConstantNode node) {
+		node.setType(PrimitiveType.STRING);
 	}
 	@Override
 	public void visit(NewlineNode node) {

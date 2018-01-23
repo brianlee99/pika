@@ -11,11 +11,13 @@ import tokens.Token;
 public class IdentifierNode extends ParseNode {
 	private Binding binding;
 	private Scope declarationScope;
+	// private boolean mutable;
 
 	public IdentifierNode(Token token) {
 		super(token);
 		assert(token instanceof IdentifierToken);
 		this.binding = null;
+		// this.mutable = false; // by default
 	}
 	public IdentifierNode(ParseNode node) {
 		super(node);
@@ -41,6 +43,16 @@ public class IdentifierNode extends ParseNode {
 	public Binding getBinding() {
 		return binding;
 	}
+	
+////////////////////////////////////////////////////////////
+// get/set mutability 
+	
+//	public boolean isMutable() {
+//		return mutable;
+//	}
+//	public void setMutable(boolean mutable) {
+//		this.mutable = mutable;
+//	}
 	
 ////////////////////////////////////////////////////////////
 // Speciality functions
