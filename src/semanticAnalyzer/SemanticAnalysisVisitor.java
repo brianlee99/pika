@@ -11,6 +11,7 @@ import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
@@ -105,11 +106,28 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			System.err.println("Error: the declared type and the initializing type are not the same.");
 			return;
 		}
-		
-//		node.setType(declarationType);
+	}
+	///////////////////////////////////////////////////////////////////////////
+	// casting
+	public void visitLeave(CastingExpressionNode node) {
+		assert node.nChildren() == 2;
+		ParseNode left  = node.child(0);
+		ParseNode right = node.child(1);
+		List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
 //		
-//		identifier.setType(declarationType);
-//		addBinding(identifier, declarationType);
+//		Lextant operator = operatorFor(node);
+//		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+//		
+//		FunctionSignature signature = signatures.acceptingSignature(childTypes);
+//		
+//		if(signature.accepts(childTypes)) {
+//			node.setType(signature.resultType());
+//			node.setSignature(signature);
+//		}
+//		else {
+//			typeCheckError(node, childTypes);
+//			node.setType(PrimitiveType.ERROR);
+//		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////

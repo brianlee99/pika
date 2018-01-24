@@ -13,7 +13,6 @@ public enum Keyword implements Lextant {
 	TRUE("_true_"),
 	FALSE("_false_"),
 	EXEC("exec"),
-	// types
 	BOOL("bool"),
 	CHAR("char"),
 	STRING("string"),

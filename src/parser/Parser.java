@@ -7,6 +7,7 @@ import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
@@ -20,6 +21,7 @@ import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
+import parseTree.nodeTypes.TypeNode;
 import tokens.*;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -240,8 +242,6 @@ public class Parser {
 	}
 	
 
-
-	
 	///////////////////////////////////////////////////////////
 	// expressions
 	// expr                     -> comparisonExpression
@@ -251,25 +251,7 @@ public class Parser {
 	// atomicExpression         -> literal
 	// literal                  -> intNumber | identifier | booleanConstant (among others)
 
-	
-	// parsing square brackets (Casting)
-//	private ParseNode parseCastingExpression() {
-//		if(!startsCastingExpression(nowReading)) {
-//			return syntaxErrorNode("casting");
-//		}
-//		Token declarationToken = nowReading;
-//		readToken();
-//		
-//		ParseNode identifier = parseIdentifier();
-//		expect(Punctuator.ASSIGN);
-//		ParseNode initializer = parseExpression();
-//		expect(Punctuator.TERMINATOR);
-//		
-//		return DeclarationNode.withChildren(declarationToken, identifier, initializer);
-//	}
-//	private boolean startsCastingExpression(Token token) {
-//		return (token.isLextant(Punctuator.OPEN_BRACKET));
-//	}
+
 	
 	// expr  -> comparisonExpression
 	private ParseNode parseExpression() {		
@@ -327,7 +309,7 @@ public class Parser {
 		return left;
 	}
 	private boolean startsAdditiveExpression(Token token) {
-		return startsLiteral(token);
+		return startsMultiplicativeExpression(token);
 	}	
 
 	// multiplicativeExpression -> atomicExpression [MULT atomicExpression]*  (left-assoc)
@@ -350,16 +332,63 @@ public class Parser {
 		return startsAtomicExpression(token);
 	}
 	
+	
+	
 	// atomicExpression -> literal
 	private ParseNode parseAtomicExpression() {
 		if(!startsAtomicExpression(nowReading)) {
 			return syntaxErrorNode("atomic expression");
 		}
+		
+		if (startsCastingExpression(nowReading)) {
+			return parseCastingExpression();
+		}
+		
 		return parseLiteral();
 	}
 	private boolean startsAtomicExpression(Token token) {
-		return startsLiteral(token);
+		return startsLiteral(token) || startsCastingExpression(token);
 	}
+	
+	
+	
+	// Casting expression is treated as atomic (highest level of precedence)
+	private ParseNode parseCastingExpression() {
+		if(!startsCastingExpression(nowReading)) {
+			return syntaxErrorNode("casting");
+		}
+		Token declarationToken = nowReading;
+		readToken();
+		
+		ParseNode expression = parseExpression();  // change this.
+		expect(Punctuator.BAR);
+		ParseNode targetType = parseType();
+		expect(Punctuator.CLOSE_BRACKET);
+		
+		return CastingExpressionNode.withChildren(declarationToken, expression, targetType);
+	}
+	
+	private boolean startsCastingExpression(Token token) {
+		return (token.isLextant(Punctuator.OPEN_BRACKET));
+	}
+	
+	// private ParseNode parseParenthesesExpression();
+	
+//	private boolean startsParenthesesExpression(Token token) {
+//		return (token.isLextant(Punctuator.OPEN_PARENTHESES));
+//	}
+	
+	private ParseNode parseType() {
+		if(!startsType(nowReading)) {
+			return syntaxErrorNode("type");
+		}
+		readToken();
+		return new TypeNode(previouslyRead);
+	}
+	private boolean startsType(Token token) {
+		return token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING);
+	}
+
 	
 	// literal -> number | identifier | booleanConstant | characterConstant
 	// | stringConstant | identifier

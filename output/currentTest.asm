@@ -100,17 +100,16 @@
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% x
-        PushI        100                       
+        Add                                    %% c
+        PushI        3                         
+        PushI        5                         
+        PushI        3                         
+        Multiply                               
+        Add                                    
         StoreI                                 
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% x
-        PushI        1000                      
-        StoreI                                 
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
+        Add                                    %% c
         LoadI                                  
         PushD        $print-format-integer     
         Printf                                 
