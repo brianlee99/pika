@@ -140,8 +140,7 @@ public class ASMCodeGenerator {
 			}	
 		}
 		private void turnAddressIntoValue(ASMCodeFragment code, ParseNode node) {
-			if(node.getType() == PrimitiveType.INTEGER ||
-			   node.getType() == PrimitiveType.STRING) {
+			if(node.getType() == PrimitiveType.INTEGER) {
 				code.add(LoadI);
 			}
 			else if(node.getType() == PrimitiveType.FLOATING) {
@@ -151,6 +150,9 @@ public class ASMCodeGenerator {
 					node.getType() == PrimitiveType.CHARACTER) {
 				code.add(LoadC);
 			}	
+			else if (node.getType() == PrimitiveType.STRING) {
+				code.add(LoadI);
+			}
 			else {
 				assert false : "node " + node;
 			}
@@ -231,8 +233,7 @@ public class ASMCodeGenerator {
 		
 		
 		private ASMOpcode opcodeForStore(Type type) {
-			if(type == PrimitiveType.INTEGER ||
-			   type == PrimitiveType.STRING) {
+			if(type == PrimitiveType.INTEGER) {
 				return StoreI;
 			}
 			if(type == PrimitiveType.FLOATING) {
@@ -241,6 +242,10 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.BOOLEAN ||
 			   type == PrimitiveType.CHARACTER) {
 				return StoreC;
+			}
+			if (type == PrimitiveType.STRING) {
+				// string logic
+				return StoreI;
 			}
 
 			assert false: "Type " + type + " unimplemented in opcodeForStore()";
@@ -289,7 +294,6 @@ public class ASMCodeGenerator {
 			code.append(arg2);
 			code.add(Label, subLabel);
 			
-			// THIS PART NOT OWKRING
 			if (leftNodeType == PrimitiveType.INTEGER ||
 					leftNodeType == PrimitiveType.CHARACTER)
 				code.add(Subtract);
@@ -432,10 +436,12 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			code.add(PushI, node.getValue());
 		}
-		// for now, it's like pushI (since Strings are 4 bytes anyway).
+		// pushD
 		public void visit(StringConstantNode node) {
 			newValueCode(node);
-			code.add(PushI, node.getValue());
+			code.add(DLabel, node.getValue());
+			code.add(DataS, node.getValue());
+			code.add(PushD, node.getValue());
 		}
 	}
 

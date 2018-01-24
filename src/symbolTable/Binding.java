@@ -10,13 +10,16 @@ public class Binding {
 	private TextLocation textLocation;
 	private MemoryLocation memoryLocation;
 	private String lexeme;
+	private boolean isMutable;
 	
-	public Binding(Type type, TextLocation location, MemoryLocation memoryLocation, String lexeme) {
+	public Binding(Type type, TextLocation location, MemoryLocation memoryLocation, String lexeme,
+			boolean isMutable) {
 		super();
 		this.type = type;
 		this.textLocation = location;
 		this.memoryLocation = memoryLocation;
 		this.lexeme = lexeme;
+		this.isMutable = isMutable;
 	}
 	
 
@@ -28,6 +31,9 @@ public class Binding {
 	}	
 	public String getLexeme() {
 		return lexeme;
+	}
+	public boolean getIsMutable() {
+		return isMutable;
 	}
 	public Type getType() {
 		return type;

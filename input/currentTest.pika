@@ -1,14 +1,4 @@
 exec {
-	var c := 3.
-	var d := 3.6.
-	var e := +3.6.
-	var f := -3.6.
-	var g := +.6.
-	var h := .6.
-	var i := -.6E+12.
-	var j := .6E-12.
-	var k := +2.222E12.
-
-	var x := "Hello!".
-	
+	print "Hello".
+	print "Hello".
 }

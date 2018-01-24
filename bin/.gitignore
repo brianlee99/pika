@@ -4,3 +4,9 @@
 /lexicalAnalyzer/
 /inputHandler/
 /parseTree/
+/applications/
+/logging/
+/optimizer/
+/symbolTable/
+/tokens/
+/tests/

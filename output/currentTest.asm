@@ -96,51 +96,26 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        68                        
+        DataZ        0                         
         Label        $$main                    
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% c
-        PushI        3                         
-        StoreI                                 
-        PushD        $global-memory-block      
-        PushI        4                         
-        Add                                    %% d
-        PushF        3.600000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        12                        
-        Add                                    %% e
-        PushF        3.600000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        20                        
-        Add                                    %% f
-        PushF        -3.600000                 
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        28                        
-        Add                                    %% g
-        PushF        0.600000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        36                        
-        Add                                    %% h
-        PushF        0.600000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        44                        
-        Add                                    %% i
-        PushF        -600000000000.000000      
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        52                        
-        Add                                    %% j
-        PushF        0.000000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        60                        
-        Add                                    %% k
-        PushF        2222000000000.000000      
-        StoreF                                 
+        DLabel       Hello                     
+        DataC        72                        %% "Hello"
+        DataC        101                       
+        DataC        108                       
+        DataC        108                       
+        DataC        111                       
+        DataC        0                         
+        PushD        Hello                     
+        PushD        $print-format-string      
+        Printf                                 
+        DLabel       Hello                     
+        DataC        72                        %% "Hello"
+        DataC        101                       
+        DataC        108                       
+        DataC        108                       
+        DataC        111                       
+        DataC        0                         
+        PushD        Hello                     
+        PushD        $print-format-string      
+        Printf                                 
         Halt                                   
