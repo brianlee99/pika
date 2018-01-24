@@ -1,4 +1,4 @@
 exec {
-	print "Hello".
-	print "Hello".
+	var x := 100.
+	x := 1000.
 }

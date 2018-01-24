@@ -13,7 +13,7 @@ public class Binding {
 	private boolean isMutable;
 	
 	public Binding(Type type, TextLocation location, MemoryLocation memoryLocation, String lexeme,
-			boolean isMutable) {
+			Boolean isMutable) {
 		super();
 		this.type = type;
 		this.textLocation = location;
@@ -61,7 +61,8 @@ public class Binding {
 			super(PrimitiveType.ERROR,
 					TextLocation.nullInstance(),
 					MemoryLocation.nullInstance(),
-					"the-null-binding");
+					"the-null-binding",
+					null);
 		}
 		public static NullBinding getInstance() {
 			if(instance==null)

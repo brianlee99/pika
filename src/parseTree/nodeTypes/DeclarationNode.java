@@ -33,26 +33,10 @@ public class DeclarationNode extends ParseNode {
 	}	
 	
 	////////////////////////////////////////////////////////////
-	//get/set mutability 
-	
-//	public boolean isMutable() {
-//		return mutable;
-//	}
-//	public void setMutable(boolean mutable) {
-//		this.mutable = mutable;
-//	}
-	
-	////////////////////////////////////////////////////////////
 	// convenience factory
 	
 	public static DeclarationNode withChildren(Token token, ParseNode declaredName, ParseNode initializer) {
 		DeclarationNode node = new DeclarationNode(token);
-		
-		// set mutability
-//		if (token.isLextant(Keyword.CONST))
-//			node.mutable = false;
-//		else if (token.isLextant(Keyword.VAR))
-//			node.mutable = true;
 		
 		node.appendChild(declaredName);
 		node.appendChild(initializer);

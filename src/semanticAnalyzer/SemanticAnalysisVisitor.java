@@ -3,6 +3,7 @@ package semanticAnalyzer;
 import java.util.Arrays;
 import java.util.List;
 
+import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import logging.PikaLogger;
 import parseTree.ParseNode;
@@ -82,11 +83,9 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		node.setType(declarationType);
 		
 		identifier.setType(declarationType);
-		// if node is CONST, then set mutable to FALSE
-		// if node is VAR, then set mutable to TRUE
-		// identifier.setMutable(node.isMutable());
+		boolean isMutable = node.getToken().isLextant(Keyword.VAR) ? true : false;
 
-		addBinding(identifier, declarationType);
+		addBinding(identifier, declarationType, isMutable);
 	}
 	
 	@Override
@@ -190,9 +189,9 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		ParseNode parent = node.getParent();
 		return (parent instanceof DeclarationNode) && (node == parent.child(0));
 	}
-	private void addBinding(IdentifierNode identifierNode, Type type) {
+	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
 		Scope scope = identifierNode.getLocalScope();
-		Binding binding = scope.createBinding(identifierNode, type);
+		Binding binding = scope.createBinding(identifierNode, type, isMutable);
 		identifierNode.setBinding(binding);
 	}
 	

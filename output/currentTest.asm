@@ -96,8 +96,13 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        0                         
+        DataZ        4                         
         Label        $$main                    
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        PushI        100                       
+        StoreI                                 
         DLabel       Hello                     
         DataC        72                        %% "Hello"
         DataC        101                       
@@ -108,14 +113,15 @@
         PushD        Hello                     
         PushD        $print-format-string      
         Printf                                 
-        DLabel       Hello                     
-        DataC        72                        %% "Hello"
+        DLabel       Hello2                    
+        DataC        72                        %% "Hello2"
         DataC        101                       
         DataC        108                       
         DataC        108                       
         DataC        111                       
+        DataC        50                        
         DataC        0                         
-        PushD        Hello                     
+        PushD        Hello2                    
         PushD        $print-format-string      
         Printf                                 
         Halt                                   
