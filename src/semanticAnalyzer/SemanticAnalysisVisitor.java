@@ -93,10 +93,10 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		IdentifierNode identifier = (IdentifierNode) node.child(0);
 		ParseNode initializer = node.child(1);
 		
-//		if (!identifier.isMutable()) {
-//			System.err.println("Error: the identifier is a const.");
-//			return;
-//		}
+		if (!identifier.isMutable()) {
+			System.err.println("Error: the identifier is a const.");
+			return;
+		}
 
 		Type declarationType = initializer.getType();
 		Type identifierType = identifier.getType();

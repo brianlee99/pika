@@ -1,4 +1,7 @@
 exec {
 	var x := 100.
 	x := 1000.
+	
+	print x.
+	
 }

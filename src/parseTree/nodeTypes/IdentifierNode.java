@@ -47,12 +47,9 @@ public class IdentifierNode extends ParseNode {
 ////////////////////////////////////////////////////////////
 // get/set mutability 
 	
-//	public boolean isMutable() {
-//		return mutable;
-//	}
-//	public void setMutable(boolean mutable) {
-//		this.mutable = mutable;
-//	}
+	public boolean isMutable() {
+		return getBinding().getIsMutable();
+	}
 	
 ////////////////////////////////////////////////////////////
 // Speciality functions

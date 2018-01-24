@@ -242,7 +242,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			c = input.next();
 		}
 		// skip the \n or # (which ends a comment)
-		input.next();
+		// input.next();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////

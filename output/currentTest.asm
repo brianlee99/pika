@@ -103,25 +103,15 @@
         Add                                    %% x
         PushI        100                       
         StoreI                                 
-        DLabel       Hello                     
-        DataC        72                        %% "Hello"
-        DataC        101                       
-        DataC        108                       
-        DataC        108                       
-        DataC        111                       
-        DataC        0                         
-        PushD        Hello                     
-        PushD        $print-format-string      
-        Printf                                 
-        DLabel       Hello2                    
-        DataC        72                        %% "Hello2"
-        DataC        101                       
-        DataC        108                       
-        DataC        108                       
-        DataC        111                       
-        DataC        50                        
-        DataC        0                         
-        PushD        Hello2                    
-        PushD        $print-format-string      
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        PushI        1000                      
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        LoadI                                  
+        PushD        $print-format-integer     
         Printf                                 
         Halt                                   
