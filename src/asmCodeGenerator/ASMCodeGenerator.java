@@ -305,7 +305,6 @@ public class ASMCodeGenerator {
 			
 			// we need to check the signature of node, to see if it takes two integers,
 			// two floating, etc.
-			
 			if (operator == Punctuator.GREATER) {
 				if (leftNodeType == PrimitiveType.INTEGER ||
 						leftNodeType == PrimitiveType.CHARACTER)

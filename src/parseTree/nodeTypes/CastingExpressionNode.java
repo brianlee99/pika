@@ -2,47 +2,57 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.signatures.FunctionSignature;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import tokens.LextantToken;
 import tokens.Token;
 
+// For now, basically a clone of BinaryOperatorNode.
 public class CastingExpressionNode extends ParseNode {
 	
-	// private boolean mutable;
 	
 	public CastingExpressionNode(Token token) {
 		super(token);
-		// this.mutable = false; // by default
-		// assert(token.isLextant(Keyword.CONST, Keyword.VAR));
+		assert(token instanceof LextantToken);
 	}
 
 	public CastingExpressionNode(ParseNode node) {
 		super(node);
 	}
 	
+	////////////////////////////////////////////////////////////
+	// function signature
+	private FunctionSignature signature = FunctionSignature.nullInstance();
+	
+	public final FunctionSignature getSignature() {
+		return signature;
+	}
+	
+	public final void setSignature(FunctionSignature signature) {
+		this.signature = signature;
+	}
 	
 	////////////////////////////////////////////////////////////
 	// attributes
 	
-	public Lextant getDeclarationType() {
+	public Lextant getOperator() {
 		return lextantToken().getLextant();
 	}
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
 	
+	
 	////////////////////////////////////////////////////////////
 	// convenience factory
 	
-	public static CastingExpressionNode withChildren(Token token, ParseNode declaredName, ParseNode initializer) {
+	public static CastingExpressionNode withChildren(Token token, ParseNode left, ParseNode right) {
 		CastingExpressionNode node = new CastingExpressionNode(token);
-		
-		node.appendChild(declaredName);
-		node.appendChild(initializer);
+		node.appendChild(left);
+		node.appendChild(right);
 		return node;
 	}
-	
 	
 	///////////////////////////////////////////////////////////
 	// boilerplate for visitors

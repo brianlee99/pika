@@ -1,3 +1,3 @@
 exec {
-	const d := [ 3 + 2 | float ].
+	const d := [ 32 | float ].
 } 

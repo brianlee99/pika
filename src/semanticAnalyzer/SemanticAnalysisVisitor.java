@@ -114,20 +114,20 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		ParseNode left  = node.child(0);
 		ParseNode right = node.child(1);
 		List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
-//		
-//		Lextant operator = operatorFor(node);
-//		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-//		
-//		FunctionSignature signature = signatures.acceptingSignature(childTypes);
-//		
-//		if(signature.accepts(childTypes)) {
-//			node.setType(signature.resultType());
-//			node.setSignature(signature);
-//		}
-//		else {
-//			typeCheckError(node, childTypes);
-//			node.setType(PrimitiveType.ERROR);
-//		}
+		
+		Lextant operator = operatorFor(node);
+		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+
+		FunctionSignature signature = signatures.acceptingSignature(childTypes);
+		
+		if(signature.accepts(childTypes)) {
+			node.setType(signature.resultType());
+			node.setSignature(signature);
+		}
+		else {
+			typeCheckError(node, childTypes);
+			node.setType(PrimitiveType.ERROR);
+		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,10 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
 	}
-
+	private Lextant operatorFor(CastingExpressionNode node) {
+		LextantToken token = (LextantToken) node.getToken();
+		return token.getLextant();
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// simple leaf nodes
