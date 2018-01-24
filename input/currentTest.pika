@@ -1,3 +1,4 @@
 exec {
-	const d := [ 32 | float ].
+	const d := [^h^ | bool ].
+	print d.
 } 

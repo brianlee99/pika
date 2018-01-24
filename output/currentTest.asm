@@ -96,21 +96,24 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        4                         
+        DataZ        1                         
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% c
-        PushI        3                         
-        PushI        5                         
-        PushI        3                         
-        Multiply                               
-        Add                                    
-        StoreI                                 
+        Add                                    %% d
+        PushI        104                       
+        Nop                                    
+        StoreC                                 
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% c
-        LoadI                                  
-        PushD        $print-format-integer     
+        Add                                    %% d
+        LoadC                                  
+        JumpTrue     -print-boolean-1-true     
+        PushD        $boolean-false-string     
+        Jump         -print-boolean-1-join     
+        Label        -print-boolean-1-true     
+        PushD        $boolean-true-string      
+        Label        -print-boolean-1-join     
+        PushD        $print-format-boolean     
         Printf                                 
         Halt                                   

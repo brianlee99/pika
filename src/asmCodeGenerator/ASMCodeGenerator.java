@@ -12,6 +12,7 @@ import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.MainBlockNode;
 import parseTree.nodeTypes.DeclarationNode;
@@ -258,6 +259,34 @@ public class ASMCodeGenerator {
 
 		///////////////////////////////////////////////////////////////////////////
 		// expressions
+		public void visitLeave(CastingExpressionNode node) {
+
+			newValueCode(node);
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			code.append(arg1);
+			
+			Object variant = node.getSignature().getVariant();
+			
+			if(variant instanceof ASMOpcode) {
+				ASMOpcode opcode = (ASMOpcode) variant;
+				code.add(opcode);
+			}
+			else if (variant instanceof SimpleCodeGenerator) {
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+				
+			}
+			else {
+				// TODO: throw an exception
+			}
+			
+		}
+		
 		public void visitLeave(BinaryOperatorNode node) {
 			Lextant operator = node.getOperator();
 			
