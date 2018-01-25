@@ -35,6 +35,7 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
 	ParseNode root;
+	StringLabeller labeller;
 	
 	public static ASMCodeFragment generate(ParseNode syntaxTree) {
 		ASMCodeGenerator codeGenerator = new ASMCodeGenerator(syntaxTree);
@@ -43,6 +44,7 @@ public class ASMCodeGenerator {
 	public ASMCodeGenerator(ParseNode root) {
 		super();
 		this.root = root;
+		this.labeller = new StringLabeller();
 	}
 	
 	public ASMCodeFragment makeASM() {
@@ -245,7 +247,6 @@ public class ASMCodeGenerator {
 				return StoreC;
 			}
 			if (type == PrimitiveType.STRING) {
-				// string logic
 				return StoreI;
 			}
 
@@ -325,7 +326,8 @@ public class ASMCodeGenerator {
 			
 			if (leftNodeType == PrimitiveType.INTEGER ||
 					leftNodeType == PrimitiveType.CHARACTER ||
-					leftNodeType == PrimitiveType.BOOLEAN)
+					leftNodeType == PrimitiveType.BOOLEAN ||
+					leftNodeType == PrimitiveType.STRING)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
 				code.add(FSubtract);
@@ -350,7 +352,8 @@ public class ASMCodeGenerator {
 			else if (operator == Punctuator.EQUALS) {
 				if (leftNodeType == PrimitiveType.INTEGER ||
 						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN)
+						leftNodeType == PrimitiveType.BOOLEAN ||
+						leftNodeType == PrimitiveType.STRING)
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFZero, trueLabel);
@@ -360,7 +363,8 @@ public class ASMCodeGenerator {
 			else if (operator == Punctuator.NOT_EQUALS) {
 				if (leftNodeType == PrimitiveType.INTEGER ||
 						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN) {
+						leftNodeType == PrimitiveType.BOOLEAN ||
+						leftNodeType == PrimitiveType.STRING) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
@@ -467,11 +471,21 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			
 			String preLabel = node.getValue();
-			Labeller labeller = new Labeller("string-constant");
 			
-			String label = labeller.newLabel("");
-			code.add(DLabel, label);
-			code.add(DataS, preLabel);
+			String label;
+			
+			if (labeller.containsLabel(preLabel)) {
+				label = labeller.getLabel(preLabel);
+			}
+			else {
+				label = labeller.createLabel(preLabel);
+				code.add(DLabel, label);
+				code.add(DataS, preLabel);
+			}
+			code.add(PushD, label);
+			
+
+			
 			
 			// check if the string already has a label
 			// if so, just use it, otherwise create a new label
@@ -485,7 +499,8 @@ public class ASMCodeGenerator {
 //				code.add(DataS, contents);
 //			}
 			// push the reference (address of string)
-			code.add(PushD, label);
+			
+			
 			
 		}
 	}
