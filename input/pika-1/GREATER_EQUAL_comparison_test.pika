@@ -1,0 +1,16 @@
+exec {
+
+    
+    const inttrue := 5 >= 2 .
+    const intfalse := 2 >= 5.
+    const secinttrue := 2 >= 2.
+   
+    const floattrue := 5.0 >= 2.0.  
+    const floatfalse := 2.0 >= 5.0.
+    const secfloattrue := 5.0 >= 5.0.
+    
+    
+    print inttrue;intfalse;secinttrue;_n_.
+    print floattrue;floatfalse;secfloattrue;_n_.
+    
+}

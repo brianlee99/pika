@@ -1,0 +1,12 @@
+exec {
+    const firststr := "hi! I'm a none empty string".
+    const newline := "hi! i end without closing quote, but a linefeed
+    .
+    const empty := "".
+    const fakecomment := "I try to #start a comemnt# but failed. ".
+    
+    print firststr;_n_.
+    print empty;_n_.
+    print newline; _n_.
+    print fakecomment; _n_.
+}

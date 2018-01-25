@@ -1,0 +1,13 @@
+exec {
+
+    const intfalse := 5 == 2 .
+    const inttrue := 2 == 2.
+   
+    const floatfalse := 5.0 == 2.0.  
+    const floattrue := 5.0 == 5.0.
+    
+    
+    print intfalse;inttrue;_n_.
+    print floatfalse;floattrue;_n_.
+    
+}

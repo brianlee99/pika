@@ -14,7 +14,7 @@ public class FloatingDivideCodeGenerator implements SimpleCodeGenerator {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
 		
 		fragment.add(ASMOpcode.Duplicate);
-		fragment.add(ASMOpcode.JumpFalse, RunTime.INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR);
+		fragment.add(ASMOpcode.JumpFZero, RunTime.FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR);
 		fragment.add(ASMOpcode.FDivide);
 		
 		return fragment;

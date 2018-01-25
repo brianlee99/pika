@@ -19,8 +19,8 @@ public class RunTime {
 	
 	public static final String GENERAL_RUNTIME_ERROR = "$$general-runtime-error";
 	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$i-divide-by-zero";
+	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	
-	// pika-1
 	public static final String TAB_PRINT_FORMAT   = "$print-format-tab";
 
 	private ASMCodeFragment environmentASM() {
@@ -72,6 +72,7 @@ public class RunTime {
 		
 		generalRuntimeError(frag);
 		integerDivideByZeroError(frag);
+		floatingDivideByZeroError(frag);
 		
 		return frag;
 	}
@@ -97,7 +98,16 @@ public class RunTime {
 		frag.add(PushD, intDivideByZeroMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
-	
+	private void floatingDivideByZeroError(ASMCodeFragment frag) {
+		String floatingDivideByZeroMessage = "$errors-float-divide-by-zero";
+		
+		frag.add(DLabel, floatingDivideByZeroMessage);
+		frag.add(DataS, "float divide by zero");
+		
+		frag.add(Label, FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR);
+		frag.add(PushD, floatingDivideByZeroMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
 	
 	public static ASMCodeFragment getEnvironment() {
 		RunTime rt = new RunTime();

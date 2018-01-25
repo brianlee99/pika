@@ -1,8 +1,7 @@
 exec {
-	var d := "Hello".
-	var e := "Hey".
-	const f := "what is it?".
-	print d, _n_.
-	print e, _n_.
-	print f, _n_.
-} 
+	const x := 12.0.
+	
+	const y := 7.0.
+	const z := x / y.
+	print z.
+}

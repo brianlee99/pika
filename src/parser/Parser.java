@@ -382,9 +382,11 @@ public class Parser {
 		if (!startsParenthesesExpression(nowReading)) {
 			return syntaxErrorNode("parentheses");
 		}
+		readToken();
+		ParseNode expression = parseExpression();
+		expect(Punctuator.CLOSE_PARENTHESES);
 		
-		// TODO: Implement
-		return null;
+		return expression;
 	}
 	
 	private boolean startsParenthesesExpression(Token token) {

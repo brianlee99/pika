@@ -94,72 +94,64 @@
         Label        $$i-divide-by-zero        
         PushD        $errors-int-divide-by-zero 
         Jump         $$general-runtime-error   
-        DLabel       $usable-memory-start      
-        DLabel       $global-memory-block      
-        DataZ        12                        
-        Label        $$main                    
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% d
-        DLabel       -string-constant-1-       
-        DataC        72                        %% "Hello"
-        DataC        101                       
-        DataC        108                       
+        DLabel       $errors-float-divide-by-zero 
+        DataC        102                       %% "float divide by zero"
         DataC        108                       
         DataC        111                       
-        DataC        0                         
-        PushD        -string-constant-1-       
-        StoreI                                 
-        PushD        $global-memory-block      
-        PushI        4                         
-        Add                                    %% e
-        DLabel       -string-constant-2-       
-        DataC        72                        %% "Hey"
-        DataC        101                       
-        DataC        121                       
-        DataC        0                         
-        PushD        -string-constant-2-       
-        StoreI                                 
-        PushD        $global-memory-block      
-        PushI        8                         
-        Add                                    %% f
-        DLabel       -string-constant-3-       
-        DataC        119                       %% "what is it?"
-        DataC        104                       
         DataC        97                        
         DataC        116                       
         DataC        32                        
+        DataC        100                       
         DataC        105                       
-        DataC        115                       
+        DataC        118                       
+        DataC        105                       
+        DataC        100                       
+        DataC        101                       
         DataC        32                        
-        DataC        105                       
-        DataC        116                       
-        DataC        63                        
+        DataC        98                        
+        DataC        121                       
+        DataC        32                        
+        DataC        122                       
+        DataC        101                       
+        DataC        114                       
+        DataC        111                       
         DataC        0                         
-        PushD        -string-constant-3-       
-        StoreI                                 
+        Label        $$f-divide-by-zero        
+        PushD        $errors-float-divide-by-zero 
+        Jump         $$general-runtime-error   
+        DLabel       $usable-memory-start      
+        DLabel       $global-memory-block      
+        DataZ        24                        
+        Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% d
-        LoadI                                  
-        PushD        $print-format-string      
-        Printf                                 
-        PushD        $print-format-newline     
-        Printf                                 
-        PushD        $global-memory-block      
-        PushI        4                         
-        Add                                    %% e
-        LoadI                                  
-        PushD        $print-format-string      
-        Printf                                 
-        PushD        $print-format-newline     
-        Printf                                 
+        Add                                    %% x
+        PushF        12.000000                 
+        StoreF                                 
         PushD        $global-memory-block      
         PushI        8                         
-        Add                                    %% f
-        LoadI                                  
-        PushD        $print-format-string      
-        Printf                                 
-        PushD        $print-format-newline     
+        Add                                    %% y
+        PushF        7.000000                  
+        StoreF                                 
+        PushD        $global-memory-block      
+        PushI        16                        
+        Add                                    %% z
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        LoadF                                  
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% y
+        LoadF                                  
+        Duplicate                              
+        JumpFZero    $$f-divide-by-zero        
+        FDivide                                
+        StoreF                                 
+        PushD        $global-memory-block      
+        PushI        16                        
+        Add                                    %% z
+        LoadF                                  
+        PushD        $print-format-floating    
         Printf                                 
         Halt                                   

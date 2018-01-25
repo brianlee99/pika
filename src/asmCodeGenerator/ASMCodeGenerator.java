@@ -35,7 +35,6 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
 	ParseNode root;
-	// StringLabelGenerator generator;
 	
 	public static ASMCodeFragment generate(ParseNode syntaxTree) {
 		ASMCodeGenerator codeGenerator = new ASMCodeGenerator(syntaxTree);
@@ -44,8 +43,6 @@ public class ASMCodeGenerator {
 	public ASMCodeGenerator(ParseNode root) {
 		super();
 		this.root = root;
-		// create a string label generator
-		// generator = new StringLabelGenerator();
 	}
 	
 	public ASMCodeFragment makeASM() {
