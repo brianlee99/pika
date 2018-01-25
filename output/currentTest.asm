@@ -96,24 +96,70 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        1                         
+        DataZ        12                        
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% d
-        PushI        104                       
-        Nop                                    
-        StoreC                                 
+        DLabel       -string-constant-1-       
+        DataC        72                        %% "Hello"
+        DataC        101                       
+        DataC        108                       
+        DataC        108                       
+        DataC        111                       
+        DataC        0                         
+        PushD        -string-constant-1-       
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        4                         
+        Add                                    %% e
+        DLabel       -string-constant-2-       
+        DataC        72                        %% "Hey"
+        DataC        101                       
+        DataC        121                       
+        DataC        0                         
+        PushD        -string-constant-2-       
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% f
+        DLabel       -string-constant-3-       
+        DataC        119                       %% "what is it?"
+        DataC        104                       
+        DataC        97                        
+        DataC        116                       
+        DataC        32                        
+        DataC        105                       
+        DataC        115                       
+        DataC        32                        
+        DataC        105                       
+        DataC        116                       
+        DataC        63                        
+        DataC        0                         
+        PushD        -string-constant-3-       
+        StoreI                                 
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% d
-        LoadC                                  
-        JumpTrue     -print-boolean-1-true     
-        PushD        $boolean-false-string     
-        Jump         -print-boolean-1-join     
-        Label        -print-boolean-1-true     
-        PushD        $boolean-true-string      
-        Label        -print-boolean-1-join     
-        PushD        $print-format-boolean     
+        LoadI                                  
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-newline     
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        4                         
+        Add                                    %% e
+        LoadI                                  
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-newline     
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% f
+        LoadI                                  
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-newline     
         Printf                                 
         Halt                                   

@@ -1,4 +1,8 @@
 exec {
-	const d := [^h^ | bool ].
-	print d.
+	var d := "Hello".
+	var e := "Hey".
+	const f := "what is it?".
+	print d, _n_.
+	print e, _n_.
+	print f, _n_.
 } 

@@ -344,10 +344,16 @@ public class Parser {
 			return parseCastingExpression();
 		}
 		
+		if (startsParenthesesExpression(nowReading)) {
+			return parseParenthesesExpression();
+		}
+		
 		return parseLiteral();
 	}
 	private boolean startsAtomicExpression(Token token) {
-		return startsLiteral(token) || startsCastingExpression(token);
+		return startsLiteral(token) ||
+				startsCastingExpression(token) ||
+				startsParenthesesExpression(token) ;
 	}
 	
 	
@@ -372,11 +378,18 @@ public class Parser {
 		return (token.isLextant(Punctuator.OPEN_BRACKET));
 	}
 	
-	// private ParseNode parseParenthesesExpression();
+	private ParseNode parseParenthesesExpression() {
+		if (!startsParenthesesExpression(nowReading)) {
+			return syntaxErrorNode("parentheses");
+		}
+		
+		// TODO: Implement
+		return null;
+	}
 	
-//	private boolean startsParenthesesExpression(Token token) {
-//		return (token.isLextant(Punctuator.OPEN_PARENTHESES));
-//	}
+	private boolean startsParenthesesExpression(Token token) {
+		return (token.isLextant(Punctuator.OPEN_PARENTHESES));
+	}
 	
 	private ParseNode parseType() {
 		if(!startsType(nowReading)) {

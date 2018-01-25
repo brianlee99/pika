@@ -35,7 +35,7 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
 	ParseNode root;
-	StringLabelGenerator generator;
+	// StringLabelGenerator generator;
 	
 	public static ASMCodeFragment generate(ParseNode syntaxTree) {
 		ASMCodeGenerator codeGenerator = new ASMCodeGenerator(syntaxTree);
@@ -45,7 +45,7 @@ public class ASMCodeGenerator {
 		super();
 		this.root = root;
 		// create a string label generator
-		generator = new StringLabelGenerator();
+		// generator = new StringLabelGenerator();
 	}
 	
 	public ASMCodeFragment makeASM() {
@@ -471,20 +471,24 @@ public class ASMCodeGenerator {
 		public void visit(StringConstantNode node) {
 			newValueCode(node);
 			
-			String contents = node.getValue();
-			String label;
+			String preLabel = node.getValue();
+			Labeller labeller = new Labeller("string-constant");
+			
+			String label = labeller.newLabel("");
+			code.add(DLabel, label);
+			code.add(DataS, preLabel);
 			
 			// check if the string already has a label
 			// if so, just use it, otherwise create a new label
 			// and add the string to the data segment
-			if (generator.hasString(contents)) {
-				label = generator.findLabel(contents);
-			}
-			else {
-				label = generator.generateLabel(contents);
-				code.add(DLabel, label);
-				code.add(DataS, contents);
-			}
+//			if (generator.hasString(contents)) {
+//				label = generator.findLabel(contents);
+//			}
+//			else {
+//				label = generator.generateLabel(contents);
+//				code.add(DLabel, label);
+//				code.add(DataS, contents);
+//			}
 			// push the reference (address of string)
 			code.add(PushD, label);
 			
