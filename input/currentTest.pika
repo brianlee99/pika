@@ -1,7 +1,14 @@
 exec {
-	const x := 12.0.
+	const x := _false_.
+	const y := _true_.
+	var z := _false_.
+	z := _true_.
 	
-	const y := 7.0.
-	const z := x / y.
-	print z.
+	
+	print y == y;_t_.  # true
+	print x != y;_t_.  # true
+	print x == y;_n_.  # false
+	print y == z;_t_.  # true
+	print x == z;_t_.  # false
+	print x != z;_n_.  # true
 }

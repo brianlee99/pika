@@ -107,9 +107,10 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			FunctionSignature cSignature = new FunctionSignature(1, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER, PrimitiveType.BOOLEAN);
 			FunctionSignature fSignature = new FunctionSignature(1, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.BOOLEAN);
 			FunctionSignature bSignature = new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN);
+			FunctionSignature sSignature = new FunctionSignature(1, PrimitiveType.STRING, PrimitiveType.STRING, PrimitiveType.BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
-				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature);
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature);
 			}
 			else {
 				new FunctionSignatures(comparison, iSignature, cSignature, fSignature);

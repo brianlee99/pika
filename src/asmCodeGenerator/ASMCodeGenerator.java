@@ -324,16 +324,15 @@ public class ASMCodeGenerator {
 			code.add(Label, subLabel);
 			
 			if (leftNodeType == PrimitiveType.INTEGER ||
-					leftNodeType == PrimitiveType.CHARACTER)
+					leftNodeType == PrimitiveType.CHARACTER ||
+					leftNodeType == PrimitiveType.BOOLEAN)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
 				code.add(FSubtract);
 			
-			// we need to check the signature of node, to see if it takes two integers,
-			// two floating, etc.
+			// we need to check the node signatures
 			if (operator == Punctuator.GREATER) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
 					code.add(JumpPos, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFPos, trueLabel);
@@ -341,8 +340,7 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.LESS) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
 					code.add(JumpNeg, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFNeg, trueLabel);
@@ -351,7 +349,8 @@ public class ASMCodeGenerator {
 			}
 			else if (operator == Punctuator.EQUALS) {
 				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER)
+						leftNodeType == PrimitiveType.CHARACTER ||
+						leftNodeType == PrimitiveType.BOOLEAN)
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFZero, trueLabel);
@@ -360,7 +359,8 @@ public class ASMCodeGenerator {
 			}
 			else if (operator == Punctuator.NOT_EQUALS) {
 				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER) {
+						leftNodeType == PrimitiveType.CHARACTER ||
+						leftNodeType == PrimitiveType.BOOLEAN) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
@@ -371,8 +371,7 @@ public class ASMCodeGenerator {
 				
 			}
 			else if (operator == Punctuator.GREATER_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
 					code.add(JumpNeg, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFNeg, falseLabel);
@@ -380,8 +379,7 @@ public class ASMCodeGenerator {
 				code.add(Jump, trueLabel);
 			}
 			else if (operator == Punctuator.LESS_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
-						leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
 					code.add(JumpPos, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFPos, falseLabel);
