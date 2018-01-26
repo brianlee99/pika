@@ -35,7 +35,6 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
 	ParseNode root;
-	StringLabeller labeller;
 	
 	public static ASMCodeFragment generate(ParseNode syntaxTree) {
 		ASMCodeGenerator codeGenerator = new ASMCodeGenerator(syntaxTree);
@@ -44,7 +43,6 @@ public class ASMCodeGenerator {
 	public ASMCodeGenerator(ParseNode root) {
 		super();
 		this.root = root;
-		this.labeller = new StringLabeller();
 	}
 	
 	public ASMCodeFragment makeASM() {
@@ -471,18 +469,25 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			
 			String preLabel = node.getValue();
+			Labeller labeller = new Labeller("string-constant");
 			
-			String label;
+			String label = labeller.newLabel("");
 			
-			if (labeller.containsLabel(preLabel)) {
-				label = labeller.getLabel(preLabel);
-			}
-			else {
-				label = labeller.createLabel(preLabel);
-				code.add(DLabel, label);
-				code.add(DataS, preLabel);
-			}
+			code.add(DLabel, label);
+			code.add(DataS, preLabel);
 			code.add(PushD, label);
+			
+//			String label;
+//			
+//			if (labeller.containsLabel(preLabel)) {
+//				label = labeller.getLabel(preLabel);
+//			}
+//			else {
+//				label = labeller.createLabel(preLabel);
+//				code.add(DLabel, label);
+//				code.add(DataS, preLabel);
+//			}
+//			code.add(PushD, label);
 			
 
 			

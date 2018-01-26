@@ -1,25 +1,12 @@
 exec {
 	const x := "hello".
 	const y := "hello".
-	const z := "Hello".
-	const w := "hello ".
 	
-	print x != z; _n_.  # true
-	print x == y; _n_.  # true
-	print x != y; _n_.  # false
-	print y == z; _n_.  # false
-	print y == w; _n_.  # false
-	print w == x; _n_.  # false
-	print w != z; _n_.  # true
-	print y != w; _n_.  # true
-	
-	var b := "goodbye".
-	print _n_.
-	print b == z; _n_.  # false
-	
-	b := "Hello".
-	
-	print b == z; _n_.  # true
+	print x == y.  				# false
+	print x == x.  				# true.
+	var z := x.
+	print z == x.  				# true
+	print "Hello" == "Hello".   # false
 	
 	
 }
