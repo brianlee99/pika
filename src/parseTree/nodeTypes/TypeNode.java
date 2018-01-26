@@ -15,6 +15,7 @@ public class TypeNode extends ParseNode {
 		super(token);
 		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING));
 		
+		// Assigning a type to a TypeNode is convenient
 		if (token.isLextant(Keyword.BOOL)) {
 			setType(PrimitiveType.BOOLEAN);
 		}

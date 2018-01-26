@@ -141,17 +141,18 @@ public class ASMCodeGenerator {
 			}	
 		}
 		private void turnAddressIntoValue(ASMCodeFragment code, ParseNode node) {
-			if(node.getType() == PrimitiveType.INTEGER) {
+			Type nodeType = node.getType();
+			if(nodeType == PrimitiveType.INTEGER) {
 				code.add(LoadI);
 			}
-			else if(node.getType() == PrimitiveType.FLOATING) {
+			else if(nodeType == PrimitiveType.FLOATING) {
 				code.add(LoadF);
 			}
-			else if(node.getType() == PrimitiveType.BOOLEAN ||
-					node.getType() == PrimitiveType.CHARACTER) {
+			else if(nodeType == PrimitiveType.BOOLEAN ||
+					nodeType == PrimitiveType.CHARACTER) {
 				code.add(LoadC);
 			}	
-			else if (node.getType() == PrimitiveType.STRING) {
+			else if (nodeType == PrimitiveType.STRING) {
 				code.add(LoadI);
 			}
 			else {
@@ -208,7 +209,6 @@ public class ASMCodeGenerator {
 			code.add(Printf);
 		}
 		
-
 		public void visitLeave(DeclarationNode node) {
 			newVoidCode(node);
 			ASMCodeFragment lvalue = removeAddressCode(node.child(0));	
@@ -231,8 +231,7 @@ public class ASMCodeGenerator {
 			Type type = node.child(0).getType();
 			code.add(opcodeForStore(type));
 		}
-		
-		
+	
 		private ASMOpcode opcodeForStore(Type type) {
 			if(type == PrimitiveType.INTEGER) {
 				return StoreI;
@@ -240,8 +239,7 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.FLOATING) {
 				return StoreF;
 			}
-			if(type == PrimitiveType.BOOLEAN ||
-			   type == PrimitiveType.CHARACTER) {
+			if(type == PrimitiveType.BOOLEAN || type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
 			if (type == PrimitiveType.STRING) {
@@ -271,14 +269,12 @@ public class ASMCodeGenerator {
 				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
 				ASMCodeFragment fragment = generator.generate(node);
 				code.append(fragment);
-				
 				if (fragment.isAddress()) {
 					code.markAsAddress();
 				}
-				
 			}
 			else {
-				// TODO: throw an exception
+				assert false : "unknown variant in CastingExpressionNode";
 			}
 			
 		}
@@ -314,7 +310,7 @@ public class ASMCodeGenerator {
 			String trueLabel  = labeller.newLabel("true");
 			String falseLabel = labeller.newLabel("false");
 			String joinLabel  = labeller.newLabel("join");
-			
+
 			newValueCode(node);
 			code.add(Label, startLabel);
 			code.append(arg1);
@@ -329,6 +325,8 @@ public class ASMCodeGenerator {
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
 				code.add(FSubtract);
+			else
+				assert false : "unknown type";
 			
 			// we need to check the node signatures
 			if (operator == Punctuator.GREATER) {
@@ -336,6 +334,8 @@ public class ASMCodeGenerator {
 					code.add(JumpPos, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFPos, trueLabel);
+				else
+					assert false : "type not supported for operation";
 				
 				code.add(Jump, falseLabel);
 			}
@@ -344,6 +344,8 @@ public class ASMCodeGenerator {
 					code.add(JumpNeg, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFNeg, trueLabel);
+				else
+					assert false : "type not supported for operation";
 				
 				code.add(Jump, falseLabel);
 			}
@@ -355,6 +357,8 @@ public class ASMCodeGenerator {
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFZero, trueLabel);
+				else
+					assert false : "type not supported for operation";
 				
 				code.add(Jump, falseLabel);
 			}
@@ -370,13 +374,17 @@ public class ASMCodeGenerator {
 					code.add(JumpFZero, falseLabel);
 					code.add(Jump, trueLabel);
 				}
-				
+				else {
+					assert false : "type not supported for operation";
+				}
 			}
 			else if (operator == Punctuator.GREATER_EQUALS) {
 				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
 					code.add(JumpNeg, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFNeg, falseLabel);
+				else
+					assert false : "type not supported for operation";
 				
 				code.add(Jump, trueLabel);
 			}
@@ -385,8 +393,13 @@ public class ASMCodeGenerator {
 					code.add(JumpPos, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFPos, falseLabel);
+				else
+					assert false : "type not supported for operation";
 				
 				code.add(Jump, trueLabel);
+			}
+			else {
+				assert false : "unrecognized operator";
 			}
 
 			code.add(Label, trueLabel);
@@ -419,10 +432,9 @@ public class ASMCodeGenerator {
 				if (fragment.isAddress()) {
 					code.markAsAddress();
 				}
-				
 			}
 			else {
-				// TODO: throw an exception
+				assert false : "unknown variant in BinaryOperatorNode";
 			}
 			
 //			ASMOpcode opcode = opcodeForOperator(node.getOperator());
@@ -470,43 +482,11 @@ public class ASMCodeGenerator {
 			
 			String preLabel = node.getValue();
 			Labeller labeller = new Labeller("string-constant");
-			
 			String label = labeller.newLabel("");
 			
 			code.add(DLabel, label);
 			code.add(DataS, preLabel);
 			code.add(PushD, label);
-			
-//			String label;
-//			
-//			if (labeller.containsLabel(preLabel)) {
-//				label = labeller.getLabel(preLabel);
-//			}
-//			else {
-//				label = labeller.createLabel(preLabel);
-//				code.add(DLabel, label);
-//				code.add(DataS, preLabel);
-//			}
-//			code.add(PushD, label);
-			
-
-			
-			
-			// check if the string already has a label
-			// if so, just use it, otherwise create a new label
-			// and add the string to the data segment
-//			if (generator.hasString(contents)) {
-//				label = generator.findLabel(contents);
-//			}
-//			else {
-//				label = generator.generateLabel(contents);
-//				code.add(DLabel, label);
-//				code.add(DataS, contents);
-//			}
-			// push the reference (address of string)
-			
-			
-			
 		}
 	}
 

@@ -19,25 +19,13 @@ public class AssignmentNode extends ParseNode {
 		super(node);
 	}
 	
-	
-	////////////////////////////////////////////////////////////
-	// attributes
-	
-	public Lextant getDeclarationType() {
-		return lextantToken().getLextant();
-	}
-	public LextantToken lextantToken() {
-		return (LextantToken)token;
-	}	
-	
-	
 	////////////////////////////////////////////////////////////
 	// convenience factory
 	
-	public static AssignmentNode withChildren(Token token, ParseNode declaredName, ParseNode initializer) {
+	public static AssignmentNode withChildren(Token token, ParseNode declaredName, ParseNode assignedValue) {
 		AssignmentNode node = new AssignmentNode(token);
 		node.appendChild(declaredName);
-		node.appendChild(initializer);
+		node.appendChild(assignedValue);
 		return node;
 	}
 	

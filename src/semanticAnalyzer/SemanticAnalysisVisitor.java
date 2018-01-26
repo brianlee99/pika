@@ -82,29 +82,27 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		
 		Type declarationType = initializer.getType();
 		node.setType(declarationType);
-		
 		identifier.setType(declarationType);
+		
+		// add 'mutable' boolean to binding
 		boolean isMutable = node.getToken().isLextant(Keyword.VAR) ? true : false;
-
 		addBinding(identifier, declarationType, isMutable);
 	}
 	
 	@Override
 	public void visitLeave(AssignmentNode node) {
 		IdentifierNode identifier = (IdentifierNode) node.child(0);
-		ParseNode initializer = node.child(1);
+		ParseNode expression = node.child(1);
 		
 		if (!identifier.isMutable()) {
-			System.err.println("Error: the identifier is a const.");
-			return;
+			logError("the identifier was declared as const at " + node.getToken().getLocation());
 		}
 
-		Type declarationType = initializer.getType();
+		Type expressionType = expression.getType();
 		Type identifierType = identifier.getType();
 		
-		if (declarationType != identifierType) {
-			System.err.println("Error: the declared type and the initializing type are not the same.");
-			return;
+		if (expressionType != identifierType) {
+			logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////
@@ -125,7 +123,7 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			node.setSignature(signature);
 		}
 		else {
-			typeCheckError(node, childTypes);
+			castingTypeCheckError(node, childTypes);
 			node.setType(PrimitiveType.ERROR);
 		}
 	}
@@ -139,6 +137,7 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		ParseNode right = node.child(1);
 		List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
 		
+		// here, the operator is just a [ (casting expression start)
 		Lextant operator = operatorFor(node);
 		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
 		
@@ -153,11 +152,12 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			node.setType(PrimitiveType.ERROR);
 		}
 	}
-	private Lextant operatorFor(BinaryOperatorNode node) {
+	private Lextant operatorFor(CastingExpressionNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
 	}
-	private Lextant operatorFor(CastingExpressionNode node) {
+	
+	private Lextant operatorFor(BinaryOperatorNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
 	}
@@ -218,7 +218,12 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	///////////////////////////////////////////////////////////////////////////
 	// error logging/printing
-
+	private void castingTypeCheckError(ParseNode node, List<Type> operandTypes) {
+		Token token = node.getToken();
+		
+		logError("casting operator not defined for types " 
+				 + operandTypes  + " at " + token.getLocation());	
+	}
 	private void typeCheckError(ParseNode node, List<Type> operandTypes) {
 		Token token = node.getToken();
 		

@@ -13,7 +13,6 @@ public class DeclarationNode extends ParseNode {
 	
 	public DeclarationNode(Token token) {
 		super(token);
-		// this.mutable = false; // by default
 		assert(token.isLextant(Keyword.CONST, Keyword.VAR));
 	}
 

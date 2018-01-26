@@ -144,8 +144,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		
 		if (!c.isDigit()) {
 			// ERROR: the exponent must have a number or sign following E
-			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
-			log.severe("Lexical error: E must be followed by a number or sign");
+			throwLexicalError("E must be followed by a number or sign");
 			return findNextToken();
 		}
 		
@@ -179,8 +178,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		String lexeme = buffer.toString();
 		
 		if (lexeme.length() > 32) {
-			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
-			log.severe("Lexical error: identifier must be at most 32 characters");
+			throwLexicalError("identifier must be at most 32 characters");
 			return findNextToken();
 		}
 		
@@ -241,8 +239,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		while (c.isCommentContinue()) {
 			c = input.next();
 		}
-		// skip the \n or # (which ends a comment)
-		// input.next();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -255,16 +251,13 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			c = input.next();
 		}
 		
-		// valid string
 		if (c.isStringStartOrEnd()) {
 			return StringToken.make(firstChar.getLocation(), buffer.toString());
 		}
+		
 		// invalid string, wasn't terminated with "
-		else {
-			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
-			log.severe("Lexical error: string must terminate with \"");
-			return findNextToken();
-		}
+		throwLexicalError("string must terminate with \"");
+		return findNextToken();
 		
 	}
 	
@@ -276,8 +269,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		LocatedChar c = input.next();
 		
 		if (!c.isValidCharacter()) {
-			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
-			log.severe("Lexical error: character must be between ASCII 32 and 126");
+			throwLexicalError("character must be between ASCII 32 and 126");
 			return findNextToken();
 		}
 		
@@ -287,13 +279,10 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			buffer.append(ch);
 			return CharacterToken.make(firstChar.getLocation(), buffer.toString());
 		}
-		else {
-			PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
-			log.severe("Lexical error: character must terminate with ^");
-			return findNextToken();
-		}
 		
-
+		throwLexicalError("character must terminate with ^");
+		return findNextToken();
+		
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -311,7 +300,12 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	
 	
 	//////////////////////////////////////////////////////////////////////////////
-	// Error-reporting	
+	// Error-reporting
+	
+	private void throwLexicalError(String message) {
+		PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");
+		log.severe("Lexical error: " + message);
+	}
 
 	private void lexicalError(LocatedChar ch) {
 		PikaLogger log = PikaLogger.getLogger("compiler.lexicalAnalyzer");

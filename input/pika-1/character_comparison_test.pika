@@ -1,0 +1,25 @@
+exec {
+    const fal0 := ^ ^ > ^~^.
+    const fal1 := ^ ^ >= ^~^.
+    const fal3 := ^~^ < ^ ^.
+    const fal4 := ^~^ <= ^ ^.
+    const fal5 := ^ ^ == ^~^.
+    const fal6 := ^ ^ != ^ ^.
+    
+    
+    const tru0 := ^ ^ < ^~^.
+    const tru1 := ^ ^ <= ^~^.
+    const tru2 := ^ ^ <= ^ ^.
+    const tru3 := ^~^ > ^ ^.
+    const tru4 := ^~^ >= ^~^.
+    const tru5 := ^ ^ == ^ ^.
+    const tru6 := ^ ^ != ^~^.
+    
+    const tilda := ^~^.
+    const space := ^ ^.
+    const vartrue := ^ ^ <= ^ ^.
+    
+    print fal0;fal1;fal3;fal4;fal5;fal6;_n_.
+    print tru0;;tru1;;tru2;;tru3;;tru4;;tru5;;tru6;;_n_.
+    print vartrue;_n_.
+}

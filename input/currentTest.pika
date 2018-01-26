@@ -1,12 +1,4 @@
 exec {
-	const x := "hello".
-	const y := "hello".
-	
-	print x == y.  				# false
-	print x == x.  				# true.
-	var z := x.
-	print z == x.  				# true
-	print "Hello" == "Hello".   # false
-	
-	
+    var x := ["Goodbye" | bool ].
+    print x.
 }

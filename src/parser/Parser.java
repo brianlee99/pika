@@ -116,9 +116,7 @@ public class Parser {
 		return syntaxErrorNode("statement");
 	}
 	private boolean startsStatement(Token token) {
-		return startsPrintStatement(token) ||
-			   startsDeclaration(token) ||
-			   startsAssignment(token);
+		return startsPrintStatement(token) || startsDeclaration(token) || startsAssignment(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
@@ -232,10 +230,10 @@ public class Parser {
 		
 		ParseNode identifier = parseIdentifier();
 		expect(Punctuator.ASSIGN);
-		ParseNode initializer = parseExpression();
+		ParseNode assignedValue = parseExpression();
 		expect(Punctuator.TERMINATOR);
 		
-		return AssignmentNode.withChildren(assignmentToken, identifier, initializer);
+		return AssignmentNode.withChildren(assignmentToken, identifier, assignedValue);
 	}
 	private boolean startsAssignment(Token token) {
 		return token instanceof IdentifierToken;
@@ -277,8 +275,7 @@ public class Parser {
 				Punctuator.EQUALS,
 				Punctuator.NOT_EQUALS,
 				Punctuator.GREATER_EQUALS,
-				Punctuator.LESS_EQUALS)
-		) {
+				Punctuator.LESS_EQUALS)) {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseAdditiveExpression();
@@ -332,8 +329,6 @@ public class Parser {
 		return startsAtomicExpression(token);
 	}
 	
-	
-	
 	// atomicExpression -> literal
 	private ParseNode parseAtomicExpression() {
 		if(!startsAtomicExpression(nowReading)) {
@@ -351,33 +346,43 @@ public class Parser {
 		return parseLiteral();
 	}
 	private boolean startsAtomicExpression(Token token) {
-		return startsLiteral(token) ||
-				startsCastingExpression(token) ||
-				startsParenthesesExpression(token) ;
+		return startsLiteral(token) || startsCastingExpression(token) || startsParenthesesExpression(token);
 	}
 	
-	
-	
-	// Casting expression is treated as atomic (highest level of precedence)
+	// Casting expression is treated as atomic
 	private ParseNode parseCastingExpression() {
 		if(!startsCastingExpression(nowReading)) {
 			return syntaxErrorNode("casting");
 		}
-		Token declarationToken = nowReading;
+		Token castingToken = nowReading;
 		readToken();
 		
-		ParseNode expression = parseExpression();  // change this.
+		ParseNode expression = parseExpression();
 		expect(Punctuator.BAR);
 		ParseNode targetType = parseType();
 		expect(Punctuator.CLOSE_BRACKET);
 		
-		return CastingExpressionNode.withChildren(declarationToken, expression, targetType);
+		return CastingExpressionNode.withChildren(castingToken, expression, targetType);
 	}
 	
 	private boolean startsCastingExpression(Token token) {
 		return (token.isLextant(Punctuator.OPEN_BRACKET));
 	}
 	
+	// Parsing a Type Node (right side of a casting expression)
+	private ParseNode parseType() {
+		if(!startsType(nowReading)) {
+			return syntaxErrorNode("type");
+		}
+		readToken();
+		return new TypeNode(previouslyRead);
+	}
+	
+	private boolean startsType(Token token) {
+		return token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING);
+	}
+	
+	// Parsing a parentheses-enclosed expression
 	private ParseNode parseParenthesesExpression() {
 		if (!startsParenthesesExpression(nowReading)) {
 			return syntaxErrorNode("parentheses");
@@ -393,16 +398,7 @@ public class Parser {
 		return (token.isLextant(Punctuator.OPEN_PARENTHESES));
 	}
 	
-	private ParseNode parseType() {
-		if(!startsType(nowReading)) {
-			return syntaxErrorNode("type");
-		}
-		readToken();
-		return new TypeNode(previouslyRead);
-	}
-	private boolean startsType(Token token) {
-		return token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING);
-	}
+
 
 	
 	// literal -> number | identifier | booleanConstant | characterConstant
