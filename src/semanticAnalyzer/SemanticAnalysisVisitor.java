@@ -13,7 +13,7 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
-import parseTree.nodeTypes.MainBlockNode;
+import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
@@ -48,9 +48,9 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	public void visitLeave(ProgramNode node) {
 		leaveScope(node);
 	}
-	public void visitEnter(MainBlockNode node) {
+	public void visitEnter(BlockNode node) {
 	}
-	public void visitLeave(MainBlockNode node) {
+	public void visitLeave(BlockNode node) {
 	}
 	
 	

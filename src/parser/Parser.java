@@ -9,7 +9,7 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
-import parseTree.nodeTypes.MainBlockNode;
+import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
@@ -59,7 +59,7 @@ public class Parser {
 		ParseNode program = new ProgramNode(nowReading);
 		
 		expect(Keyword.EXEC);
-		ParseNode mainBlock = parseMainBlock();
+		ParseNode mainBlock = parseBlock();
 		program.appendChild(mainBlock);
 		
 		if(!(nowReading instanceof NullToken)) {
@@ -77,11 +77,11 @@ public class Parser {
 	// mainBlock
 	
 	// mainBlock -> { statement* }
-	private ParseNode parseMainBlock() {
-		if(!startsMainBlock(nowReading)) {
+	private ParseNode parseBlock() {
+		if(!startsBlock(nowReading)) {
 			return syntaxErrorNode("mainBlock");
 		}
-		ParseNode mainBlock = new MainBlockNode(nowReading);
+		ParseNode mainBlock = new BlockNode(nowReading);
 		expect(Punctuator.OPEN_BRACE);
 		
 		while(startsStatement(nowReading)) {
@@ -91,7 +91,7 @@ public class Parser {
 		expect(Punctuator.CLOSE_BRACE);
 		return mainBlock;
 	}
-	private boolean startsMainBlock(Token token) {
+	private boolean startsBlock(Token token) {
 		return token.isLextant(Punctuator.OPEN_BRACE);
 	}
 	
@@ -113,10 +113,13 @@ public class Parser {
 		if(startsPrintStatement(nowReading)) {
 			return parsePrintStatement();
 		}
+		if(startsBlock(nowReading)) {
+			return parseBlock();
+		}
 		return syntaxErrorNode("statement");
 	}
 	private boolean startsStatement(Token token) {
-		return startsPrintStatement(token) || startsDeclaration(token) || startsAssignment(token);
+		return startsPrintStatement(token) || startsDeclaration(token) || startsAssignment(token) || startsBlock(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
