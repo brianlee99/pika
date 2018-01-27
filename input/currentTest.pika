@@ -1,4 +1,29 @@
 exec {
-    var x := ["Goodbye" | bool ].
-    print x.
+    var a := 1.
+    var b := +1.
+    var c := -1.
+    var d := +1000000.
+    var e := -1234567.
+    
+    print a; b; c; d; e.
+    print _n_.
+    
+    var f := +1.0.
+    var g := -22.7.
+    var h := 8.16.
+    var i := +.9.
+    var j := -.330.
+    var k := .16.
+    
+    print f; g; h; i; j; k.
+    print _n_.
+    
+    f := +1.0E12.
+    g := -22.7E+12.
+    h := 8.16E+0.
+    i := +.9E-3.
+    j := 0.0E6.
+    k := 144.8E13.
+    
+    print f; g; h; i; j; k.
 }

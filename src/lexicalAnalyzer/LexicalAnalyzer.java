@@ -80,31 +80,34 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	//////////////////////////////////////////////////////////////////////////////
 	// Integer/floating lexical analysis
 	public boolean isNumberStart(LocatedChar firstChar) {
-		char ch = firstChar.getCharacter();
-		if (firstChar.isDigit())
+		// char ch = firstChar.getCharacter();
+		if (firstChar.isDigit()) {
 			return true;
-		else if (ch == '+' || ch == '-')
+		}
+		else if (firstChar.isSign()) {
 			return numberFollows() || decimalNumberFollows();
-		else if (ch == '.')
+		}
+		else if (firstChar.isDecimal()) {
 			return numberFollows();
-		else
+		}
+		else {
 			return false;
+		}
 	}
 	
 	public boolean decimalNumberFollows() {
-		// peek at the next character
 		LocatedChar c = input.next();
+		
 		boolean isDecimal = c.isDecimal();
-		boolean hasNumberAfterDecimal = isDecimal ? numberFollows() : false;
+		boolean hasNumberAfterDecimal = numberFollows();
+		
 		input.pushback(c);
 		return isDecimal && hasNumberAfterDecimal;
 	}
 	
 	public boolean numberFollows() {
-		LocatedChar c = input.next();
-		boolean result = c.isDigit();
-		input.pushback(c);
-		return result;
+		LocatedChar d = input.peek();
+		return d.isDigit();
 	}
 	
 	private Token scanNumber(LocatedChar firstChar) {
@@ -156,8 +159,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 
 	}
 	
-
-	
 	private void appendSubsequentDigits(StringBuffer buffer) {
 		LocatedChar c = input.next();
 		while(c.isDigit()) {
@@ -170,7 +171,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	
 	//////////////////////////////////////////////////////////////////////////////
 	// Identifier and keyword lexical analysis	
-
 	private Token scanIdentifier(LocatedChar firstChar) {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(firstChar.getCharacter());
@@ -198,7 +198,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 		}
 		input.pushback(c);
 	}
-	
 	
 	//////////////////////////////////////////////////////////////////////////////
 	// Punctuator lexical analysis	
@@ -234,7 +233,6 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 	//////////////////////////////////////////////////////////////////////////////
 	// Comment lexical analysis
 	private void scanComment(LocatedChar firstChar) {
-		// firstChar should be a #, so skip it
 		LocatedChar c = input.next();
 		while (c.isCommentContinue()) {
 			c = input.next();
@@ -255,7 +253,7 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			return StringToken.make(firstChar.getLocation(), buffer.toString());
 		}
 		
-		// invalid string, wasn't terminated with "
+		// invalid string termination
 		throwLexicalError("string must terminate with \"");
 		return findNextToken();
 		
@@ -273,13 +271,14 @@ public class LexicalAnalyzer extends ScannerImp implements Scanner {
 			return findNextToken();
 		}
 		
-		char ch = c.getCharacter();
+		buffer.append(c.getCharacter());
 		c = input.next();
+		
 		if (c.isCharacterStartOrEnd()) {
-			buffer.append(ch);
 			return CharacterToken.make(firstChar.getLocation(), buffer.toString());
 		}
 		
+		// invalid char termination
 		throwLexicalError("character must terminate with ^");
 		return findNextToken();
 		
