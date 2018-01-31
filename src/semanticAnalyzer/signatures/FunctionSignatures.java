@@ -134,8 +134,18 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN),
 			
 			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.STRING, PrimitiveType.STRING, PrimitiveType.STRING)
-			
 		);
+		
+		// OR and AND
+		new FunctionSignatures(Punctuator.OR,
+			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+		);
+		new FunctionSignatures(Punctuator.AND,
+			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+		);
+		
+
+		
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

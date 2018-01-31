@@ -290,6 +290,9 @@ public class ASMCodeGenerator {
 					operator == Punctuator.LESS_EQUALS ) {
 				visitComparisonOperatorNode(node, operator);
 			}
+			else if (operator == Punctuator.OR || operator == Punctuator.AND) {
+				visitBooleanOperatorNode(node, operator);
+			}
 			else {
 				visitNormalBinaryOperatorNode(node);
 			}
@@ -409,8 +412,55 @@ public class ASMCodeGenerator {
 			code.add(PushI, 0);
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
-
 		}
+		private void visitBooleanOperatorNode(BinaryOperatorNode node,
+				Lextant operator) {
+			
+			Type leftNodeType = node.child(0).getType();
+
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			ASMCodeFragment arg2 = removeValueCode(node.child(1));
+			
+			Labeller labeller = new Labeller("compare");
+			
+			String startLabel = labeller.newLabel("arg1");
+			String arg2Label  = labeller.newLabel("arg2");
+			String trueLabel  = labeller.newLabel("true");
+			String falseLabel = labeller.newLabel("false");
+			String joinLabel  = labeller.newLabel("join");
+			
+			String opLabel    = labeller.newLabel("op");
+
+			newValueCode(node);
+			code.add(Label, startLabel);
+			code.append(arg1);
+			code.add(Label, arg2Label);
+			code.append(arg2);
+			code.add(Label, opLabel);
+			
+			// we need to check the node signatures
+			if (operator == Punctuator.OR) {
+				code.add(Or);
+			}
+			else if (operator == Punctuator.AND) {
+				code.add(And);
+			}
+			else {
+				assert false : "unrecognized operator";
+			}
+			
+			code.add(JumpTrue, trueLabel);
+			code.add(Jump, falseLabel);
+			
+			code.add(Label, trueLabel);
+			code.add(PushI, 1);
+			code.add(Jump, joinLabel);
+			code.add(Label, falseLabel);
+			code.add(PushI, 0);
+			code.add(Jump, joinLabel);
+			code.add(Label, joinLabel);
+		}
+		
 		private void visitNormalBinaryOperatorNode(BinaryOperatorNode node) {
 			newValueCode(node);
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));

@@ -251,17 +251,55 @@ public class Parser {
 	// multiplicativeExpression -> atomicExpression [MULT atomicExpression]*  (left-assoc)
 	// atomicExpression         -> literal
 	// literal                  -> intNumber | identifier | booleanConstant (among others)
-
-
 	
+
 	// expr  -> comparisonExpression
 	private ParseNode parseExpression() {		
 		if(!startsExpression(nowReading)) {
 			return syntaxErrorNode("expression");
 		}
-		return parseComparisonExpression();
+		//return parseComparisonExpression();
+		return parseDisjunctionExpression();
 	}
 	private boolean startsExpression(Token token) {
+		return startsDisjunctionExpression(token);
+		//return startsComparisonExpression(token);
+	}
+	
+	// Disjunction and conjunction
+	private ParseNode parseDisjunctionExpression() {
+		if(!startsDisjunctionExpression(nowReading)) {
+			return syntaxErrorNode("or");
+		}
+		ParseNode left = parseConjunctionExpression();
+		// readToken();
+		if (nowReading.isLextant(Punctuator.OR)) {
+			Token compareToken = nowReading;
+			readToken();
+			ParseNode right = parseConjunctionExpression();
+			return BinaryOperatorNode.withChildren(compareToken, left, right);
+		}
+		return left;
+	}
+	private boolean startsDisjunctionExpression(Token token) {
+		return startsConjunctionExpression(token);
+	}
+	
+	private ParseNode parseConjunctionExpression() {
+		if(!startsConjunctionExpression(nowReading)) {
+			return syntaxErrorNode("and");
+		}
+		ParseNode left = parseComparisonExpression();
+		//readToken();
+		if (nowReading.isLextant(Punctuator.AND)) {
+			Token compareToken = nowReading;
+			readToken();
+			ParseNode right = parseComparisonExpression();
+			return BinaryOperatorNode.withChildren(compareToken, left, right);
+		}
+		return left;
+	}
+	private boolean startsConjunctionExpression(Token token) {
 		return startsComparisonExpression(token);
 	}
 
@@ -401,7 +439,6 @@ public class Parser {
 		return (token.isLextant(Punctuator.OPEN_PARENTHESES));
 	}
 	
-
 
 	
 	// literal -> number | identifier | booleanConstant | characterConstant
