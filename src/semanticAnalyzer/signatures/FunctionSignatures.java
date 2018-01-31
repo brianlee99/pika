@@ -144,6 +144,11 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
 		);
 		
+		// NOT
+		new FunctionSignatures(Punctuator.NOT,
+			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+		);
+		
 
 		
 		

@@ -356,18 +356,38 @@ public class Parser {
 			return syntaxErrorNode("multiplicativeExpression");
 		}
 		
-		ParseNode left = parseAtomicExpression();
+		ParseNode left = parseUnaryPrefixExpression();
 		while(nowReading.isLextant(Punctuator.MULTIPLY, Punctuator.DIVIDE)) {
 			Token multiplicativeToken = nowReading;
 			readToken();
-			ParseNode right = parseAtomicExpression();
+			ParseNode right = parseUnaryPrefixExpression();
 			
 			left = BinaryOperatorNode.withChildren(multiplicativeToken, left, right);
 		}
 		return left;
 	}
 	private boolean startsMultiplicativeExpression(Token token) {
-		return startsAtomicExpression(token);
+		//return startsAtomicExpression(token);
+		return startsUnaryPrefixExpression(token);
+	}
+	
+	private ParseNode parseUnaryPrefixExpression() {
+		if(!startsUnaryPrefixExpression(nowReading)) {
+			return syntaxErrorNode("unaryPrefixExpression");
+		}
+		
+		if (startsAtomicExpression(nowReading)) {
+			return parseAtomicExpression();
+		}
+		
+		Token token = nowReading;
+		readToken();
+		ParseNode child = parseAtomicExpression();
+		ParseNode parent = BinaryOperatorNode.withChildren(token, child);
+		return parent;
+	}
+	private boolean startsUnaryPrefixExpression(Token token) {
+		return startsAtomicExpression(token) || token.isLextant(Punctuator.NOT);
 	}
 	
 	// atomicExpression -> literal

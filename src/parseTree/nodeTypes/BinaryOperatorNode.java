@@ -43,6 +43,7 @@ public class BinaryOperatorNode extends ParseNode {
 	////////////////////////////////////////////////////////////
 	// convenience factory
 	
+	// Two children
 	public static BinaryOperatorNode withChildren(Token token, ParseNode left, ParseNode right) {
 		BinaryOperatorNode node = new BinaryOperatorNode(token);
 		node.appendChild(left);
@@ -50,6 +51,12 @@ public class BinaryOperatorNode extends ParseNode {
 		return node;
 	}
 	
+	// One child
+	public static BinaryOperatorNode withChildren(Token token, ParseNode child) {
+		BinaryOperatorNode node = new BinaryOperatorNode(token);
+		node.appendChild(child);
+		return node;
+	}
 	
 	///////////////////////////////////////////////////////////
 	// boilerplate for visitors

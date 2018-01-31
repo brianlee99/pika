@@ -293,6 +293,9 @@ public class ASMCodeGenerator {
 			else if (operator == Punctuator.OR || operator == Punctuator.AND) {
 				visitBooleanOperatorNode(node, operator);
 			}
+			else if (operator == Punctuator.NOT) {
+				visitUnaryOperatorNode(node, operator);
+			}
 			else {
 				visitNormalBinaryOperatorNode(node);
 			}
@@ -444,6 +447,45 @@ public class ASMCodeGenerator {
 			}
 			else if (operator == Punctuator.AND) {
 				code.add(And);
+			}
+			else {
+				assert false : "unrecognized operator";
+			}
+			
+			code.add(JumpTrue, trueLabel);
+			code.add(Jump, falseLabel);
+			
+			code.add(Label, trueLabel);
+			code.add(PushI, 1);
+			code.add(Jump, joinLabel);
+			code.add(Label, falseLabel);
+			code.add(PushI, 0);
+			code.add(Jump, joinLabel);
+			code.add(Label, joinLabel);
+		}
+		
+		private void visitUnaryOperatorNode(BinaryOperatorNode node,
+				Lextant operator) {
+			
+			Type leftNodeType = node.child(0).getType();
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			
+			Labeller labeller = new Labeller("compare");
+			
+			String startLabel = labeller.newLabel("arg1");
+			String trueLabel  = labeller.newLabel("true");
+			String falseLabel = labeller.newLabel("false");
+			String joinLabel  = labeller.newLabel("join");
+			String opLabel    = labeller.newLabel("op");
+
+			newValueCode(node);
+			code.add(Label, startLabel);
+			code.append(arg1);
+			code.add(Label, opLabel);
+			
+			// we need to check the node signatures
+			if (operator == Punctuator.NOT) {
+				code.add(BNegate);
 			}
 			else {
 				assert false : "unrecognized operator";

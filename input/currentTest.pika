@@ -1,5 +1,5 @@
 exec {
-	const x := _true_ && _true_ .
+	const x := !(3 > 2).
 	
 	print x.
 	

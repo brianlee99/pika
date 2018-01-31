@@ -130,28 +130,53 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
 	///////////////////////////////////////////////////////////////////////////
 	// expressions
+	
+	// TODO: Refactor to get rid of duplicate code
 	@Override
 	public void visitLeave(BinaryOperatorNode node) {
-		assert node.nChildren() == 2;
-		ParseNode left  = node.child(0);
-		ParseNode right = node.child(1);
-		List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
-		
-		// here, the operator is just a [ (casting expression start)
-		Lextant operator = operatorFor(node);
-		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-		
-		FunctionSignature signature = signatures.acceptingSignature(childTypes);
-		
-		if(signature.accepts(childTypes)) {
-			node.setType(signature.resultType());
-			node.setSignature(signature);
+		if (node.nChildren() == 2) {
+			ParseNode left  = node.child(0);
+			ParseNode right = node.child(1);
+			List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
+			
+			// here, the operator is just a [ (casting expression start)
+			Lextant operator = operatorFor(node);
+			FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+			
+			FunctionSignature signature = signatures.acceptingSignature(childTypes);
+			
+			if(signature.accepts(childTypes)) {
+				node.setType(signature.resultType());
+				node.setSignature(signature);
+			}
+			else {
+				typeCheckError(node, childTypes);
+				node.setType(PrimitiveType.ERROR);
+			}
+		}
+		else if (node.nChildren() == 1) {
+			ParseNode left  = node.child(0);
+			List<Type> childTypes = Arrays.asList(left.getType());
+			
+			Lextant operator = operatorFor(node);
+			FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+			
+			FunctionSignature signature = signatures.acceptingSignature(childTypes);
+			
+			if(signature.accepts(childTypes)) {
+				node.setType(signature.resultType());
+				node.setSignature(signature);
+			}
+			else {
+				typeCheckError(node, childTypes);
+				node.setType(PrimitiveType.ERROR);
+			}
 		}
 		else {
-			typeCheckError(node, childTypes);
-			node.setType(PrimitiveType.ERROR);
+			assert false;
 		}
 	}
+	
 	private Lextant operatorFor(CastingExpressionNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();

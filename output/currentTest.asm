@@ -126,13 +126,14 @@
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
+        Label        -compare-2-arg1           
         Label        -compare-1-arg1           
-        PushI        1                         
+        PushI        3                         
         Label        -compare-1-arg2           
-        PushI        1                         
-        Label        -compare-1-op             
-        And                                    
-        JumpTrue     -compare-1-true           
+        PushI        2                         
+        Label        -compare-1-sub            
+        Subtract                               
+        JumpPos      -compare-1-true           
         Jump         -compare-1-false          
         Label        -compare-1-true           
         PushI        1                         
@@ -141,17 +142,28 @@
         PushI        0                         
         Jump         -compare-1-join           
         Label        -compare-1-join           
+        Label        -compare-2-op             
+        BNegate                                
+        JumpTrue     -compare-2-true           
+        Jump         -compare-2-false          
+        Label        -compare-2-true           
+        PushI        1                         
+        Jump         -compare-2-join           
+        Label        -compare-2-false          
+        PushI        0                         
+        Jump         -compare-2-join           
+        Label        -compare-2-join           
         StoreC                                 
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
         LoadC                                  
-        JumpTrue     -print-boolean-2-true     
+        JumpTrue     -print-boolean-3-true     
         PushD        $boolean-false-string     
-        Jump         -print-boolean-2-join     
-        Label        -print-boolean-2-true     
+        Jump         -print-boolean-3-join     
+        Label        -print-boolean-3-true     
         PushD        $boolean-true-string      
-        Label        -print-boolean-2-join     
+        Label        -print-boolean-3-join     
         PushD        $print-format-boolean     
         Printf                                 
         Halt                                   
