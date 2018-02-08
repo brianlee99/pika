@@ -116,10 +116,13 @@ public class Parser {
 		if(startsBlock(nowReading)) {
 			return parseBlock();
 		}
+		if(startsControlFlowStatement(nowReading)) {
+			return parseControlFlowStatement();
+		}
 		return syntaxErrorNode("statement");
 	}
 	private boolean startsStatement(Token token) {
-		return startsPrintStatement(token) || startsDeclaration(token) || startsAssignment(token) || startsBlock(token);
+		return startsPrintStatement(token) || startsDeclaration(token) || startsAssignment(token) || startsBlock(token) || startsControlFlowStatement(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
@@ -241,6 +244,101 @@ public class Parser {
 	private boolean startsAssignment(Token token) {
 		return token instanceof IdentifierToken;
 	}
+	
+	// e.g. if (condition) { block statement }
+	// or while (condition { block statement}
+	private ParseNode parseControlFlowStatement() {
+		if (!startsControlFlowStatement(nowReading)) {
+			return syntaxErrorNode("control flow");
+		}
+		
+		if (startsIfStatement(nowReading)) {
+			return parseIfStatement();
+		}
+		if (startsWhileStatement(nowReading)) {
+			return parseWhileStatement();
+		}
+	}
+	
+	private ParseNode parseIfStatement() {
+		
+		Token controlFlowToken = nowReading;
+		
+		ParseNode expression = parseExpression();
+		ParseNode thenStatement = parseBlock();
+		ParseNode elseStatement = null;
+		
+		if (startsElseStatement(nowReading)) {
+			expect(Keyword.ELSE);
+			Token elseToken = previouslyRead;
+			
+			elseStatement = parseBlock();
+			
+		}
+		
+		return ControlFlowStatementNode.withChildren()
+		
+		
+//		Token assignmentToken = nowReading;
+//		//readToken();
+//		
+//		ParseNode identifier = parseIdentifier();
+//		expect(Punctuator.ASSIGN);
+//		ParseNode assignedValue = parseExpression();
+//		expect(Punctuator.TERMINATOR);
+//		
+//		return AssignmentNode.withChildren(assignmentToken, identifier, assignedValue);
+		
+		return null;
+	}	
+	private ParseNode parseWhileStatement() {
+		
+		Token controlFlowToken = nowReading;
+		
+		ParseNode expression = parseExpression();
+		ParseNode thenStatement = parseBlock();
+		ParseNode elseStatement = null;
+		
+		if (startsElseStatement(nowReading)) {
+			expect(Keyword.ELSE);
+			Token elseToken = previouslyRead;
+			
+			elseStatement = parseBlock();
+			
+		}
+		
+		return ControlFlowStatementNode.withChildren()
+		
+		
+//		Token assignmentToken = nowReading;
+//		//readToken();
+//		
+//		ParseNode identifier = parseIdentifier();
+//		expect(Punctuator.ASSIGN);
+//		ParseNode assignedValue = parseExpression();
+//		expect(Punctuator.TERMINATOR);
+//		
+//		return AssignmentNode.withChildren(assignmentToken, identifier, assignedValue);
+		
+		return null;
+	}
+	
+	private boolean startsControlFlowStatement(Token token) {
+		return token.isLextant(Keyword.IF, Keyword.WHILE);
+	}
+	
+	private boolean startsIfStatement(Token token) {
+		return token.isLextant(Keyword.IF);
+	}
+	private boolean startsWhileStatement(Token token) {
+		return token.isLextant(Keyword.WHILE;
+	}
+	
+	private boolean startsElseStatement(Token token) {
+		return token.isLextant(Keyword.ELSE);
+	}
+	
+	
 	
 
 	///////////////////////////////////////////////////////////
