@@ -50,7 +50,7 @@ public class FunctionSignature {
 	// main query
 
 	public boolean accepts(List<Type> types) {
-		resetTypeVariables();
+		// resetTypeVariables();
 		
 		if(types.size() != paramTypes.length) {
 			return false;

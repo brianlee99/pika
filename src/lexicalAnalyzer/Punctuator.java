@@ -29,6 +29,9 @@ public enum Punctuator implements Lextant {
 	AND("&&"),
 	OR("||"),
 	NOT("!"),
+	OVER("//"),
+	EXPRESS_OVER("///"),
+	RATIONALIZE("////"),
 	CASTING(""),
 	ARRAY_INDEXING(""),
 	NULL_PUNCTUATOR("");

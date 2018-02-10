@@ -121,19 +121,16 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        1                         
+        DataZ        0                         
         Label        $$main                    
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
+        Label        -compare-4-arg1           
+        Label        -compare-3-arg1           
         Label        -compare-2-arg1           
         Label        -compare-1-arg1           
-        PushI        3                         
-        Label        -compare-1-arg2           
-        PushI        2                         
-        Label        -compare-1-sub            
-        Subtract                               
-        JumpPos      -compare-1-true           
+        PushI        1                         
+        Label        -compare-1-op             
+        BNegate                                
+        JumpTrue     -compare-1-true           
         Jump         -compare-1-false          
         Label        -compare-1-true           
         PushI        1                         
@@ -153,17 +150,127 @@
         PushI        0                         
         Jump         -compare-2-join           
         Label        -compare-2-join           
-        StoreC                                 
-        PushD        $global-memory-block      
+        Label        -compare-3-op             
+        BNegate                                
+        JumpTrue     -compare-3-true           
+        Jump         -compare-3-false          
+        Label        -compare-3-true           
+        PushI        1                         
+        Jump         -compare-3-join           
+        Label        -compare-3-false          
         PushI        0                         
-        Add                                    %% x
-        LoadC                                  
-        JumpTrue     -print-boolean-3-true     
+        Jump         -compare-3-join           
+        Label        -compare-3-join           
+        Label        -compare-4-op             
+        BNegate                                
+        JumpTrue     -compare-4-true           
+        Jump         -compare-4-false          
+        Label        -compare-4-true           
+        PushI        1                         
+        Jump         -compare-4-join           
+        Label        -compare-4-false          
+        PushI        0                         
+        Jump         -compare-4-join           
+        Label        -compare-4-join           
+        JumpTrue     -print-boolean-5-true     
         PushD        $boolean-false-string     
-        Jump         -print-boolean-3-join     
-        Label        -print-boolean-3-true     
+        Jump         -print-boolean-5-join     
+        Label        -print-boolean-5-true     
         PushD        $boolean-true-string      
-        Label        -print-boolean-3-join     
+        Label        -print-boolean-5-join     
+        PushD        $print-format-boolean     
+        Printf                                 
+        Label        -compare-12-arg1          
+        Label        -compare-11-arg1          
+        Label        -compare-10-arg1          
+        Label        -compare-9-arg1           
+        Label        -compare-8-arg1           
+        Label        -compare-7-arg1           
+        Label        -compare-6-arg1           
+        PushI        1                         
+        Label        -compare-6-op             
+        BNegate                                
+        JumpTrue     -compare-6-true           
+        Jump         -compare-6-false          
+        Label        -compare-6-true           
+        PushI        1                         
+        Jump         -compare-6-join           
+        Label        -compare-6-false          
+        PushI        0                         
+        Jump         -compare-6-join           
+        Label        -compare-6-join           
+        Label        -compare-7-op             
+        BNegate                                
+        JumpTrue     -compare-7-true           
+        Jump         -compare-7-false          
+        Label        -compare-7-true           
+        PushI        1                         
+        Jump         -compare-7-join           
+        Label        -compare-7-false          
+        PushI        0                         
+        Jump         -compare-7-join           
+        Label        -compare-7-join           
+        Label        -compare-8-op             
+        BNegate                                
+        JumpTrue     -compare-8-true           
+        Jump         -compare-8-false          
+        Label        -compare-8-true           
+        PushI        1                         
+        Jump         -compare-8-join           
+        Label        -compare-8-false          
+        PushI        0                         
+        Jump         -compare-8-join           
+        Label        -compare-8-join           
+        Label        -compare-9-op             
+        BNegate                                
+        JumpTrue     -compare-9-true           
+        Jump         -compare-9-false          
+        Label        -compare-9-true           
+        PushI        1                         
+        Jump         -compare-9-join           
+        Label        -compare-9-false          
+        PushI        0                         
+        Jump         -compare-9-join           
+        Label        -compare-9-join           
+        Label        -compare-10-op            
+        BNegate                                
+        JumpTrue     -compare-10-true          
+        Jump         -compare-10-false         
+        Label        -compare-10-true          
+        PushI        1                         
+        Jump         -compare-10-join          
+        Label        -compare-10-false         
+        PushI        0                         
+        Jump         -compare-10-join          
+        Label        -compare-10-join          
+        Label        -compare-11-op            
+        BNegate                                
+        JumpTrue     -compare-11-true          
+        Jump         -compare-11-false         
+        Label        -compare-11-true          
+        PushI        1                         
+        Jump         -compare-11-join          
+        Label        -compare-11-false         
+        PushI        0                         
+        Jump         -compare-11-join          
+        Label        -compare-11-join          
+        Label        -compare-12-op            
+        BNegate                                
+        JumpTrue     -compare-12-true          
+        Jump         -compare-12-false         
+        Label        -compare-12-true          
+        PushI        1                         
+        Jump         -compare-12-join          
+        Label        -compare-12-false         
+        PushI        0                         
+        Jump         -compare-12-join          
+        Label        -compare-12-join          
+        JumpTrue     -print-boolean-13-true    
+        PushD        $boolean-false-string     
+        Jump         -print-boolean-13-join    
+        Label        -print-boolean-13-true    
+        PushD        $boolean-true-string      
+        Label        -print-boolean-13-join    
         PushD        $print-format-boolean     
         Printf                                 
         Halt                                   

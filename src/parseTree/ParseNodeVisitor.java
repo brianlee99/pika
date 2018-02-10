@@ -5,6 +5,7 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
+import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
@@ -46,6 +47,9 @@ public interface ParseNodeVisitor {
 	
 	void visitEnter(ProgramNode node);
 	void visitLeave(ProgramNode node);
+	
+	void visitEnter(ControlFlowStatementNode node);
+	void visitLeave(ControlFlowStatementNode node);
 
 
 	// leaf nodes: visitLeaf only
@@ -122,7 +126,12 @@ public interface ParseNodeVisitor {
 		public void visitLeave(ProgramNode node) {
 			defaultVisitLeave(node);
 		}
-		
+		public void visitEnter(ControlFlowStatementNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(ControlFlowStatementNode node) {
+			defaultVisitLeave(node);
+		}
 
 		public void visit(BooleanConstantNode node) {
 			defaultVisitForLeaf(node);
@@ -157,5 +166,9 @@ public interface ParseNodeVisitor {
 		public void visit(TypeNode node) {
 			defaultVisitForLeaf(node);
 		}
+		public void visit(ControlFlowStatementNode node) {
+			defaultVisitForLeaf(node);
+		}
 	}
+
 }

@@ -4,3 +4,9 @@
 /semanticAnalyzer/
 /parser/
 /parseTree/
+/applications/
+/inputHandler/
+/logging/
+/optimizer/
+/symbolTable/
+/tests/

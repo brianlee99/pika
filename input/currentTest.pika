@@ -1,6 +1,4 @@
 exec {
-	const x := !(3 > 2).
-	
-	print x.
-	
+	print !!!! _true_ .
+	print !!!!!!!_true_.
 }

@@ -13,6 +13,7 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
+import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
@@ -176,6 +177,18 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			assert false;
 		}
 	}
+	
+	// Todo: Probably should check if the left side evaluates to a boolean or something.
+	@Override
+	public void visitLeave(ControlFlowStatementNode node) {
+		ParseNode condition = node.child(0);
+		System.out.println("test");
+		ParseNode thenStatement = node.child(1);
+		if (node.nChildren() == 3) {
+			ParseNode elseStatement = node.child(2);
+		}
+	}
+	
 	
 	private Lextant operatorFor(CastingExpressionNode node) {
 		LextantToken token = (LextantToken) node.getToken();

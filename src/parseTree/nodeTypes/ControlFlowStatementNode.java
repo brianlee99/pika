@@ -5,22 +5,22 @@ import parseTree.ParseNodeVisitor;
 import lexicalAnalyzer.Keyword;
 import tokens.Token;
 
-public class IfStatementNode extends ParseNode {
+public class ControlFlowStatementNode extends ParseNode {
 	
-	public IfStatementNode(Token token) {
+	public ControlFlowStatementNode(Token token) {
 		super(token);
-		assert(token.isLextant(Keyword.IF));
+		assert(token.isLextant(Keyword.IF, Keyword.WHILE));
 	}
 
-	public IfStatementNode(ParseNode node) {
+	public ControlFlowStatementNode(ParseNode node) {
 		super(node);
 	}
 
 	
 	////////////////////////////////////////////////////////////
 	// attributes
-	public static IfStatementNode withChildren(Token token, ParseNode ... children) {
-		IfStatementNode node = new IfStatementNode(token);
+	public static ControlFlowStatementNode withChildren(Token token, ParseNode ... children) {
+		ControlFlowStatementNode node = new ControlFlowStatementNode(token);
 		for (ParseNode child : children) {
 			node.appendChild(child);
 		}

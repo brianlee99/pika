@@ -6,6 +6,7 @@ import java.util.Map;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import asmCodeGenerator.runtime.RunTime;
+import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
 import parseTree.*;
@@ -14,6 +15,7 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
+import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.FloatingConstantNode;
@@ -277,6 +279,27 @@ public class ASMCodeGenerator {
 				assert false : "unknown variant in CastingExpressionNode";
 			}
 			
+		}
+		
+		public void visitLeave(ControlFlowStatementNode node) {
+			if (! node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
+				assert false;
+			}
+			Lextant controlFlowType = (Lextant) node.getToken();
+			
+			if (controlFlowType == Keyword.IF) {
+				// check that the result evaluates to true
+				// if so, jump to the "loop" label
+				
+				// or alternatively, if not, jump to the "end" label
+			}
+			else {
+				// similarly to If, check that the result evaluates to true
+				// if so, jump to the loop label
+				// if not, then jump outside the loop
+				
+				// at the end of the loop, jump back to the comparison
+			}
 		}
 		
 		public void visitLeave(BinaryOperatorNode node) {

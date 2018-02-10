@@ -79,23 +79,42 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 
 		new FunctionSignatures(Punctuator.ADD,
 		    new FunctionSignature(ASMOpcode.Add, INTEGER, INTEGER, INTEGER),
-		    new FunctionSignature(ASMOpcode.FAdd, FLOATING, FLOATING, FLOATING)
+		    new FunctionSignature(ASMOpcode.FAdd, FLOATING, FLOATING, FLOATING),
+		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.SUBTRACT,
 		    new FunctionSignature(ASMOpcode.Subtract, INTEGER, INTEGER, INTEGER),
-		    new FunctionSignature(ASMOpcode.FSubtract, FLOATING, FLOATING, FLOATING)
+		    new FunctionSignature(ASMOpcode.FSubtract, FLOATING, FLOATING, FLOATING),
+		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.MULTIPLY,
 			new FunctionSignature(ASMOpcode.Multiply, INTEGER, INTEGER, INTEGER),
-			new FunctionSignature(ASMOpcode.FMultiply, FLOATING, FLOATING, FLOATING)
+			new FunctionSignature(ASMOpcode.FMultiply, FLOATING, FLOATING, FLOATING),
+		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.DIVIDE,
 			new FunctionSignature(new IntegerDivideCodeGenerator(), INTEGER, INTEGER, INTEGER),
-			new FunctionSignature(new FloatingDivideCodeGenerator(), FLOATING, FLOATING, FLOATING)
+			new FunctionSignature(new FloatingDivideCodeGenerator(), FLOATING, FLOATING, FLOATING),
+		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
 		);
+		
+		// Rational initialization
+		new FunctionSignatures(Punctuator.OVER,
+			new FunctionSignature(1, INTEGER, INTEGER, RATIONAL)
+		);
+		
+		new FunctionSignatures(Punctuator.EXPRESS_OVER,
+			new FunctionSignature(1, RATIONAL, INTEGER, INTEGER),
+			new FunctionSignature(1, FLOATING, INTEGER, INTEGER)
+		);
+		
+		new FunctionSignatures(Punctuator.RATIONALIZE,
+			new FunctionSignature(1, RATIONAL, INTEGER, RATIONAL),
+			new FunctionSignature(1, FLOATING, INTEGER, RATIONAL)
+		);	
 		
 		Punctuator[] comparisons = {
 			Punctuator.GREATER,
@@ -127,17 +146,24 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, INTEGER, INTEGER),
+			new FunctionSignature(1, INTEGER, RATIONAL, RATIONAL),
 			
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, CHARACTER, CHARACTER),
+			new FunctionSignature(1, CHARACTER, RATIONAL, RATIONAL),
 			
 			new FunctionSignature(ASMOpcode.ConvertI, FLOATING, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, FLOATING, FLOATING, FLOATING),
+			new FunctionSignature(1, FLOATING, RATIONAL, RATIONAL),
 
 			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
 			
-			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING)
+			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING),
+			
+			new FunctionSignature(ASMOpcode.Nop, RATIONAL, RATIONAL, RATIONAL),
+			new FunctionSignature(1, RATIONAL, FLOATING, FLOATING),
+			new FunctionSignature(1, RATIONAL, INTEGER, INTEGER)
 		);
 		
 		// OR and AND

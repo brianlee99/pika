@@ -9,11 +9,13 @@ import parseTree.nodeTypes.BinaryOperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
+import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
 import parseTree.nodeTypes.IdentifierNode;
+import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
@@ -22,6 +24,7 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import parseTree.nodeTypes.TypeNode;
+import parseTree.nodeTypes.WhileStatementNode;
 import tokens.*;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -258,69 +261,38 @@ public class Parser {
 		if (startsWhileStatement(nowReading)) {
 			return parseWhileStatement();
 		}
+		
+		return syntaxErrorNode("control flow");
 	}
 	
 	private ParseNode parseIfStatement() {
 		
-		Token controlFlowToken = nowReading;
-		
+		Token ifToken = nowReading;
+		readToken();
+		expect(Punctuator.OPEN_PARENTHESES);
 		ParseNode expression = parseExpression();
+		expect(Punctuator.CLOSE_PARENTHESES);
 		ParseNode thenStatement = parseBlock();
-		ParseNode elseStatement = null;
 		
 		if (startsElseStatement(nowReading)) {
-			expect(Keyword.ELSE);
-			Token elseToken = previouslyRead;
-			
-			elseStatement = parseBlock();
+			// expect(Keyword.ELSE);
+			Token elseToken = nowReading;
+			readToken();
+			ParseNode elseStatement = parseBlock();
+			return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement, elseStatement);
 			
 		}
-		
-		return ControlFlowStatementNode.withChildren()
-		
-		
-//		Token assignmentToken = nowReading;
-//		//readToken();
-//		
-//		ParseNode identifier = parseIdentifier();
-//		expect(Punctuator.ASSIGN);
-//		ParseNode assignedValue = parseExpression();
-//		expect(Punctuator.TERMINATOR);
-//		
-//		return AssignmentNode.withChildren(assignmentToken, identifier, assignedValue);
-		
-		return null;
+		return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement);
 	}	
 	private ParseNode parseWhileStatement() {
-		
-		Token controlFlowToken = nowReading;
-		
+		Token whileToken = nowReading;
+		readToken();
+		expect(Punctuator.OPEN_PARENTHESES);
 		ParseNode expression = parseExpression();
+		expect(Punctuator.CLOSE_PARENTHESES);
 		ParseNode thenStatement = parseBlock();
-		ParseNode elseStatement = null;
 		
-		if (startsElseStatement(nowReading)) {
-			expect(Keyword.ELSE);
-			Token elseToken = previouslyRead;
-			
-			elseStatement = parseBlock();
-			
-		}
-		
-		return ControlFlowStatementNode.withChildren()
-		
-		
-//		Token assignmentToken = nowReading;
-//		//readToken();
-//		
-//		ParseNode identifier = parseIdentifier();
-//		expect(Punctuator.ASSIGN);
-//		ParseNode assignedValue = parseExpression();
-//		expect(Punctuator.TERMINATOR);
-//		
-//		return AssignmentNode.withChildren(assignmentToken, identifier, assignedValue);
-		
-		return null;
+		return ControlFlowStatementNode.withChildren(whileToken, expression, thenStatement);
 	}
 	
 	private boolean startsControlFlowStatement(Token token) {
@@ -331,7 +303,7 @@ public class Parser {
 		return token.isLextant(Keyword.IF);
 	}
 	private boolean startsWhileStatement(Token token) {
-		return token.isLextant(Keyword.WHILE;
+		return token.isLextant(Keyword.WHILE);
 	}
 	
 	private boolean startsElseStatement(Token token) {
@@ -480,7 +452,7 @@ public class Parser {
 		
 		Token token = nowReading;
 		readToken();
-		ParseNode child = parseAtomicExpression();
+		ParseNode child = parseUnaryPrefixExpression();
 		ParseNode parent = BinaryOperatorNode.withChildren(token, child);
 		return parent;
 	}
