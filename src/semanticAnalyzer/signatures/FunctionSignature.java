@@ -50,6 +50,8 @@ public class FunctionSignature {
 	// main query
 
 	public boolean accepts(List<Type> types) {
+		resetTypeVariables();
+		
 		if(types.size() != paramTypes.length) {
 			return false;
 		}
@@ -65,8 +67,10 @@ public class FunctionSignature {
 		if(valueType == PrimitiveType.ERROR && ALL_TYPES_ACCEPT_ERROR_TYPES) {
 			return true;
 		}	
-		return variableType.equals(valueType);
+		return variableType.equivalent(valueType);
 	}
+	
+	
 	
 	// Null object pattern
 	private static FunctionSignature neverMatchedSignature = new FunctionSignature(1, PrimitiveType.ERROR) {

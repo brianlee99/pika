@@ -5,13 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import semanticAnalyzer.types.PrimitiveType;
+import semanticAnalyzer.types.Array;
+import static semanticAnalyzer.types.PrimitiveType.*;
+
+import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
+import semanticAnalyzer.types.TypeVariable;
 
 
 public class FunctionSignatures extends ArrayList<FunctionSignature> {
@@ -71,26 +75,26 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	
 	static {
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
-		// for this to work, you should statically import PrimitiveType.*
+		// for this to work, you should statically import *
 
 		new FunctionSignatures(Punctuator.ADD,
-		    new FunctionSignature(ASMOpcode.Add, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-		    new FunctionSignature(ASMOpcode.FAdd, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		    new FunctionSignature(ASMOpcode.Add, INTEGER, INTEGER, INTEGER),
+		    new FunctionSignature(ASMOpcode.FAdd, FLOATING, FLOATING, FLOATING)
 		);
 		
 		new FunctionSignatures(Punctuator.SUBTRACT,
-		    new FunctionSignature(ASMOpcode.Subtract, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-		    new FunctionSignature(ASMOpcode.FSubtract, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+		    new FunctionSignature(ASMOpcode.Subtract, INTEGER, INTEGER, INTEGER),
+		    new FunctionSignature(ASMOpcode.FSubtract, FLOATING, FLOATING, FLOATING)
 		);
 		
 		new FunctionSignatures(Punctuator.MULTIPLY,
-			new FunctionSignature(ASMOpcode.Multiply, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-			new FunctionSignature(ASMOpcode.FMultiply, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+			new FunctionSignature(ASMOpcode.Multiply, INTEGER, INTEGER, INTEGER),
+			new FunctionSignature(ASMOpcode.FMultiply, FLOATING, FLOATING, FLOATING)
 		);
 		
 		new FunctionSignatures(Punctuator.DIVIDE,
-			new FunctionSignature(new IntegerDivideCodeGenerator(), PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-			new FunctionSignature(new FloatingDivideCodeGenerator(), PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING)
+			new FunctionSignature(new IntegerDivideCodeGenerator(), INTEGER, INTEGER, INTEGER),
+			new FunctionSignature(new FloatingDivideCodeGenerator(), FLOATING, FLOATING, FLOATING)
 		);
 		
 		Punctuator[] comparisons = {
@@ -103,11 +107,11 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		};
 		
 		for (Punctuator comparison : comparisons) {
-			FunctionSignature iSignature = new FunctionSignature(1, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN);
-			FunctionSignature cSignature = new FunctionSignature(1, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER, PrimitiveType.BOOLEAN);
-			FunctionSignature fSignature = new FunctionSignature(1, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.BOOLEAN);
-			FunctionSignature bSignature = new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN);
-			FunctionSignature sSignature = new FunctionSignature(1, PrimitiveType.STRING, PrimitiveType.STRING, PrimitiveType.BOOLEAN);
+			FunctionSignature iSignature = new FunctionSignature(1, INTEGER, INTEGER, BOOLEAN);
+			FunctionSignature cSignature = new FunctionSignature(1, CHARACTER, CHARACTER, BOOLEAN);
+			FunctionSignature fSignature = new FunctionSignature(1, FLOATING, FLOATING, BOOLEAN);
+			FunctionSignature bSignature = new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN);
+			FunctionSignature sSignature = new FunctionSignature(1, STRING, STRING, BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
 				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature);
@@ -119,37 +123,44 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		
 		// For Type Casting
 		new FunctionSignatures(Punctuator.OPEN_BRACKET,
-			new FunctionSignature(ASMOpcode.ConvertF, PrimitiveType.INTEGER, PrimitiveType.FLOATING, PrimitiveType.FLOATING),
-			new FunctionSignature(new IntegerToCharacterCodeGenerator(), PrimitiveType.INTEGER, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER),
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.INTEGER, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN),
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.INTEGER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
+			new FunctionSignature(ASMOpcode.ConvertF, INTEGER, FLOATING, FLOATING),
+			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
+			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
+			new FunctionSignature(ASMOpcode.Nop, INTEGER, INTEGER, INTEGER),
 			
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.CHARACTER, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.CHARACTER, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN),
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER, PrimitiveType.CHARACTER),
+			new FunctionSignature(ASMOpcode.Nop, CHARACTER, INTEGER, INTEGER),
+			new FunctionSignature(ASMOpcode.Nop, CHARACTER, BOOLEAN, BOOLEAN),
+			new FunctionSignature(ASMOpcode.Nop, CHARACTER, CHARACTER, CHARACTER),
 			
-			new FunctionSignature(ASMOpcode.ConvertI, PrimitiveType.FLOATING, PrimitiveType.INTEGER, PrimitiveType.INTEGER),
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.FLOATING, PrimitiveType.FLOATING, PrimitiveType.FLOATING),
+			new FunctionSignature(ASMOpcode.ConvertI, FLOATING, INTEGER, INTEGER),
+			new FunctionSignature(ASMOpcode.Nop, FLOATING, FLOATING, FLOATING),
 
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN),
+			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
 			
-			new FunctionSignature(ASMOpcode.Nop, PrimitiveType.STRING, PrimitiveType.STRING, PrimitiveType.STRING)
+			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING)
 		);
 		
 		// OR and AND
 		new FunctionSignatures(Punctuator.OR,
-			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+			new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN)
 		);
 		new FunctionSignatures(Punctuator.AND,
-			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+			new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN)
 		);
 		
 		// NOT
 		new FunctionSignatures(Punctuator.NOT,
-			new FunctionSignature(1, PrimitiveType.BOOLEAN, PrimitiveType.BOOLEAN)
+			new FunctionSignature(1, BOOLEAN, BOOLEAN)
 		);
 		
-
+		TypeVariable S = new TypeVariable("S");
+		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
+			new FunctionSignature(
+				new ArrayIndexingCodeGenerator(),
+				new Array(S), INTEGER, S
+			)
+		);
+						
 		
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.

@@ -29,6 +29,8 @@ public enum Punctuator implements Lextant {
 	AND("&&"),
 	OR("||"),
 	NOT("!"),
+	CASTING(""),
+	ARRAY_INDEXING(""),
 	NULL_PUNCTUATOR("");
 
 	private String lexeme;

@@ -36,4 +36,17 @@ public class TypeVariable implements Type {
 		return "<" + getName() + ">";
 	}
 
+	@Override
+	public boolean equivalent(Type otherType) {
+		if (otherType instanceof TypeVariable) {
+			throw new RuntimeException(
+					"equals attempted on two types containing type variables.");
+		}
+		if (this.getTypeConstraint() == PrimitiveType.NO_TYPE) {
+			setType(otherType);
+			return true;
+		}
+		return this.getTypeConstraint().equivalent(otherType);
+	}
+
 }

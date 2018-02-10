@@ -14,4 +14,6 @@ public interface Type {
 	 * @return string representation of type.
 	 */
 	public String infoString();
+	
+	public boolean equivalent(Type otherType);
 }

@@ -27,4 +27,9 @@ public enum PrimitiveType implements Type {
 	public String infoString() {
 		return infoString;
 	}
+	
+	@Override
+	public boolean equivalent(Type otherType) {
+		return this == otherType;
+	}
 }
