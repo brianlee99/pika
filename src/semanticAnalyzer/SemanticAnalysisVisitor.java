@@ -9,7 +9,7 @@ import logging.PikaLogger;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.AssignmentNode;
-import parseTree.nodeTypes.BinaryOperatorNode;
+import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -134,7 +134,8 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	// TODO: Refactor to get rid of duplicate code
 	@Override
-	public void visitLeave(BinaryOperatorNode node) {
+	public void visitLeave(OperatorNode node) {
+		// binary operator
 		if (node.nChildren() == 2) {
 			ParseNode left  = node.child(0);
 			ParseNode right = node.child(1);
@@ -155,6 +156,7 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 				node.setType(PrimitiveType.ERROR);
 			}
 		}
+		// unary operator
 		else if (node.nChildren() == 1) {
 			ParseNode left  = node.child(0);
 			List<Type> childTypes = Arrays.asList(left.getType());
@@ -182,7 +184,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
 		ParseNode condition = node.child(0);
-		System.out.println("test");
 		ParseNode thenStatement = node.child(1);
 		if (node.nChildren() == 3) {
 			ParseNode elseStatement = node.child(2);
@@ -195,7 +196,7 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		return token.getLextant();
 	}
 	
-	private Lextant operatorFor(BinaryOperatorNode node) {
+	private Lextant operatorFor(OperatorNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
 	}

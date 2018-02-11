@@ -12,6 +12,7 @@ import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
+import asmCodeGenerator.RationalInitializerCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
@@ -103,7 +104,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		
 		// Rational initialization
 		new FunctionSignatures(Punctuator.OVER,
-			new FunctionSignature(1, INTEGER, INTEGER, RATIONAL)
+			new FunctionSignature(new RationalInitializerCodeGenerator(), INTEGER, INTEGER, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.EXPRESS_OVER,

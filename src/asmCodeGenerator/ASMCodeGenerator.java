@@ -11,7 +11,7 @@ import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
 import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
-import parseTree.nodeTypes.BinaryOperatorNode;
+import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -150,10 +150,15 @@ public class ASMCodeGenerator {
 			else if(nodeType == PrimitiveType.FLOATING) {
 				code.add(LoadF);
 			}
-			else if(nodeType == PrimitiveType.BOOLEAN ||
-					nodeType == PrimitiveType.CHARACTER) {
+			else if(nodeType == PrimitiveType.BOOLEAN) {
 				code.add(LoadC);
-			}	
+			}
+			else if (nodeType == PrimitiveType.CHARACTER) {
+				code.add(LoadC);
+			}
+			else if (nodeType == PrimitiveType.RATIONAL) {
+				code.add(LoadI);
+			}
 			else if (nodeType == PrimitiveType.STRING) {
 				code.add(LoadI);
 			}
@@ -241,8 +246,15 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.FLOATING) {
 				return StoreF;
 			}
-			if(type == PrimitiveType.BOOLEAN || type == PrimitiveType.CHARACTER) {
+			if(type == PrimitiveType.BOOLEAN) {
 				return StoreC;
+			}
+			if(type == PrimitiveType.CHARACTER) {
+				return StoreC;
+			}
+			// TODO : find a way to store and load rationals
+			if(type == PrimitiveType.RATIONAL) {
+				return StoreI;
 			}
 			if (type == PrimitiveType.STRING) {
 				return StoreI;
@@ -285,24 +297,57 @@ public class ASMCodeGenerator {
 			if (! node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
 				assert false;
 			}
-			Lextant controlFlowType = (Lextant) node.getToken();
+			Lextant controlFlowType = node.getControlFlowType();
 			
 			if (controlFlowType == Keyword.IF) {
-				// check that the result evaluates to true
-				// if so, jump to the "loop" label
+				ASMCodeFragment conditionCode = removeValueCode(node.child(0));
+				ASMCodeFragment thenCode = removeVoidCode(node.child(1));
 				
-				// or alternatively, if not, jump to the "end" label
+				Labeller labeller = new Labeller("if");
+				String falseLabel = labeller.newLabel("false");
+				String endLabel   = labeller.newLabel("end");
+				
+				newVoidCode(node);
+				code.append(conditionCode);
+				code.add(JumpFalse, falseLabel);
+				
+				// true code
+				code.append(thenCode);
+				code.add(Jump, endLabel);
+				
+				// false code
+				code.add(Label, falseLabel);
+				if (node.nChildren() == 3) {
+					code.append(removeVoidCode(node.child(2)));
+				}
+				
+				code.add(Label, endLabel);
+			}
+			else if (controlFlowType == Keyword.WHILE) {
+				ASMCodeFragment conditionCode = removeValueCode(node.child(0));
+				ASMCodeFragment loopCode = removeVoidCode(node.child(1));
+				
+				Labeller labeller = new Labeller("while");
+				String loopLabel = labeller.newLabel("loop");
+				String endLabel   = labeller.newLabel("end");
+				
+				newVoidCode(node);
+				code.add(Label, loopLabel);
+				code.append(conditionCode);
+				code.add(JumpFalse, endLabel);
+				
+				// loop body
+				code.append(loopCode);
+				code.add(Jump, loopLabel);
+
+				code.add(Label, endLabel);
 			}
 			else {
-				// similarly to If, check that the result evaluates to true
-				// if so, jump to the loop label
-				// if not, then jump outside the loop
-				
-				// at the end of the loop, jump back to the comparison
+				assert false;
 			}
 		}
 		
-		public void visitLeave(BinaryOperatorNode node) {
+		public void visitLeave(OperatorNode node) {
 			Lextant operator = node.getOperator();
 			
 			if(operator == Punctuator.GREATER ||
@@ -323,7 +368,7 @@ public class ASMCodeGenerator {
 				visitNormalBinaryOperatorNode(node);
 			}
 		}
-		private void visitComparisonOperatorNode(BinaryOperatorNode node,
+		private void visitComparisonOperatorNode(OperatorNode node,
 				Lextant operator) {
 			
 			Type leftNodeType = node.child(0).getType();
@@ -439,7 +484,7 @@ public class ASMCodeGenerator {
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
 		}
-		private void visitBooleanOperatorNode(BinaryOperatorNode node,
+		private void visitBooleanOperatorNode(OperatorNode node,
 				Lextant operator) {
 			
 			Type leftNodeType = node.child(0).getType();
@@ -487,7 +532,7 @@ public class ASMCodeGenerator {
 			code.add(Label, joinLabel);
 		}
 		
-		private void visitUnaryOperatorNode(BinaryOperatorNode node,
+		private void visitUnaryOperatorNode(OperatorNode node,
 				Lextant operator) {
 			
 			Type leftNodeType = node.child(0).getType();
@@ -526,7 +571,7 @@ public class ASMCodeGenerator {
 			code.add(Label, joinLabel);
 		}
 		
-		private void visitNormalBinaryOperatorNode(BinaryOperatorNode node) {
+		private void visitNormalBinaryOperatorNode(OperatorNode node) {
 			newValueCode(node);
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import logging.PikaLogger;
 import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
-import parseTree.nodeTypes.BinaryOperatorNode;
+import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -255,64 +255,61 @@ public class Parser {
 			return syntaxErrorNode("control flow");
 		}
 		
-		if (startsIfStatement(nowReading)) {
-			return parseIfStatement();
-		}
-		if (startsWhileStatement(nowReading)) {
-			return parseWhileStatement();
-		}
-		
-		return syntaxErrorNode("control flow");
+        Token controlFlowToken = nowReading;
+        readToken();
+        expect(Punctuator.OPEN_PARENTHESES);
+        ParseNode expression = parseExpression();
+        expect(Punctuator.CLOSE_PARENTHESES);
+        ParseNode thenStatement = parseBlock();
+        
+        if (controlFlowToken.isLextant(Keyword.IF) && startsElseStatement(nowReading)) {
+            // expect(Keyword.ELSE);
+            readToken();
+            ParseNode elseStatement = parseBlock();
+            return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement, elseStatement);
+            
+        }
+        return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement);
+        
 	}
-	
-	private ParseNode parseIfStatement() {
-		
-		Token ifToken = nowReading;
-		readToken();
-		expect(Punctuator.OPEN_PARENTHESES);
-		ParseNode expression = parseExpression();
-		expect(Punctuator.CLOSE_PARENTHESES);
-		ParseNode thenStatement = parseBlock();
-		
-		if (startsElseStatement(nowReading)) {
-			// expect(Keyword.ELSE);
-			Token elseToken = nowReading;
-			readToken();
-			ParseNode elseStatement = parseBlock();
-			return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement, elseStatement);
-			
-		}
-		return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement);
-	}	
-	private ParseNode parseWhileStatement() {
-		Token whileToken = nowReading;
-		readToken();
-		expect(Punctuator.OPEN_PARENTHESES);
-		ParseNode expression = parseExpression();
-		expect(Punctuator.CLOSE_PARENTHESES);
-		ParseNode thenStatement = parseBlock();
-		
-		return ControlFlowStatementNode.withChildren(whileToken, expression, thenStatement);
-	}
+//	
+//	private ParseNode parseIfStatement() {
+//		
+//		Token ifToken = nowReading;
+//		readToken();
+//		expect(Punctuator.OPEN_PARENTHESES);
+//		ParseNode expression = parseExpression();
+//		expect(Punctuator.CLOSE_PARENTHESES);
+//		ParseNode thenStatement = parseBlock();
+//		
+//		if (startsElseStatement(nowReading)) {
+//			// expect(Keyword.ELSE);
+//			Token elseToken = nowReading;
+//			readToken();
+//			ParseNode elseStatement = parseBlock();
+//			return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement, elseStatement);
+//			
+//		}
+//		return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement);
+//	}	
+//	private ParseNode parseWhileStatement() {
+//		Token whileToken = nowReading;
+//		readToken();
+//		expect(Punctuator.OPEN_PARENTHESES);
+//		ParseNode expression = parseExpression();
+//		expect(Punctuator.CLOSE_PARENTHESES);
+//		ParseNode thenStatement = parseBlock();
+//		
+//		return ControlFlowStatementNode.withChildren(whileToken, expression, thenStatement);
+//	}
 	
 	private boolean startsControlFlowStatement(Token token) {
 		return token.isLextant(Keyword.IF, Keyword.WHILE);
 	}
 	
-	private boolean startsIfStatement(Token token) {
-		return token.isLextant(Keyword.IF);
-	}
-	private boolean startsWhileStatement(Token token) {
-		return token.isLextant(Keyword.WHILE);
-	}
-	
 	private boolean startsElseStatement(Token token) {
 		return token.isLextant(Keyword.ELSE);
 	}
-	
-	
-	
-
 	///////////////////////////////////////////////////////////
 	// expressions
 	// expr                     -> comparisonExpression
@@ -347,7 +344,7 @@ public class Parser {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseConjunctionExpression();
-			return BinaryOperatorNode.withChildren(compareToken, left, right);
+			return OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
 	}
@@ -365,7 +362,7 @@ public class Parser {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseComparisonExpression();
-			return BinaryOperatorNode.withChildren(compareToken, left, right);
+			return OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
 	}
@@ -391,7 +388,7 @@ public class Parser {
 			readToken();
 			ParseNode right = parseAdditiveExpression();
 			
-			return BinaryOperatorNode.withChildren(compareToken, left, right);
+			return OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
 
@@ -412,7 +409,7 @@ public class Parser {
 			readToken();
 			ParseNode right = parseMultiplicativeExpression();
 			
-			left = BinaryOperatorNode.withChildren(additiveToken, left, right);
+			left = OperatorNode.withChildren(additiveToken, left, right);
 		}
 		return left;
 	}
@@ -437,7 +434,7 @@ public class Parser {
 			readToken();
 			ParseNode right = parseUnaryPrefixExpression();
 			
-			left = BinaryOperatorNode.withChildren(multiplicativeToken, left, right);
+			left = OperatorNode.withChildren(multiplicativeToken, left, right);
 		}
 		return left;
 	}
@@ -458,7 +455,7 @@ public class Parser {
 		Token token = nowReading;
 		readToken();
 		ParseNode child = parseUnaryPrefixExpression();
-		ParseNode parent = BinaryOperatorNode.withChildren(token, child);
+		ParseNode parent = OperatorNode.withChildren(token, child);
 		return parent;
 	}
 	private boolean startsUnaryPrefixExpression(Token token) {
