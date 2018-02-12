@@ -270,38 +270,7 @@ public class Parser {
             
         }
         return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement);
-        
 	}
-//	
-//	private ParseNode parseIfStatement() {
-//		
-//		Token ifToken = nowReading;
-//		readToken();
-//		expect(Punctuator.OPEN_PARENTHESES);
-//		ParseNode expression = parseExpression();
-//		expect(Punctuator.CLOSE_PARENTHESES);
-//		ParseNode thenStatement = parseBlock();
-//		
-//		if (startsElseStatement(nowReading)) {
-//			// expect(Keyword.ELSE);
-//			Token elseToken = nowReading;
-//			readToken();
-//			ParseNode elseStatement = parseBlock();
-//			return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement, elseStatement);
-//			
-//		}
-//		return ControlFlowStatementNode.withChildren(ifToken, expression, thenStatement);
-//	}	
-//	private ParseNode parseWhileStatement() {
-//		Token whileToken = nowReading;
-//		readToken();
-//		expect(Punctuator.OPEN_PARENTHESES);
-//		ParseNode expression = parseExpression();
-//		expect(Punctuator.CLOSE_PARENTHESES);
-//		ParseNode thenStatement = parseBlock();
-//		
-//		return ControlFlowStatementNode.withChildren(whileToken, expression, thenStatement);
-//	}
 	
 	private boolean startsControlFlowStatement(Token token) {
 		return token.isLextant(Keyword.IF, Keyword.WHILE);
@@ -320,20 +289,18 @@ public class Parser {
 	// literal                  -> intNumber | identifier | booleanConstant (among others)
 	
 
-	// expr  -> comparisonExpression
+	// expr  -> disjunctionExpression
 	private ParseNode parseExpression() {		
 		if(!startsExpression(nowReading)) {
 			return syntaxErrorNode("expression");
 		}
-		//return parseComparisonExpression();
 		return parseDisjunctionExpression();
 	}
 	private boolean startsExpression(Token token) {
 		return startsDisjunctionExpression(token);
-		//return startsComparisonExpression(token);
 	}
 	
-	// Disjunction and conjunction
+	// disjunctionExpression -> conjunctionExpression ( || conjunctionExpression)
 	private ParseNode parseDisjunctionExpression() {
 		if(!startsDisjunctionExpression(nowReading)) {
 			return syntaxErrorNode("or");
@@ -352,6 +319,7 @@ public class Parser {
 		return startsConjunctionExpression(token);
 	}
 	
+	// conjunctionExpression -> comparisonExpression ( && comparisonExpression)
 	private ParseNode parseConjunctionExpression() {
 		if(!startsConjunctionExpression(nowReading)) {
 			return syntaxErrorNode("and");
@@ -487,7 +455,11 @@ public class Parser {
 		if(!startsCastingExpression(nowReading)) {
 			return syntaxErrorNode("casting");
 		}
-		Token castingToken = nowReading;
+		Token realToken = nowReading;
+		Token castingToken = LextantToken.artificial(realToken, Punctuator.CASTING);
+		
+		// Token castingToken = nowReading;  // no
+		
 		readToken();
 		
 		ParseNode expression = parseExpression();

@@ -53,6 +53,7 @@ public class ASMCodeGenerator {
 		code.append( RunTime.getEnvironment() );
 		code.append( globalVariableBlockASM() );
 		code.append( programASM() );
+//		code.append( RunTime.lowestTerms() );
 //		code.append( MemoryManager.codeForAfterApplication() );
 		
 		return code;
@@ -73,6 +74,7 @@ public class ASMCodeGenerator {
 		code.add(    Label, RunTime.MAIN_PROGRAM_LABEL);
 		code.append( programCode());
 		code.add(    Halt );
+	
 		
 		return code;
 	}

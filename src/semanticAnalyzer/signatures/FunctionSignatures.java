@@ -10,8 +10,10 @@ import static semanticAnalyzer.types.PrimitiveType.*;
 
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
+import asmCodeGenerator.FloatingExpressOverCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
+import asmCodeGenerator.RationalExpressOverCodeGenerator;
 import asmCodeGenerator.RationalInitializerCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Punctuator;
@@ -108,8 +110,8 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		);
 		
 		new FunctionSignatures(Punctuator.EXPRESS_OVER,
-			new FunctionSignature(1, RATIONAL, INTEGER, INTEGER),
-			new FunctionSignature(1, FLOATING, INTEGER, INTEGER)
+			new FunctionSignature(new RationalExpressOverCodeGenerator(), RATIONAL, INTEGER, INTEGER),
+			new FunctionSignature(new FloatingExpressOverCodeGenerator(), FLOATING, INTEGER, INTEGER)
 		);
 		
 		new FunctionSignatures(Punctuator.RATIONALIZE,
@@ -142,7 +144,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		}
 		
 		// For Type Casting
-		new FunctionSignatures(Punctuator.OPEN_BRACKET,
+		new FunctionSignatures(Punctuator.CASTING,
 			new FunctionSignature(ASMOpcode.ConvertF, INTEGER, FLOATING, FLOATING),
 			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
