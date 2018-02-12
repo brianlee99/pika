@@ -1,10 +1,13 @@
 package asmCodeGenerator;
 
+import static asmCodeGenerator.codeStorage.ASMOpcode.Call;
 import static asmCodeGenerator.codeStorage.ASMOpcode.Jump;
 import static asmCodeGenerator.codeStorage.ASMOpcode.JumpTrue;
 import static asmCodeGenerator.codeStorage.ASMOpcode.Label;
 import static asmCodeGenerator.codeStorage.ASMOpcode.Printf;
 import static asmCodeGenerator.codeStorage.ASMOpcode.PushD;
+import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
+
 import parseTree.ParseNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
@@ -42,12 +45,19 @@ public class PrintStatementGenerator {
 	}
 
 	private void appendPrintCode(ParseNode node) {
-		String format = printFormat(node.getType());
+		Type type = node.getType();
+		if (type == PrimitiveType.RATIONAL) {
+			code.append(visitor.removeValueCode(node));
+			code.add(Call, RunTime.PRINTF_RATIONAL);
+		}
+		else {
+			String format = printFormat(node.getType());
+			code.append(visitor.removeValueCode(node));
+			convertToStringIfBoolean(node);
+			code.add(PushD, format);
+			code.add(Printf);
+		}
 
-		code.append(visitor.removeValueCode(node));
-		convertToStringIfBoolean(node);
-		code.add(PushD, format);
-		code.add(Printf);
 	}
 	private void convertToStringIfBoolean(ParseNode node) {
 		if(node.getType() != PrimitiveType.BOOLEAN) {
@@ -76,7 +86,7 @@ public class PrintStatementGenerator {
 		case BOOLEAN:	return RunTime.BOOLEAN_PRINT_FORMAT;
 		case CHARACTER: return RunTime.CHARACTER_PRINT_FORMAT;
 		case STRING:	return RunTime.STRING_PRINT_FORMAT;
-		case RATIONAL:  return RunTime.RATIONAL_PRINT_FORMAT;
+		// case RATIONAL:  return RunTime.RATIONAL_PRINT_FORMAT;
 		default:		
 			assert false : "Type " + type + " unimplemented in PrintStatementGenerator.printFormat()";
 			return "";

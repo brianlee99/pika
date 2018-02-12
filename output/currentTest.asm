@@ -57,6 +57,10 @@
         DataZ        4                         
         DLabel       $denominator-2            
         DataZ        4                         
+        DLabel       $quotient                 
+        DataZ        4                         
+        DLabel       $remainder                
+        DataZ        4                         
         Label        $lowest-terms             
         PushD        $return-address           
         Exchange                               
@@ -249,6 +253,61 @@
         PushD        $return-address           
         LoadI                                  
         Return                                 
+        Label        $printf-rational          
+        PushD        $return-address           
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $denominator-1            
+        LoadI                                  
+        Divide                                 
+        PushD        $quotient                 
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $denominator-1            
+        LoadI                                  
+        Remainder                              
+        PushD        $remainder                
+        Exchange                               
+        StoreI                                 
+        PushD        $quotient                 
+        LoadI                                  
+        JumpFalse    $no-leading-number        
+        PushD        $quotient                 
+        LoadI                                  
+        PushD        $print-format-integer     
+        Printf                                 
+        Label        $no-leading-number        
+        PushD        $remainder                
+        LoadI                                  
+        JumpFalse    $no-remainder             
+        PushI        95                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushD        $remainder                
+        LoadI                                  
+        PushD        $print-format-integer     
+        Printf                                 
+        PushI        47                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushD        $denominator-1            
+        LoadI                                  
+        PushD        $print-format-integer     
+        Printf                                 
+        Label        $no-remainder             
+        PushD        $return-address           
+        LoadI                                  
+        Return                                 
         DLabel       $errors-general-message   
         DataC        82                        %% "Runtime error: %s\n"
         DataC        117                       
@@ -376,18 +435,16 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        8                         
+        DataZ        0                         
         Label        $$main                    
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
+        PushI        86                        
+        PushI        66                        
+        Call         $lowest-terms             
+        Call         $printf-rational          
+        PushD        $print-format-space       
+        Printf                                 
         PushI        10                        
-        PushI        20                        
+        PushI        3                         
         Call         $lowest-terms             
-        PushI        0                         
-        PushI        40                        
-        Call         $lowest-terms             
-        Call         $rational-divide          
-        Call         $lowest-terms             
-        StoreF                                 
+        Call         $printf-rational          
         Halt                                   

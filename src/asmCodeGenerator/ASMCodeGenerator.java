@@ -5,6 +5,7 @@ import java.util.Map;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
+import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import asmCodeGenerator.runtime.RunTime;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -33,6 +34,8 @@ import symbolTable.Binding;
 import symbolTable.Scope;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
+import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
+import static asmCodeGenerator.runtime.RunTime.RATIONAL_MULTIPLY;
 
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
@@ -158,6 +161,12 @@ public class ASMCodeGenerator {
 				code.add(LoadC);
 			}
 			else if (nodeType == PrimitiveType.RATIONAL) {
+				// needs to bring up both num and denom
+				code.add(Duplicate);
+				code.add(LoadI);
+				code.add(Exchange);
+				code.add(PushI, 4);
+				code.add(Add);
 				code.add(LoadI);
 			}
 			else if (nodeType == PrimitiveType.STRING) {
@@ -224,9 +233,50 @@ public class ASMCodeGenerator {
 			
 			code.append(lvalue);
 			code.append(rvalue);
-			
 			Type type = node.getType();
-			code.add(opcodeForStore(type));
+			if (type == PrimitiveType.RATIONAL) {
+				code.append(rationalFragmentForStore());
+			}
+			else {
+				code.add(opcodeForStore(type));
+			}
+		}
+		
+		private ASMCodeFragment rationalFragmentForStore() {
+			ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VOID);
+
+			// [addr num denom] -> [addr num denom addr]
+			// save num and denum in temp variables
+			Macros.storeITo(fragment, "$denominator-1");
+
+			Macros.storeITo(fragment, "$numerator-1");
+			// make a copy of addr
+			fragment.add(Duplicate);
+			// bring back num
+			Macros.loadIFrom(fragment, "$numerator-1");
+
+			// swap					[addr num addr]
+			fragment.add(Exchange);
+			
+			// bring back denom     [addr num addr denom]
+			Macros.loadIFrom(fragment, "$denominator-1");
+			
+			// swap                 [addr num denom addr]
+			fragment.add(Exchange);
+			
+			// add 4                [addr num denom addr+4]
+			fragment.add(PushI, 4);
+			fragment.add(Add);
+			
+			// swap                 [addr num addr+4 denom]
+			fragment.add(Exchange);
+
+			fragment.add(StoreI);
+			fragment.add(StoreI);
+			
+
+			return fragment;
+			
 		}
 		
 		public void visitLeave(AssignmentNode node) {
@@ -237,7 +287,12 @@ public class ASMCodeGenerator {
 			code.append(rvalue);
 			
 			Type type = node.child(0).getType();
+			if (type == PrimitiveType.RATIONAL) {
+				code.append(rationalFragmentForStore());
+			}
 			code.add(opcodeForStore(type));
+			
+			
 		}
 	
 		private ASMOpcode opcodeForStore(Type type) {
@@ -253,9 +308,8 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
-			// TODO : find a way to store and load rationals
 			if(type == PrimitiveType.RATIONAL) {
-				return StoreF;
+				return StoreI;
 			}
 			if (type == PrimitiveType.STRING) {
 				return StoreI;
@@ -265,6 +319,7 @@ public class ASMCodeGenerator {
 			return null;
 		}
 
+		
 
 		///////////////////////////////////////////////////////////////////////////
 		// expressions

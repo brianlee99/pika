@@ -20,6 +20,7 @@ import asmCodeGenerator.RationalExpressOverCodeGenerator;
 import asmCodeGenerator.RationalInitializerCodeGenerator;
 import asmCodeGenerator.RationalMultiplicationCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
+import asmCodeGenerator.RationalToFloatingCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
@@ -172,7 +173,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			
 			new FunctionSignature(ASMOpcode.Nop, RATIONAL, RATIONAL, RATIONAL),
 			new FunctionSignature(new RationalToFloatingCodeGenerator(), RATIONAL, FLOATING, FLOATING),
-			new FunctionSignature(new RationalToIntegerCodeGenerator(), RATIONAL, INTEGER, INTEGER)
+			new FunctionSignature(ASMOpcode.Divide, RATIONAL, INTEGER, INTEGER)
 		);
 		
 		// OR and AND

@@ -8,14 +8,18 @@ import asmCodeGenerator.codeStorage.ASMOpcode;
 import asmCodeGenerator.runtime.RunTime;
 import parseTree.ParseNode;
 
-public class RationalToIntegerCodeGenerator implements SimpleCodeGenerator {
+public class RationalToFloatingCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
 		
-		// simply add a denominator of 1
-		fragment.add(PushI, 1);
+		// turn both to floats, then divide
+		fragment.add(ConvertF);
+		fragment.add(Exchange);
+		fragment.add(ConvertF);
+		fragment.add(Exchange);
+		fragment.add(FDivide);
 		
 		return fragment;
 		

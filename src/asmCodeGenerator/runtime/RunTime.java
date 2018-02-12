@@ -3,6 +3,7 @@ import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
+import static asmCodeGenerator.Macros.*;
 public class RunTime {
 	public static final String EAT_LOCATION_ZERO      = "$eat-location-zero";		// helps us distinguish null pointers from real ones.
 	public static final String INTEGER_PRINT_FORMAT   = "$print-format-integer";
@@ -13,37 +14,40 @@ public class RunTime {
 	public static final String RATIONAL_PRINT_FORMAT  = "$print-format-rational";
 	public static final String NEWLINE_PRINT_FORMAT   = "$print-format-newline";
 	public static final String SPACE_PRINT_FORMAT     = "$print-format-space";
+	public static final String TAB_PRINT_FORMAT       = "$print-format-tab";
 	public static final String BOOLEAN_TRUE_STRING    = "$boolean-true-string";
 	public static final String BOOLEAN_FALSE_STRING   = "$boolean-false-string";
 	public static final String GLOBAL_MEMORY_BLOCK    = "$global-memory-block";
 	public static final String USABLE_MEMORY_START    = "$usable-memory-start";
 	public static final String MAIN_PROGRAM_LABEL     = "$$main";
 	
-	public static final String GENERAL_RUNTIME_ERROR = "$$general-runtime-error";
-	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$i-divide-by-zero";
+	public static final String GENERAL_RUNTIME_ERROR                 = "$$general-runtime-error";
+	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR  = "$$i-divide-by-zero";
 	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	public static final String RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$r-divide-by-zero";
 	
 	public static final String DENOMINATOR_ZERO_RUNTIME_ERROR = "$$denominator-zero";
 	
-	public static final String TAB_PRINT_FORMAT   = "$print-format-tab";
 	
-	public static final String LOWEST_TERMS = "$lowest-terms";
-	public static final String RETURN_ADDRESS = "$return-address";
+	public static final String LOWEST_TERMS    = "$lowest-terms";
+	public static final String PRINTF_RATIONAL = "$printf-rational";
+	public static final String RETURN_ADDRESS  = "$return-address";
 	
 	public static final String RATIONAL_ADD      = "$rational-add";
-	public static final String RETURN_ADDRESS_ADD = "$return-address-add";
+//	public static final String RETURN_ADDRESS_ADD = "$return-address-add";
 	public static final String RATIONAL_SUBTRACT = "$rational-subtract";
-	public static final String RETURN_ADDRESS_SUBTRACT = "$return-address-subtract";
+//	public static final String RETURN_ADDRESS_SUBTRACT = "$return-address-subtract";
 	public static final String RATIONAL_MULTIPLY = "$rational-multiply";
-	public static final String RETURN_ADDRESS_MULTIPLY = "$return-address-multiply";
+//	public static final String RETURN_ADDRESS_MULTIPLY = "$return-address-multiply";
 	public static final String RATIONAL_DIVIDE   = "$rational-divide";
-	public static final String RETURN_ADDRESS_DIVIDE = "$return-address-divide";
+//	public static final String RETURN_ADDRESS_DIVIDE = "$return-address-divide";
 	
 	public static final String NUMERATOR_1   = "$numerator-1";
 	public static final String NUMERATOR_2   = "$numerator-2";
 	public static final String DENOMINATOR_1 = "$denominator-1";
 	public static final String DENOMINATOR_2 = "$denominator-2";
+	public static final String QUOTIENT      = "$quotient";
+	public static final String REMAINDER     = "$remainder";
 	
 	
 	private ASMCodeFragment environmentASM() {
@@ -57,6 +61,8 @@ public class RunTime {
 		result.append(rationalSubtract());
 		result.append(rationalMultiply());
 		result.append(rationalDivide());
+		
+		result.append(printfRational());
 		
 		result.append(runtimeErrors());
 		result.add(DLabel, USABLE_MEMORY_START);
@@ -85,6 +91,12 @@ public class RunTime {
 
 		frag.add(DLabel, DENOMINATOR_2);
 		frag.add(DataZ, 4);
+		
+		frag.add(DLabel, QUOTIENT);
+		frag.add(DataZ, 4);
+
+		frag.add(DLabel, REMAINDER);
+		frag.add(DataZ, 4);	
 		
 		return frag;
 		
@@ -430,6 +442,62 @@ public class RunTime {
 			return frag;
 		}
 		
+		private ASMCodeFragment printfRational() {
+			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
+			frag.add(Label, PRINTF_RATIONAL);
+			storeITo(frag, RETURN_ADDRESS);  	// [.. 17 13]
+			
+			// -?\d*(_\d+/\d+);
+			
+			storeITo(frag, DENOMINATOR_1);
+			storeITo(frag, NUMERATOR_1);
+			
+			loadIFrom(frag, NUMERATOR_1);
+			loadIFrom(frag, DENOMINATOR_1);
+			frag.add(Divide);					// [.. 1 ] 
+			storeITo(frag, QUOTIENT);
+			
+			loadIFrom(frag, NUMERATOR_1);
+			loadIFrom(frag, DENOMINATOR_1);
+			frag.add(Remainder);
+			storeITo(frag, REMAINDER);			// [.. 4 ]
+
+			loadIFrom(frag, QUOTIENT);
+			frag.add(JumpFalse, "$no-leading-number");
+			
+			loadIFrom(frag, QUOTIENT);			// [ .. 1]
+			frag.add(PushD, INTEGER_PRINT_FORMAT); // [ .. 1 print_int ]
+			frag.add(Printf);
+			
+			frag.add(Label, "$no-leading-number");
+			loadIFrom(frag, REMAINDER);
+			frag.add(JumpFalse, "$no-remainder");			
+			
+			frag.add(PushI, 95); // for the underline
+			frag.add(PushD, CHARACTER_PRINT_FORMAT);
+			frag.add(Printf);
+			
+			loadIFrom(frag, REMAINDER);
+			frag.add(PushD, INTEGER_PRINT_FORMAT);
+			frag.add(Printf);
+			
+			frag.add(PushI, 47); // for the slash
+			frag.add(PushD, CHARACTER_PRINT_FORMAT);
+			frag.add(Printf);
+				
+			loadIFrom(frag, DENOMINATOR_1);
+			frag.add(PushD, INTEGER_PRINT_FORMAT);
+			frag.add(Printf);			
+			
+			frag.add(Label, "$no-remainder");
+			
+			// load return address
+			frag.add(PushD, RETURN_ADDRESS);
+			frag.add(LoadI);
+			frag.add(Return);
+			
+			return frag;
+		}
 		
 	private ASMCodeFragment runtimeErrors() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
