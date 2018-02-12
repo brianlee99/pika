@@ -265,6 +265,39 @@
         StoreI                                 
         PushD        $numerator-1              
         LoadI                                  
+        PStack                                 
+        JumpNeg      $rat-print-negative-numerator 
+        Jump         $rat-print-check-denom-negative 
+        Label        $rat-print-negative-numerator 
+        PushI        45                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        Negate                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        Jump         $rat-print-calculate-quotient 
+        Label        $rat-print-check-denom-negative 
+        PushD        $denominator-1            
+        LoadI                                  
+        PStack                                 
+        JumpNeg      $rat-print-negative-denominator 
+        Jump         $rat-print-calculate-quotient 
+        Label        $rat-print-negative-denominator 
+        PushI        45                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushD        $denominator-1            
+        LoadI                                  
+        Negate                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        Label        $rat-print-calculate-quotient 
+        PushD        $numerator-1              
+        LoadI                                  
         PushD        $denominator-1            
         LoadI                                  
         Divide                                 
@@ -281,15 +314,26 @@
         StoreI                                 
         PushD        $quotient                 
         LoadI                                  
-        JumpFalse    $no-leading-number        
+        PushD        $remainder                
+        LoadI                                  
+        BTOr                                   
+        JumpTrue     $rat-print-check-leading-number 
+        PushI        0                         
+        PushD        $print-format-integer     
+        Printf                                 
+        Jump         $rat-print-end            
+        Label        $rat-print-check-leading-number 
+        PushD        $quotient                 
+        LoadI                                  
+        JumpFalse    $rat-print-check-fraction 
         PushD        $quotient                 
         LoadI                                  
         PushD        $print-format-integer     
         Printf                                 
-        Label        $no-leading-number        
+        Label        $rat-print-check-fraction 
         PushD        $remainder                
         LoadI                                  
-        JumpFalse    $no-remainder             
+        JumpFalse    $rat-print-end            
         PushI        95                        
         PushD        $print-format-character   
         Printf                                 
@@ -304,7 +348,7 @@
         LoadI                                  
         PushD        $print-format-integer     
         Printf                                 
-        Label        $no-remainder             
+        Label        $rat-print-end            
         PushD        $return-address           
         LoadI                                  
         Return                                 
@@ -437,14 +481,8 @@
         DLabel       $global-memory-block      
         DataZ        0                         
         Label        $$main                    
-        PushI        86                        
-        PushI        66                        
-        Call         $lowest-terms             
-        Call         $printf-rational          
-        PushD        $print-format-space       
-        Printf                                 
-        PushI        10                        
-        PushI        3                         
+        PushI        14                        
+        PushI        -13                       
         Call         $lowest-terms             
         Call         $printf-rational          
         Halt                                   

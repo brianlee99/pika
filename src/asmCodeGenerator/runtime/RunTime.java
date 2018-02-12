@@ -452,6 +452,37 @@ public class RunTime {
 			storeITo(frag, DENOMINATOR_1);
 			storeITo(frag, NUMERATOR_1);
 			
+			// check that exactly one of denominator or numerator is positive
+			loadIFrom(frag, NUMERATOR_1);
+			frag.add(PStack);
+			frag.add(JumpNeg, "$rat-print-negative-numerator");
+			frag.add(Jump, "$rat-print-check-denom-negative");
+			frag.add(Label, "$rat-print-negative-numerator");
+			frag.add(PushI, 45); 						// negative sign
+			frag.add(PushD, CHARACTER_PRINT_FORMAT);
+			frag.add(Printf);
+			// turn numerator into a positive
+			loadIFrom(frag, NUMERATOR_1);
+			frag.add(Negate);
+			storeITo(frag, NUMERATOR_1);
+			frag.add(Jump, "$rat-print-calculate-quotient");
+			
+			frag.add(Label, "$rat-print-check-denom-negative");
+			loadIFrom(frag, DENOMINATOR_1);
+			frag.add(PStack);
+			frag.add(JumpNeg, "$rat-print-negative-denominator");
+			frag.add(Jump, "$rat-print-calculate-quotient");
+			frag.add(Label, "$rat-print-negative-denominator");
+			frag.add(PushI, 45); 						// negative sign
+			frag.add(PushD, CHARACTER_PRINT_FORMAT);
+			frag.add(Printf);
+			// turn denominator into a positive
+			loadIFrom(frag, DENOMINATOR_1);
+			frag.add(Negate);
+			storeITo(frag, DENOMINATOR_1);
+			
+			// calculate quotient and remainder
+			frag.add(Label, "$rat-print-calculate-quotient");
 			loadIFrom(frag, NUMERATOR_1);
 			loadIFrom(frag, DENOMINATOR_1);
 			frag.add(Divide);					// [.. 1 ] 
@@ -460,18 +491,35 @@ public class RunTime {
 			loadIFrom(frag, NUMERATOR_1);
 			loadIFrom(frag, DENOMINATOR_1);
 			frag.add(Remainder);
-			storeITo(frag, REMAINDER);			// [.. 4 ]
+			storeITo(frag, REMAINDER);					// [.. 4 ]
 
-			loadIFrom(frag, QUOTIENT);
-			frag.add(JumpFalse, "$no-leading-number");
 			
-			loadIFrom(frag, QUOTIENT);			// [ .. 1]
-			frag.add(PushD, INTEGER_PRINT_FORMAT); // [ .. 1 print_int ]
+			// print the leading number if it exists
+			// if both quotient and remainder are 0, then just print 0.
+			loadIFrom(frag, QUOTIENT);
+			loadIFrom(frag, REMAINDER);
+			frag.add(BTOr);
+			frag.add(JumpTrue, "$rat-print-check-leading-number");
+			frag.add(PushI, 0);
+			frag.add(PushD, INTEGER_PRINT_FORMAT);
+			frag.add(Printf);
+			frag.add(Jump, "$rat-print-end");
+			
+
+			// print the leading number if it exists
+			frag.add(Label, "$rat-print-check-leading-number");
+			loadIFrom(frag, QUOTIENT);
+			frag.add(JumpFalse, "$rat-print-check-fraction");
+			
+			loadIFrom(frag, QUOTIENT);					// [ .. 1]
+			frag.add(PushD, INTEGER_PRINT_FORMAT); 		// [ .. 1 print_int ]
 			frag.add(Printf);
 			
-			frag.add(Label, "$no-leading-number");
+			
+			// print out the fraction part, if it exists
+			frag.add(Label, "$rat-print-check-fraction");
 			loadIFrom(frag, REMAINDER);
-			frag.add(JumpFalse, "$no-remainder");			
+			frag.add(JumpFalse, "$rat-print-end");			
 			
 			frag.add(PushI, 95); // for the underline
 			frag.add(PushD, CHARACTER_PRINT_FORMAT);
@@ -489,8 +537,7 @@ public class RunTime {
 			frag.add(PushD, INTEGER_PRINT_FORMAT);
 			frag.add(Printf);			
 			
-			frag.add(Label, "$no-remainder");
-			
+			frag.add(Label, "$rat-print-end");
 			// load return address
 			frag.add(PushD, RETURN_ADDRESS);
 			frag.add(LoadI);
