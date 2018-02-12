@@ -47,9 +47,17 @@
         DataC        115                       
         DataC        101                       
         DataC        0                         
-        Label        $lowest-terms             
         DLabel       $return-address           
         DataZ        4                         
+        DLabel       $numerator-1              
+        DataZ        4                         
+        DLabel       $numerator-2              
+        DataZ        4                         
+        DLabel       $denominator-1            
+        DataZ        4                         
+        DLabel       $denominator-2            
+        DataZ        4                         
+        Label        $lowest-terms             
         PushD        $return-address           
         Exchange                               
         StoreI                                 
@@ -108,6 +116,136 @@
         PushD        $a                        
         LoadI                                  
         Divide                                 
+        PushD        $return-address           
+        LoadI                                  
+        Return                                 
+        Label        $rational-add             
+        PushD        $return-address           
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-2            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-2              
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
+        PushD        $numerator-2              
+        LoadI                                  
+        PushD        $denominator-1            
+        LoadI                                  
+        Multiply                               
+        Add                                    
+        PushD        $denominator-1            
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
+        PushD        $return-address           
+        LoadI                                  
+        Return                                 
+        Label        $rational-subtract        
+        PushD        $return-address           
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-2            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-2              
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
+        PushD        $numerator-2              
+        LoadI                                  
+        PushD        $denominator-1            
+        LoadI                                  
+        Multiply                               
+        Subtract                               
+        PushD        $denominator-1            
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
+        PushD        $return-address           
+        LoadI                                  
+        Return                                 
+        Label        $rational-multiply        
+        PushD        $return-address           
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-2            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-2              
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $numerator-2              
+        LoadI                                  
+        Multiply                               
+        PushD        $denominator-1            
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
+        PushD        $return-address           
+        LoadI                                  
+        Return                                 
+        Label        $rational-divide          
+        PushD        $return-address           
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-2            
+        Exchange                               
+        StoreI                                 
+        Duplicate                              
+        JumpFalse    $$r-divide-by-zero        
+        PushD        $numerator-2              
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $numerator-2              
+        LoadI                                  
+        Multiply                               
+        PushD        $denominator-1            
+        LoadI                                  
+        PushD        $denominator-2            
+        LoadI                                  
+        Multiply                               
         PushD        $return-address           
         LoadI                                  
         Return                                 
@@ -187,6 +325,34 @@
         Label        $$f-divide-by-zero        
         PushD        $errors-float-divide-by-zero 
         Jump         $$general-runtime-error   
+        DLabel       $errors-rat-divide-by-zero 
+        DataC        114                       %% "rational divide by zero"
+        DataC        97                        
+        DataC        116                       
+        DataC        105                       
+        DataC        111                       
+        DataC        110                       
+        DataC        97                        
+        DataC        108                       
+        DataC        32                        
+        DataC        100                       
+        DataC        105                       
+        DataC        118                       
+        DataC        105                       
+        DataC        100                       
+        DataC        101                       
+        DataC        32                        
+        DataC        98                        
+        DataC        121                       
+        DataC        32                        
+        DataC        122                       
+        DataC        101                       
+        DataC        114                       
+        DataC        111                       
+        DataC        0                         
+        Label        $$r-divide-by-zero        
+        PushD        $errors-rat-divide-by-zero 
+        Jump         $$general-runtime-error   
         DLabel       $errors-denominator-zero  
         DataC        100                       %% "denominator zero"
         DataC        101                       
@@ -216,7 +382,12 @@
         PushI        0                         
         Add                                    %% x
         PushI        10                        
-        PushI        15                        
+        PushI        20                        
         Call         $lowest-terms             
-        StoreI                                 
+        PushI        0                         
+        PushI        40                        
+        Call         $lowest-terms             
+        Call         $rational-divide          
+        Call         $lowest-terms             
+        StoreF                                 
         Halt                                   

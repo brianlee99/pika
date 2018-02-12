@@ -53,7 +53,6 @@ public class ASMCodeGenerator {
 		code.append( RunTime.getEnvironment() );
 		code.append( globalVariableBlockASM() );
 		code.append( programASM() );
-//		code.append( RunTime.lowestTerms() );
 //		code.append( MemoryManager.codeForAfterApplication() );
 		
 		return code;
@@ -256,7 +255,7 @@ public class ASMCodeGenerator {
 			}
 			// TODO : find a way to store and load rationals
 			if(type == PrimitiveType.RATIONAL) {
-				return StoreI;
+				return StoreF;
 			}
 			if (type == PrimitiveType.STRING) {
 				return StoreI;

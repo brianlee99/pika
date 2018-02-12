@@ -13,8 +13,13 @@ import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
+import asmCodeGenerator.IntegerToRationalCodeGenerator;
+import asmCodeGenerator.RationalAdditionCodeGenerator;
+import asmCodeGenerator.RationalDivisionCodeGenerator;
 import asmCodeGenerator.RationalExpressOverCodeGenerator;
 import asmCodeGenerator.RationalInitializerCodeGenerator;
+import asmCodeGenerator.RationalMultiplicationCodeGenerator;
+import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
@@ -83,25 +88,25 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Punctuator.ADD,
 		    new FunctionSignature(ASMOpcode.Add, INTEGER, INTEGER, INTEGER),
 		    new FunctionSignature(ASMOpcode.FAdd, FLOATING, FLOATING, FLOATING),
-		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
+		    new FunctionSignature(new RationalAdditionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.SUBTRACT,
 		    new FunctionSignature(ASMOpcode.Subtract, INTEGER, INTEGER, INTEGER),
 		    new FunctionSignature(ASMOpcode.FSubtract, FLOATING, FLOATING, FLOATING),
-		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
+		    new FunctionSignature(new RationalSubtractionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.MULTIPLY,
 			new FunctionSignature(ASMOpcode.Multiply, INTEGER, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.FMultiply, FLOATING, FLOATING, FLOATING),
-		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
+		    new FunctionSignature(new RationalMultiplicationCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		new FunctionSignatures(Punctuator.DIVIDE,
 			new FunctionSignature(new IntegerDivideCodeGenerator(), INTEGER, INTEGER, INTEGER),
 			new FunctionSignature(new FloatingDivideCodeGenerator(), FLOATING, FLOATING, FLOATING),
-		    new FunctionSignature(1, RATIONAL, RATIONAL, RATIONAL)
+		    new FunctionSignature(new RationalDivisionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
 		);
 		
 		// Rational initialization
@@ -149,24 +154,25 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, INTEGER, INTEGER),
-			new FunctionSignature(1, INTEGER, RATIONAL, RATIONAL),
+			new FunctionSignature(new IntegerToRationalCodeGenerator(), INTEGER, RATIONAL, RATIONAL),
 			
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, CHARACTER, CHARACTER),
-			new FunctionSignature(1, CHARACTER, RATIONAL, RATIONAL),
+			new FunctionSignature(new IntegerToRationalCodeGenerator(), CHARACTER, RATIONAL, RATIONAL),
 			
 			new FunctionSignature(ASMOpcode.ConvertI, FLOATING, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, FLOATING, FLOATING, FLOATING),
+//			new FunctionSignature(new FloatingToRationalCodeGenerator(), FLOATING, RATIONAL, RATIONAL),
 			new FunctionSignature(1, FLOATING, RATIONAL, RATIONAL),
-
+			
 			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
 			
 			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING),
 			
 			new FunctionSignature(ASMOpcode.Nop, RATIONAL, RATIONAL, RATIONAL),
-			new FunctionSignature(1, RATIONAL, FLOATING, FLOATING),
-			new FunctionSignature(1, RATIONAL, INTEGER, INTEGER)
+			new FunctionSignature(new RationalToFloatingCodeGenerator(), RATIONAL, FLOATING, FLOATING),
+			new FunctionSignature(new RationalToIntegerCodeGenerator(), RATIONAL, INTEGER, INTEGER)
 		);
 		
 		// OR and AND
