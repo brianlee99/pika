@@ -11,6 +11,7 @@ import static semanticAnalyzer.types.PrimitiveType.*;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
+import asmCodeGenerator.FloatingRationalizeCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.IntegerToRationalCodeGenerator;
@@ -19,6 +20,7 @@ import asmCodeGenerator.RationalDivisionCodeGenerator;
 import asmCodeGenerator.RationalExpressOverCodeGenerator;
 import asmCodeGenerator.RationalInitializerCodeGenerator;
 import asmCodeGenerator.RationalMultiplicationCodeGenerator;
+import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
@@ -121,8 +123,8 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		);
 		
 		new FunctionSignatures(Punctuator.RATIONALIZE,
-			new FunctionSignature(1, RATIONAL, INTEGER, RATIONAL),
-			new FunctionSignature(1, FLOATING, INTEGER, RATIONAL)
+			new FunctionSignature(new RationalRationalizeCodeGenerator(), RATIONAL, INTEGER, RATIONAL),
+			new FunctionSignature(new FloatingRationalizeCodeGenerator(), FLOATING, INTEGER, RATIONAL)
 		);	
 		
 		Punctuator[] comparisons = {

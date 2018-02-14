@@ -632,16 +632,28 @@ public class ASMCodeGenerator {
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));
 			
-			code.append(arg1);
-			code.append(arg2);
-			
 			Object variant = node.getSignature().getVariant();
 			if(variant instanceof ASMOpcode) {
+				code.append(arg1);
+				code.append(arg2);
+				
 				ASMOpcode opcode = (ASMOpcode) variant;
 				code.add(opcode);
 			}
 			else if (variant instanceof SimpleCodeGenerator) {
+				code.append(arg1);
+				code.append(arg2);
+				
 				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+			}
+			else if (variant instanceof FullCodeGenerator) {
+				FullCodeGenerator generator = (FullCodeGenerator) variant;
 				ASMCodeFragment fragment = generator.generate(node);
 				code.append(fragment);
 				

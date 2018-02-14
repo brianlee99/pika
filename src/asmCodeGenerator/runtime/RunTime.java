@@ -1,6 +1,9 @@
 package asmCodeGenerator.runtime;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
+
+import com.sun.org.apache.bcel.internal.classfile.Code;
+
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import static asmCodeGenerator.Macros.*;
@@ -25,22 +28,25 @@ public class RunTime {
 	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR  = "$$i-divide-by-zero";
 	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	public static final String RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$r-divide-by-zero";
-	
-	public static final String DENOMINATOR_ZERO_RUNTIME_ERROR = "$$denominator-zero";
+	public static final String DENOMINATOR_ZERO_RUNTIME_ERROR        = "$$denominator-zero";
+	public static final String NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR   = "$$negative-length-arr";
 	
 	
 	public static final String LOWEST_TERMS    = "$lowest-terms";
-	public static final String PRINTF_RATIONAL = "$printf-rational";
 	public static final String RETURN_ADDRESS  = "$return-address";
 	
+	public static final String PRINTF_RATIONAL = "$printf-rational";
+	public static final String RATIONAL_PRINT_NEGATIVE_NUMERATOR = "$rat-print-negative-numerator";
+	public static final String RATIONAL_PRINT_CHECK_DENOM_NEGATIVE = "$rat-print-check-denom-negative";
+	public static final String RATIONAL_PRINT_CAlCULATE_QUOTIENT = "$rat-print-calculate-quotient";
+	public static final String RATIONAL_PRINT_NEGATIVE_DENOMINATOR = "$rat-print-negative-denominator";
+	public static final String RATIONAL_PRINT_END = "$rat-print-end";
+	
+	
 	public static final String RATIONAL_ADD      = "$rational-add";
-//	public static final String RETURN_ADDRESS_ADD = "$return-address-add";
 	public static final String RATIONAL_SUBTRACT = "$rational-subtract";
-//	public static final String RETURN_ADDRESS_SUBTRACT = "$return-address-subtract";
 	public static final String RATIONAL_MULTIPLY = "$rational-multiply";
-//	public static final String RETURN_ADDRESS_MULTIPLY = "$return-address-multiply";
 	public static final String RATIONAL_DIVIDE   = "$rational-divide";
-//	public static final String RETURN_ADDRESS_DIVIDE = "$return-address-divide";
 	
 	public static final String NUMERATOR_1   = "$numerator-1";
 	public static final String NUMERATOR_2   = "$numerator-2";
@@ -48,6 +54,12 @@ public class RunTime {
 	public static final String DENOMINATOR_2 = "$denominator-2";
 	public static final String QUOTIENT      = "$quotient";
 	public static final String REMAINDER     = "$remainder";
+	
+	public static final String EXPRESS_OVER_DENOMINATOR = "$express-over-denominator";
+	
+	public static final String RECORD_CREATION_TEMP     = "$record-creation-temp";
+	public static final String ARRAY_DATASIZE_TEMPORARY = "$array-datasize-temp";
+	public static final String CLEAR_N_BYTES	 		= "$clear-n-bytes";
 	
 	
 	private ASMCodeFragment environmentASM() {
@@ -63,6 +75,8 @@ public class RunTime {
 		result.append(rationalDivide());
 		
 		result.append(printfRational());
+		
+		result.append(clearNBytes());
 		
 		result.append(runtimeErrors());
 		result.add(DLabel, USABLE_MEMORY_START);
@@ -97,6 +111,16 @@ public class RunTime {
 
 		frag.add(DLabel, REMAINDER);
 		frag.add(DataZ, 4);	
+		
+		frag.add(DLabel, EXPRESS_OVER_DENOMINATOR);
+		frag.add(DataZ, 4);
+		
+		frag.add(DLabel, RECORD_CREATION_TEMP);
+		frag.add(DataZ, 4);
+		// dataZ
+		
+		frag.add(DLabel, ARRAY_DATASIZE_TEMPORARY);
+		frag.add(DataZ, 4);
 		
 		return frag;
 		
@@ -224,327 +248,374 @@ public class RunTime {
 
 		return frag;
 	}
+
+	private ASMCodeFragment rationalAdd() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
+		frag.add(Label, RATIONAL_ADD);
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		// [ ... num1 den1 num2 den2]
+		
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);	
+		
+		// compute num1*denom2
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute num2*denom1
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute num1*denom2 + num2*denom1
+		frag.add(Add);
+		
+		// computer denom1*denom2
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// load return address
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(LoadI);
+		frag.add(Return);
+
+		return frag;
+	}
+
+	private ASMCodeFragment rationalSubtract() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
+		frag.add(Label, RATIONAL_SUBTRACT);
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		// [ ... num1 den1 num2 den2]
+		
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);	
+		
+		// compute num1*denom2
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute num2*denom1
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute num1*denom2 - num2*denom1
+		frag.add(Subtract);
+		
+		// computer denom1*denom2
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// load return address
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(LoadI);
+		frag.add(Return);
+
+		return frag;
+	}
 	
-		private ASMCodeFragment rationalAdd() {
-			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
-			frag.add(Label, RATIONAL_ADD);
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			// [ ... num1 den1 num2 den2]
-			
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);	
-			
-			// compute num1*denom2
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute num2*denom1
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute num1*denom2 + num2*denom1
-			frag.add(Add);
-			
-			// computer denom1*denom2
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// load return address
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(LoadI);
-			frag.add(Return);
+	// new numerator: num1 * num2
+	// new denominator: den1 * den2
+	private ASMCodeFragment rationalMultiply() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
+		frag.add(Label, RATIONAL_MULTIPLY);
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		// [ ... num1 den1 num2 den2]
+		
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);	
+		
+		// compute num1*num2
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute denom1*denom2
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// load return address
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(LoadI);
+		frag.add(Return);
 
-			return frag;
-		}
+		return frag;
+	}
 	
-		private ASMCodeFragment rationalSubtract() {
-			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
-			frag.add(Label, RATIONAL_SUBTRACT);
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			// [ ... num1 den1 num2 den2]
-			
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);	
-			
-			// compute num1*denom2
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute num2*denom1
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute num1*denom2 - num2*denom1
-			frag.add(Subtract);
-			
-			// computer denom1*denom2
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// load return address
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(LoadI);
-			frag.add(Return);
-
-			return frag;
-		}
+	// new numerator: num1 * den2
+	// new denominator: den1 * num2
+	// constraint : num2 cannot be 0.
+	private ASMCodeFragment rationalDivide() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
+		frag.add(Label, RATIONAL_DIVIDE);
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(Exchange);
+		frag.add(StoreI);
 		
-		// new numerator: num1 * num2
-		// new denominator: den1 * den2
-		private ASMCodeFragment rationalMultiply() {
-			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
-			frag.add(Label, RATIONAL_MULTIPLY);
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			// [ ... num1 den1 num2 den2]
-			
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);	
-			
-			// compute num1*num2
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute denom1*denom2
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// load return address
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(LoadI);
-			frag.add(Return);
-
-			return frag;
-		}
+		// [ ... num1 den1 num2 den2]
 		
-		// new numerator: num1 * den2
-		// new denominator: den1 * num2
-		// constraint : num2 cannot be 0.
-		private ASMCodeFragment rationalDivide() {
-			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
-			frag.add(Label, RATIONAL_DIVIDE);
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			// [ ... num1 den1 num2 den2]
-			
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			// check that num2 is not zero
-			frag.add(Duplicate);
-			frag.add(JumpFalse, RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
-			
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);
-			
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(Exchange);
-			frag.add(StoreI);	
-			
-			// compute num1*num2
-			frag.add(PushD, NUMERATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, NUMERATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// compute denom1*denom2
-			frag.add(PushD, DENOMINATOR_1);
-			frag.add(LoadI);
-			frag.add(PushD, DENOMINATOR_2);
-			frag.add(LoadI);
-			frag.add(Multiply);
-			
-			// load return address
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(LoadI);
-			frag.add(Return);
-
-			return frag;
-		}
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
 		
-		private ASMCodeFragment printfRational() {
-			ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
-			frag.add(Label, PRINTF_RATIONAL);
-			storeITo(frag, RETURN_ADDRESS);  	// [.. 17 13]
-			
-			// -?\d*(_\d+/\d+);
-			
-			storeITo(frag, DENOMINATOR_1);
-			storeITo(frag, NUMERATOR_1);
-			
-			// check that exactly one of denominator or numerator is positive
-			loadIFrom(frag, NUMERATOR_1);
-			frag.add(PStack);
-			frag.add(JumpNeg, "$rat-print-negative-numerator");
-			frag.add(Jump, "$rat-print-check-denom-negative");
-			frag.add(Label, "$rat-print-negative-numerator");
-			frag.add(PushI, 45); 						// negative sign
-			frag.add(PushD, CHARACTER_PRINT_FORMAT);
-			frag.add(Printf);
-			// turn numerator into a positive
-			loadIFrom(frag, NUMERATOR_1);
-			frag.add(Negate);
-			storeITo(frag, NUMERATOR_1);
-			frag.add(Jump, "$rat-print-calculate-quotient");
-			
-			frag.add(Label, "$rat-print-check-denom-negative");
-			loadIFrom(frag, DENOMINATOR_1);
-			frag.add(PStack);
-			frag.add(JumpNeg, "$rat-print-negative-denominator");
-			frag.add(Jump, "$rat-print-calculate-quotient");
-			frag.add(Label, "$rat-print-negative-denominator");
-			frag.add(PushI, 45); 						// negative sign
-			frag.add(PushD, CHARACTER_PRINT_FORMAT);
-			frag.add(Printf);
-			// turn denominator into a positive
-			loadIFrom(frag, DENOMINATOR_1);
-			frag.add(Negate);
-			storeITo(frag, DENOMINATOR_1);
-			
-			// calculate quotient and remainder
-			frag.add(Label, "$rat-print-calculate-quotient");
-			loadIFrom(frag, NUMERATOR_1);
-			loadIFrom(frag, DENOMINATOR_1);
-			frag.add(Divide);					// [.. 1 ] 
-			storeITo(frag, QUOTIENT);
-			
-			loadIFrom(frag, NUMERATOR_1);
-			loadIFrom(frag, DENOMINATOR_1);
-			frag.add(Remainder);
-			storeITo(frag, REMAINDER);					// [.. 4 ]
+		// check that num2 is not zero
+		frag.add(Duplicate);
+		frag.add(JumpFalse, RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
+		
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);
+		
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(Exchange);
+		frag.add(StoreI);	
+		
+		// compute num1*num2
+		frag.add(PushD, NUMERATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, NUMERATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// compute denom1*denom2
+		frag.add(PushD, DENOMINATOR_1);
+		frag.add(LoadI);
+		frag.add(PushD, DENOMINATOR_2);
+		frag.add(LoadI);
+		frag.add(Multiply);
+		
+		// load return address
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(LoadI);
+		frag.add(Return);
 
-			
-			// print the leading number if it exists
-			// if both quotient and remainder are 0, then just print 0.
-			loadIFrom(frag, QUOTIENT);
-			loadIFrom(frag, REMAINDER);
-			frag.add(BTOr);
-			frag.add(JumpTrue, "$rat-print-check-leading-number");
-			frag.add(PushI, 0);
-			frag.add(PushD, INTEGER_PRINT_FORMAT);
-			frag.add(Printf);
-			frag.add(Jump, "$rat-print-end");
-			
+		return frag;
+	}
+	
+	private ASMCodeFragment printfRational() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
+		frag.add(Label, PRINTF_RATIONAL);
+		storeITo(frag, RETURN_ADDRESS);  	// [.. 17 13]
+		
+		// -?\d*(_\d+/\d+);
+		
+		storeITo(frag, DENOMINATOR_1);
+		storeITo(frag, NUMERATOR_1);
+		
+		// check that exactly one of denominator or numerator is positive
+		loadIFrom(frag, NUMERATOR_1);
+		frag.add(JumpNeg, RATIONAL_PRINT_NEGATIVE_NUMERATOR);
+		frag.add(Jump, RATIONAL_PRINT_CHECK_DENOM_NEGATIVE);
+		frag.add(Label, RATIONAL_PRINT_NEGATIVE_NUMERATOR);
+		frag.add(PushI, 45); 						// negative sign
+		frag.add(PushD, CHARACTER_PRINT_FORMAT);
+		frag.add(Printf);
+		// turn numerator into a positive
+		loadIFrom(frag, NUMERATOR_1);
+		frag.add(Negate);
+		storeITo(frag, NUMERATOR_1);
+		frag.add(Jump, RATIONAL_PRINT_CAlCULATE_QUOTIENT);
+		
+		frag.add(Label, RATIONAL_PRINT_CHECK_DENOM_NEGATIVE);
+		loadIFrom(frag, DENOMINATOR_1);
+		frag.add(JumpNeg, RATIONAL_PRINT_NEGATIVE_DENOMINATOR);
+		frag.add(Jump, RATIONAL_PRINT_CAlCULATE_QUOTIENT);
+		frag.add(Label, RATIONAL_PRINT_NEGATIVE_DENOMINATOR);
+		frag.add(PushI, 45); 						// negative sign
+		frag.add(PushD, CHARACTER_PRINT_FORMAT);
+		frag.add(Printf);
+		// turn denominator into a positive
+		loadIFrom(frag, DENOMINATOR_1);
+		frag.add(Negate);
+		storeITo(frag, DENOMINATOR_1);
+		
+		// calculate quotient and remainder
+		frag.add(Label, RATIONAL_PRINT_CAlCULATE_QUOTIENT);
+		loadIFrom(frag, NUMERATOR_1);
+		loadIFrom(frag, DENOMINATOR_1);
+		frag.add(Divide);					// [.. 1 ] 
+		storeITo(frag, QUOTIENT);
+		
+		loadIFrom(frag, NUMERATOR_1);
+		loadIFrom(frag, DENOMINATOR_1);
+		frag.add(Remainder);
+		storeITo(frag, REMAINDER);					// [.. 4 ]
 
-			// print the leading number if it exists
-			frag.add(Label, "$rat-print-check-leading-number");
-			loadIFrom(frag, QUOTIENT);
-			frag.add(JumpFalse, "$rat-print-check-fraction");
+		
+		// print the leading number if it exists
+		// if both quotient and remainder are 0, then just print 0.
+		loadIFrom(frag, QUOTIENT);
+		loadIFrom(frag, REMAINDER);
+		frag.add(BTOr);
+		frag.add(JumpTrue, "$rat-print-check-leading-number");
+		frag.add(PushI, 0);
+		frag.add(PushD, INTEGER_PRINT_FORMAT);
+		frag.add(Printf);
+		frag.add(Jump, RATIONAL_PRINT_END);
+		
+
+		// print the leading number if it exists
+		frag.add(Label, "$rat-print-check-leading-number");
+		loadIFrom(frag, QUOTIENT);
+		frag.add(JumpFalse, "$rat-print-check-fraction");
+		
+		loadIFrom(frag, QUOTIENT);					// [ .. 1]
+		frag.add(PushD, INTEGER_PRINT_FORMAT); 		// [ .. 1 print_int ]
+		frag.add(Printf);
+		
+		
+		// print out the fraction part, if it exists
+		frag.add(Label, "$rat-print-check-fraction");
+		loadIFrom(frag, REMAINDER);
+		frag.add(JumpFalse, RATIONAL_PRINT_END);			
+		
+		frag.add(PushI, 95); // for the underline
+		frag.add(PushD, CHARACTER_PRINT_FORMAT);
+		frag.add(Printf);
+		
+		loadIFrom(frag, REMAINDER);
+		frag.add(PushD, INTEGER_PRINT_FORMAT);
+		frag.add(Printf);
+		
+		frag.add(PushI, 47); // for the slash
+		frag.add(PushD, CHARACTER_PRINT_FORMAT);
+		frag.add(Printf);
 			
-			loadIFrom(frag, QUOTIENT);					// [ .. 1]
-			frag.add(PushD, INTEGER_PRINT_FORMAT); 		// [ .. 1 print_int ]
-			frag.add(Printf);
-			
-			
-			// print out the fraction part, if it exists
-			frag.add(Label, "$rat-print-check-fraction");
-			loadIFrom(frag, REMAINDER);
-			frag.add(JumpFalse, "$rat-print-end");			
-			
-			frag.add(PushI, 95); // for the underline
-			frag.add(PushD, CHARACTER_PRINT_FORMAT);
-			frag.add(Printf);
-			
-			loadIFrom(frag, REMAINDER);
-			frag.add(PushD, INTEGER_PRINT_FORMAT);
-			frag.add(Printf);
-			
-			frag.add(PushI, 47); // for the slash
-			frag.add(PushD, CHARACTER_PRINT_FORMAT);
-			frag.add(Printf);
-				
-			loadIFrom(frag, DENOMINATOR_1);
-			frag.add(PushD, INTEGER_PRINT_FORMAT);
-			frag.add(Printf);			
-			
-			frag.add(Label, "$rat-print-end");
-			// load return address
-			frag.add(PushD, RETURN_ADDRESS);
-			frag.add(LoadI);
-			frag.add(Return);
-			
-			return frag;
-		}
+		loadIFrom(frag, DENOMINATOR_1);
+		frag.add(PushD, INTEGER_PRINT_FORMAT);
+		frag.add(Printf);			
+		
+		frag.add(Label, RATIONAL_PRINT_END);
+		// load return address
+		frag.add(PushD, RETURN_ADDRESS);
+		frag.add(LoadI);
+		frag.add(Return);
+		
+		return frag;
+	}
+	
+	private ASMCodeFragment clearNBytes() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
+		frag.add(Label, CLEAR_N_BYTES);
+		storeITo(frag, RETURN_ADDRESS);
+		
+		// [... nElems elemsPtr elemSize]
+		
+		// start at elemsPtr, and set Zero for nelems * elemSize
+		
+		
+		
+		loadIFrom(frag, RETURN_ADDRESS);
+		return frag;
+	}
+		
+	public static void createRecord(ASMCodeFragment code, int typecode, int statusFlags) {
+		code.add(Call, MemoryManager.MEM_MANAGER_ALLOCATE);
+		storeITo(code, RECORD_CREATION_TEMP);
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_TYPEID_OFFSET, typecode);
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_STATUS_OFFSET, statusFlags);	
+	}
+	
+	public static void createEmptyArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize) {
+		final int typecode = Record.ARRAY_TYPE_ID;
+		code.add(Duplicate);		// [ ... nElems nElems]
+		code.add(JumpNeg, NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR);
+		
+		code.add(Duplicate);
+		code.add(PushI, subtypeSize);
+		code.add(Multiply);
+		code.add(Duplicate);
+		storeITo(code, ARRAY_DATASIZE_TEMPORARY);
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);
+		code.add(Add);
+		
+		createRecord(code, typecode, statusFlags);
+		
+		loadIFrom(code, RECORD_CREATION_TEMP);
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);
+		code.add(Add);
+		loadIFrom(code, ARRAY_DATASIZE_TEMPORARY);
+		code.add(Call, CLEAR_N_BYTES);
+		
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_SUBTYPE_SIZE_OFFSET, subtypeSize);
+		// writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET);
+		
+		
+	}
 		
 	private ASMCodeFragment runtimeErrors() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
@@ -554,6 +625,7 @@ public class RunTime {
 		floatingDivideByZeroError(frag);
 		rationalDivideByZeroError(frag);
 		denominatorZeroError(frag);
+		negativeLengthArrayError(frag);
 		
 		return frag;
 	}
@@ -607,6 +679,16 @@ public class RunTime {
 		
 		frag.add(Label, DENOMINATOR_ZERO_RUNTIME_ERROR);
 		frag.add(PushD, denominatorZeroMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
+	private void negativeLengthArrayError(ASMCodeFragment frag) {
+		String negativeLengthArrayMessage = "$errors-negative-length-arr";
+		
+		frag.add(DLabel, negativeLengthArrayMessage);
+		frag.add(DataS, "negative length array");
+		
+		frag.add(Label, NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR);
+		frag.add(PushD, negativeLengthArrayMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
 	public static ASMCodeFragment getEnvironment() {

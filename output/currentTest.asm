@@ -61,6 +61,8 @@
         DataZ        4                         
         DLabel       $remainder                
         DataZ        4                         
+        DLabel       $express-over-denominator 
+        DataZ        4                         
         Label        $lowest-terms             
         PushD        $return-address           
         Exchange                               
@@ -265,7 +267,6 @@
         StoreI                                 
         PushD        $numerator-1              
         LoadI                                  
-        PStack                                 
         JumpNeg      $rat-print-negative-numerator 
         Jump         $rat-print-check-denom-negative 
         Label        $rat-print-negative-numerator 
@@ -282,7 +283,6 @@
         Label        $rat-print-check-denom-negative 
         PushD        $denominator-1            
         LoadI                                  
-        PStack                                 
         JumpNeg      $rat-print-negative-denominator 
         Jump         $rat-print-calculate-quotient 
         Label        $rat-print-negative-denominator 
@@ -479,10 +479,98 @@
         Jump         $$general-runtime-error   
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        0                         
+        DataZ        12                        
         Label        $$main                    
-        PushI        14                        
-        PushI        -13                       
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        PushI        3                         
+        PushI        62                        
         Call         $lowest-terms             
+        PushI        14700                     
+        Duplicate                              
+        JumpFalse    $$r-divide-by-zero        
+        PushD        $express-over-denominator 
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $express-over-denominator 
+        LoadI                                  
+        Multiply                               
+        PushD        $denominator-1            
+        LoadI                                  
+        Divide                                 
+        PushD        $express-over-denominator 
+        LoadI                                  
+        Call         $lowest-terms             
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        Duplicate                              
+        PushD        $numerator-1              
+        LoadI                                  
+        Exchange                               
+        PushD        $denominator-1            
+        LoadI                                  
+        Exchange                               
+        PushI        4                         
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% y
+        PushI        3                         
+        PushI        62                        
+        Call         $lowest-terms             
+        PushI        14700                     
+        Duplicate                              
+        JumpFalse    $$r-divide-by-zero        
+        PushD        $express-over-denominator 
+        Exchange                               
+        StoreI                                 
+        PushD        $denominator-1            
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        Exchange                               
+        StoreI                                 
+        PushD        $numerator-1              
+        LoadI                                  
+        PushD        $express-over-denominator 
+        LoadI                                  
+        Multiply                               
+        PushD        $denominator-1            
+        LoadI                                  
+        Divide                                 
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        Duplicate                              
+        LoadI                                  
+        Exchange                               
+        PushI        4                         
+        Add                                    
+        LoadI                                  
         Call         $printf-rational          
+        PushD        $print-format-newline     
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% y
+        LoadI                                  
+        PushD        $print-format-integer     
+        Printf                                 
         Halt                                   

@@ -15,9 +15,11 @@ public class FloatingExpressOverCodeGenerator implements SimpleCodeGenerator {
 		
 		// Check that the denominator is non-zero
 		fragment.add(ASMOpcode.Duplicate);
-		fragment.add(ASMOpcode.JumpFalse, RunTime.INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR);
+		fragment.add(ASMOpcode.JumpFalse, RunTime.RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
 		
-		// Run the GCD algorithm here
+		fragment.add(ConvertF);
+		fragment.add(FMultiply);
+		fragment.add(ConvertI);
 		
 		return fragment;
 	}

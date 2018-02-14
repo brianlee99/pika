@@ -8,7 +8,7 @@ import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import asmCodeGenerator.runtime.RunTime;
 import parseTree.ParseNode;
 
-public class RationalExpressOverCodeGenerator implements SimpleCodeGenerator {
+public class RationalRationalizeCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
@@ -28,7 +28,9 @@ public class RationalExpressOverCodeGenerator implements SimpleCodeGenerator {
 		
 		loadIFrom(fragment, RunTime.DENOMINATOR_1);
 		fragment.add(Divide);
-		
+
+		loadIFrom(fragment, RunTime.EXPRESS_OVER_DENOMINATOR);
+		fragment.add(Call, RunTime.LOWEST_TERMS);
 		
 		return fragment;
 	}
