@@ -3,7 +3,6 @@ package parseTree;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
-import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
@@ -35,9 +34,6 @@ public interface ParseNodeVisitor {
 
 	void visitEnter(AssignmentNode node);
 	void visitLeave(AssignmentNode node);
-	
-	void visitEnter(CastingExpressionNode node);
-	void visitLeave(CastingExpressionNode node);
 	
 	void visitEnter(ParseNode node);
 	void visitLeave(ParseNode node);
@@ -94,12 +90,6 @@ public interface ParseNodeVisitor {
 			defaultVisitEnter(node);
 		}
 		public void visitLeave(AssignmentNode node) {
-			defaultVisitLeave(node);
-		}
-		public void visitEnter(CastingExpressionNode node) {
-			defaultVisitEnter(node);
-		}
-		public void visitLeave(CastingExpressionNode node) {
 			defaultVisitLeave(node);
 		}
 		public void visitEnter(BlockNode node) {

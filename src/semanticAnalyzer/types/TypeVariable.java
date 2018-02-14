@@ -3,23 +3,23 @@ package semanticAnalyzer.types;
 public class TypeVariable implements Type {
 	
 	private String name;
-	private Type typeConstraint;
+	private Type type;
 	
 	public TypeVariable(String name) {
 		this.name = name;
-		this.typeConstraint = PrimitiveType.NO_TYPE;
+		this.type = PrimitiveType.NO_TYPE;
 	}
 	
 	public String getName() {
 		return name;
 	}
 	
-	public Type getTypeConstraint() {
-		return typeConstraint;
+	public Type getType() {
+		return type;
 	}
 	
-	private void setType(Type typeConstraint) {
-		this.typeConstraint = typeConstraint;
+	private void setType(Type type) {
+		this.type = type;
 	}
 	
 	@Override
@@ -42,11 +42,20 @@ public class TypeVariable implements Type {
 			throw new RuntimeException(
 					"equals attempted on two types containing type variables.");
 		}
-		if (this.getTypeConstraint() == PrimitiveType.NO_TYPE) {
+		if (this.getType() == PrimitiveType.NO_TYPE) {
 			setType(otherType);
 			return true;
 		}
-		return this.getTypeConstraint().equivalent(otherType);
+		return getType().equivalent(otherType);
+	}
+	
+	@Override
+	public Type getConcreteType() {
+		return getType().getConcreteType();
 	}
 
+	
+	public void reset() {
+		setType(PrimitiveType.NO_TYPE);
+	}
 }

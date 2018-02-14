@@ -24,12 +24,15 @@ public class RunTime {
 	public static final String USABLE_MEMORY_START    = "$usable-memory-start";
 	public static final String MAIN_PROGRAM_LABEL     = "$$main";
 	
+	// Runtime errors
 	public static final String GENERAL_RUNTIME_ERROR                 = "$$general-runtime-error";
 	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR  = "$$i-divide-by-zero";
 	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	public static final String RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$r-divide-by-zero";
 	public static final String DENOMINATOR_ZERO_RUNTIME_ERROR        = "$$denominator-zero";
 	public static final String NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR   = "$$negative-length-arr";
+	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
+	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";
 	
 	
 	public static final String LOWEST_TERMS    = "$lowest-terms";
@@ -61,24 +64,26 @@ public class RunTime {
 	public static final String ARRAY_DATASIZE_TEMPORARY = "$array-datasize-temp";
 	public static final String CLEAR_N_BYTES	 		= "$clear-n-bytes";
 	
+	public static final String ARRAY_INDEXING_ARRAY = "$a-indexing-array";
+	public static final String ARRAY_INDEXING_INDEX = "$a-indexing-index";
+	
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
 		result.append(jumpToMain());
 		result.append(stringsForPrintf());
+		result.append(runtimeErrors());
 		result.append(variableStorage());
-		result.append(lowestTerms());
 		
+		// Function calls
+		result.append(lowestTerms());
 		result.append(rationalAdd());
 		result.append(rationalSubtract());
 		result.append(rationalMultiply());
 		result.append(rationalDivide());
-		
 		result.append(printfRational());
-		
 		result.append(clearNBytes());
 		
-		result.append(runtimeErrors());
 		result.add(DLabel, USABLE_MEMORY_START);
 		return result;
 	}
@@ -121,6 +126,9 @@ public class RunTime {
 		
 		frag.add(DLabel, ARRAY_DATASIZE_TEMPORARY);
 		frag.add(DataZ, 4);
+		
+		declareI(frag, ARRAY_INDEXING_ARRAY);
+		declareI(frag, ARRAY_INDEXING_INDEX);
 		
 		return frag;
 		
@@ -626,6 +634,8 @@ public class RunTime {
 		rationalDivideByZeroError(frag);
 		denominatorZeroError(frag);
 		negativeLengthArrayError(frag);
+		indexOutOfBoundsError(frag);
+		nullArrayError(frag);
 		
 		return frag;
 	}
@@ -691,6 +701,25 @@ public class RunTime {
 		frag.add(PushD, negativeLengthArrayMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
+	private void indexOutOfBoundsError(ASMCodeFragment frag) {
+		String indexOutOfBoundsMessage = "$errors-index-out-of-bounds";
+		frag.add(DLabel, indexOutOfBoundsMessage);
+		frag.add(DataS, "index out of bounds");
+		
+		frag.add(Label, INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR);
+		frag.add(PushD, indexOutOfBoundsMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
+	private void nullArrayError(ASMCodeFragment frag) {
+		String nullArrayMessage = "$errors-null-arr";
+		frag.add(DLabel, nullArrayMessage);
+		frag.add(DataS, "null array");
+		
+		frag.add(Label, NULL_ARRAY_RUNTIME_ERROR);
+		frag.add(PushD, nullArrayMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
+	
 	public static ASMCodeFragment getEnvironment() {
 		RunTime rt = new RunTime();
 		return rt.environmentASM();

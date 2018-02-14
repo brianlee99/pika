@@ -15,5 +15,7 @@ public interface Type {
 	 */
 	public String infoString();
 	
-	public boolean equivalent(Type otherType);
+	public boolean equivalent(Type type);
+	
+	public Type getConcreteType();
 }

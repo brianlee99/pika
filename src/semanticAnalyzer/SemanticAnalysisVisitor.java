@@ -11,7 +11,6 @@ import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
-import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
@@ -107,29 +106,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////
-	// casting
-	public void visitLeave(CastingExpressionNode node) {
-		assert node.nChildren() == 2;
-		ParseNode left  = node.child(0);
-		ParseNode right = node.child(1);
-		List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
-		
-		Lextant operator = operatorFor(node);
-		FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-
-		FunctionSignature signature = signatures.acceptingSignature(childTypes);
-		
-		if(signature.accepts(childTypes)) {
-			node.setType(signature.resultType());
-			node.setSignature(signature);
-		}
-		else {
-			castingTypeCheckError(node, childTypes);
-			node.setType(PrimitiveType.ERROR);
-		}
-	}
-
-	///////////////////////////////////////////////////////////////////////////
 	// expressions
 	
 	// TODO: Refactor to get rid of duplicate code
@@ -188,12 +164,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		if (node.nChildren() == 3) {
 			ParseNode elseStatement = node.child(2);
 		}
-	}
-	
-	
-	private Lextant operatorFor(CastingExpressionNode node) {
-		LextantToken token = (LextantToken) node.getToken();
-		return token.getLextant();
 	}
 	
 	private Lextant operatorFor(OperatorNode node) {

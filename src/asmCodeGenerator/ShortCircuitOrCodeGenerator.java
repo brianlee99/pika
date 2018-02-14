@@ -16,15 +16,15 @@ public class ShortCircuitOrCodeGenerator implements FullCodeGenerator {
 		final String endLabel = labeller.newLabel("end");
 		
 		// compute arg 1
-		fragment.append(args[0]); // [... bool]
+		fragment.append(args[0]); 				// [... bool]
 		
 		// short circuiting test
-		fragment.add(Duplicate); // [... bool bool]
-		fragment.add(JumpTrue, trueLabel); // [... bool]
-		fragment.add(Pop); // [... 0] -> [...]
+		fragment.add(Duplicate); 				// [... bool bool]
+		fragment.add(JumpTrue, trueLabel); 		// [... bool]
+		fragment.add(Pop); 						// [... 0] -> [...]
 		
 		// compute arg 2
-		fragment.append(args[1]); // [... bool]
+		fragment.append(args[1]); 				// [... bool]
 		fragment.add(Jump, endLabel);
 		
 		// the end

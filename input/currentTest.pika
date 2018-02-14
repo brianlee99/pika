@@ -1,7 +1,4 @@
 exec {
-	const x := (3 // 62) //// 14700.
-	const y := (3 // 62) /// 14700.
+	var x := [10 | float].
 	print x.
-	print _n_.
-	print y.
 }

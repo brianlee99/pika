@@ -30,7 +30,12 @@ public enum PrimitiveType implements Type {
 	}
 	
 	@Override
-	public boolean equivalent(Type otherType) {
-		return this == otherType;
+	public boolean equivalent(Type type) {
+		return this == type;
+	}
+	
+	@Override
+	public Type getConcreteType() {
+		return this;
 	}
 }

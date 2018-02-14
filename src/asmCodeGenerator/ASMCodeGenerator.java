@@ -6,6 +6,7 @@ import java.util.Map;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
+import asmCodeGenerator.runtime.MemoryManager;
 import asmCodeGenerator.runtime.RunTime;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -14,7 +15,6 @@ import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
-import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
@@ -55,8 +55,9 @@ public class ASMCodeGenerator {
 		
 		code.append( RunTime.getEnvironment() );
 		code.append( globalVariableBlockASM() );
+		code.append( MemoryManager.codeForInitialization()); // not sure if this goes here
 		code.append( programASM() );
-//		code.append( MemoryManager.codeForAfterApplication() );
+		code.append( MemoryManager.codeForAfterApplication() );
 		
 		return code;
 	}
@@ -323,31 +324,8 @@ public class ASMCodeGenerator {
 
 		///////////////////////////////////////////////////////////////////////////
 		// expressions
-		public void visitLeave(CastingExpressionNode node) {
 
-			newValueCode(node);
-			ASMCodeFragment arg1 = removeValueCode(node.child(0));
-			code.append(arg1);
-			
-			Object variant = node.getSignature().getVariant();
-			
-			if(variant instanceof ASMOpcode) {
-				ASMOpcode opcode = (ASMOpcode) variant;
-				code.add(opcode);
-			}
-			else if (variant instanceof SimpleCodeGenerator) {
-				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
-				ASMCodeFragment fragment = generator.generate(node);
-				code.append(fragment);
-				if (fragment.isAddress()) {
-					code.markAsAddress();
-				}
-			}
-			else {
-				assert false : "unknown variant in CastingExpressionNode";
-			}
-			
-		}
+		
 		
 		public void visitLeave(ControlFlowStatementNode node) {
 			if (! node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
@@ -419,6 +397,9 @@ public class ASMCodeGenerator {
 			}
 			else if (operator == Punctuator.NOT) {
 				visitUnaryOperatorNode(node, operator);
+			}
+			else if (operator == Punctuator.CASTING) {
+				visitCastingOperatorNode(node);
 			}
 			else {
 				visitNormalBinaryOperatorNode(node);
@@ -543,7 +524,7 @@ public class ASMCodeGenerator {
 		private void visitBooleanOperatorNode(OperatorNode node,
 				Lextant operator) {
 			
-			Type leftNodeType = node.child(0).getType();
+			// Type leftNodeType = node.child(0).getType();
 
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));
@@ -626,6 +607,30 @@ public class ASMCodeGenerator {
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
 		}
+		private void visitCastingOperatorNode(OperatorNode node) {
+			newValueCode(node);
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			code.append(arg1);
+			
+			Object variant = node.getSignature().getVariant();
+			
+			if(variant instanceof ASMOpcode) {
+				ASMOpcode opcode = (ASMOpcode) variant;
+				code.add(opcode);
+			}
+			else if (variant instanceof SimpleCodeGenerator) {
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+			}
+			else {
+				assert false : "unknown variant in CastingExpressionNode";
+			}
+		}
+
 		
 		private void visitNormalBinaryOperatorNode(OperatorNode node) {
 			newValueCode(node);

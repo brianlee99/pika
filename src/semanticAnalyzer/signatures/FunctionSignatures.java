@@ -62,6 +62,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		return !acceptingSignature(types).isNull();
 	}
 
+
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	// access to FunctionSignatures by key object.
@@ -191,6 +192,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(1, BOOLEAN, BOOLEAN)
 		);
 		
+		// Array Indexing
 		TypeVariable S = new TypeVariable("S");
 		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
 			new FunctionSignature(

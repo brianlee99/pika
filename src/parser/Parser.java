@@ -7,7 +7,6 @@ import parseTree.*;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
-import parseTree.nodeTypes.CastingExpressionNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
@@ -15,7 +14,6 @@ import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
 import parseTree.nodeTypes.IdentifierNode;
-import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
@@ -24,7 +22,6 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import parseTree.nodeTypes.TypeNode;
-import parseTree.nodeTypes.WhileStatementNode;
 import tokens.*;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -436,8 +433,8 @@ public class Parser {
 			return syntaxErrorNode("atomic expression");
 		}
 		
-		if (startsCastingExpression(nowReading)) {
-			return parseCastingExpression();
+		if (startsBracketExpression(nowReading)) {
+			return parseBracketExpression();
 		}
 		
 		if (startsParenthesesExpression(nowReading)) {
@@ -447,14 +444,15 @@ public class Parser {
 		return parseLiteral();
 	}
 	private boolean startsAtomicExpression(Token token) {
-		return startsLiteral(token) || startsCastingExpression(token) || startsParenthesesExpression(token);
+		return startsLiteral(token) || startsBracketExpression(token) || startsParenthesesExpression(token);
 	}
 	
 	// Casting expression is treated as atomic
-	private ParseNode parseCastingExpression() {
-		if(!startsCastingExpression(nowReading)) {
-			return syntaxErrorNode("casting");
+	private ParseNode parseBracketExpression() {
+		if(!startsBracketExpression(nowReading)) {
+			return syntaxErrorNode("brackets");
 		}
+		
 		Token realToken = nowReading;
 		Token castingToken = LextantToken.artificial(realToken, Punctuator.CASTING);
 		
@@ -467,10 +465,10 @@ public class Parser {
 		ParseNode targetType = parseType();
 		expect(Punctuator.CLOSE_BRACKET);
 		
-		return CastingExpressionNode.withChildren(castingToken, expression, targetType);
+		return OperatorNode.withChildren(castingToken, expression, targetType);
 	}
 	
-	private boolean startsCastingExpression(Token token) {
+	private boolean startsBracketExpression(Token token) {
 		return (token.isLextant(Punctuator.OPEN_BRACKET));
 	}
 	
@@ -485,6 +483,27 @@ public class Parser {
 	
 	private boolean startsType(Token token) {
 		return token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING);
+	}
+	
+	private ParseNode parseArrayIndexingExpression() {
+		if(!startsArrayIndexingExpression(nowReading)) {
+			return syntaxErrorNode("array indexing");
+		}
+		
+		ParseNode base = parseAtomicExpression();
+		while(nowReading.isLextant(Punctuator.OPEN_BRACKET)) { 
+			Token realToken = nowReading;
+			Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
+			readToken();
+			ParseNode index = parseExpression();
+			expect(Punctuator.CLOSE_BRACKET);
+			
+			base = OperatorNode.withChildren(indexToken, base, index);
+		}
+		return base;
+	}
+	private boolean startsArrayIndexingExpression(Token token) {
+		return startsAtomicExpression(token);
 	}
 	
 	// Parsing a parentheses-enclosed expression

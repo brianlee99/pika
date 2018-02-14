@@ -1,9 +1,11 @@
 package semanticAnalyzer.signatures;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
+import semanticAnalyzer.types.TypeVariable;
 import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
 
@@ -12,6 +14,7 @@ public class FunctionSignature {
 	private static final boolean ALL_TYPES_ACCEPT_ERROR_TYPES = true;
 	private Type resultType;
 	private Type[] paramTypes;
+	private List<TypeVariable> typeVariables;
 	Object whichVariant;
 	
 	
@@ -19,11 +22,22 @@ public class FunctionSignature {
 	// construction
 	
 	public FunctionSignature(Object whichVariant, Type ...types) {
+		this(whichVariant, new ArrayList<TypeVariable>(), types);
+//		assert(types.length >= 1);
+//		storeParamTypes(types);
+//		resultType = types[types.length-1];
+//		this.whichVariant = whichVariant;
+	}
+	
+	// Constructor with type variables
+	public FunctionSignature(Object whichVariant, List<TypeVariable> typeVariables, Type ...types) {
 		assert(types.length >= 1);
+		this.typeVariables = typeVariables;
 		storeParamTypes(types);
 		resultType = types[types.length-1];
 		this.whichVariant = whichVariant;
 	}
+	
 	private void storeParamTypes(Type[] types) {
 		paramTypes = new Type[types.length-1];
 		for(int i=0; i<types.length-1; i++) {
@@ -39,7 +53,7 @@ public class FunctionSignature {
 		return whichVariant;
 	}
 	public Type resultType() {
-		return resultType;
+		return resultType.getConcreteType();
 	}
 	public boolean isNull() {
 		return false;
@@ -50,7 +64,7 @@ public class FunctionSignature {
 	// main query
 
 	public boolean accepts(List<Type> types) {
-		// resetTypeVariables();
+		 resetTypeVariables();
 		
 		if(types.size() != paramTypes.length) {
 			return false;
@@ -63,6 +77,13 @@ public class FunctionSignature {
 		}		
 		return true;
 	}
+	
+	private void resetTypeVariables() {
+		for (TypeVariable T: typeVariables) {
+			T.reset();
+		}
+	}
+	
 	private boolean assignableTo(Type variableType, Type valueType) {
 		if(valueType == PrimitiveType.ERROR && ALL_TYPES_ACCEPT_ERROR_TYPES) {
 			return true;

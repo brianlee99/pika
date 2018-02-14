@@ -31,5 +31,12 @@ public class Array implements Type {
 		}
 		return false;
 	}
+	
+	@Override
+	public Type getConcreteType() {
+		Type concreteSubtype = subtype.getConcreteType();
+		
+		return new Array(concreteSubtype);
+	}
 
 }
