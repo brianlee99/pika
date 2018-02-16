@@ -1,5 +1,6 @@
 package parseTree;
 
+import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
@@ -47,6 +48,8 @@ public interface ParseNodeVisitor {
 	void visitEnter(ControlFlowStatementNode node);
 	void visitLeave(ControlFlowStatementNode node);
 
+	void visitEnter(ArrayPopulationNode node);
+	void visitLeave(ArrayPopulationNode node);
 
 	// leaf nodes: visitLeaf only
 	void visit(BooleanConstantNode node);
@@ -122,7 +125,13 @@ public interface ParseNodeVisitor {
 		public void visitLeave(ControlFlowStatementNode node) {
 			defaultVisitLeave(node);
 		}
-
+		public void visitEnter(ArrayPopulationNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(ArrayPopulationNode node) {
+			defaultVisitLeave(node);
+		}
+		
 		public void visit(BooleanConstantNode node) {
 			defaultVisitForLeaf(node);
 		}
@@ -156,9 +165,9 @@ public interface ParseNodeVisitor {
 		public void visit(TypeNode node) {
 			defaultVisitForLeaf(node);
 		}
-		public void visit(ControlFlowStatementNode node) {
-			defaultVisitForLeaf(node);
-		}
+//		public void visit(ControlFlowStatementNode node) {
+//			defaultVisitForLeaf(node);
+//		}
 	}
 
 }

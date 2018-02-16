@@ -1,3 +1,26 @@
+        Label        -mem-manager-initialize   
+        DLabel       $heap-start-ptr           
+        DataZ        4                         
+        DLabel       $heap-after-ptr           
+        DataZ        4                         
+        DLabel       $heap-first-free          
+        DataZ        4                         
+        DLabel       $mmgr-newblock-block      
+        DataZ        4                         
+        DLabel       $mmgr-newblock-size       
+        DataZ        4                         
+        PushD        $heap-memory              
+        Duplicate                              
+        PushD        $heap-start-ptr           
+        Exchange                               
+        StoreI                                 
+        PushD        $heap-after-ptr           
+        Exchange                               
+        StoreI                                 
+        PushI        0                         
+        PushD        $heap-first-free          
+        Exchange                               
+        StoreI                                 
         Jump         $$main                    
         DLabel       $eat-location-zero        
         DataZ        8                         
@@ -554,47 +577,126 @@
         PushD        $return-address           
         Exchange                               
         StoreI                                 
+        Label        $clear-n-bytes-loop       
+        Duplicate                              
+        JumpNeg      $clear-n-bytes-end        
+        PushI        1                         
+        Subtract                               
+        PushD        $clear-n-bytes-offset-temp 
+        Exchange                               
+        StoreI                                 
+        Duplicate                              
+        PushD        $clear-n-bytes-offset-temp 
+        LoadI                                  
+        Add                                    
+        PushI        0                         
+        StoreC                                 
+        PushD        $clear-n-bytes-offset-temp 
+        LoadI                                  
+        Jump         $clear-n-bytes-loop       
+        Label        $clear-n-bytes-end        
+        Pop                                    
+        Pop                                    
         PushD        $return-address           
         LoadI                                  
+        Return                                 
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        8                         
-        Label        -mem-manager-initialize   
-        DLabel       $heap-start-ptr           
         DataZ        4                         
-        DLabel       $heap-after-ptr           
-        DataZ        4                         
-        DLabel       $heap-first-free          
-        DataZ        4                         
-        DLabel       $mmgr-newblock-block      
-        DataZ        4                         
-        DLabel       $mmgr-newblock-size       
-        DataZ        4                         
-        PushD        $heap-memory              
-        Duplicate                              
-        PushD        $heap-start-ptr           
-        Exchange                               
-        StoreI                                 
-        PushD        $heap-after-ptr           
-        Exchange                               
-        StoreI                                 
-        PushI        0                         
-        PushD        $heap-first-free          
-        Exchange                               
-        StoreI                                 
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
-        PushI        10                        
-        ConvertF                               
-        StoreF                                 
+        PushI        3                         
+        Duplicate                              
+        JumpNeg      $$negative-length-arr     
+        Duplicate                              
+        PushI        4                         
+        Multiply                               
+        Duplicate                              
+        PushD        $array-datasize-temp      
+        Exchange                               
+        StoreI                                 
+        PushI        16                        
+        Add                                    
+        Call         -mem-manager-allocate     
+        PushD        $record-creation-temp     
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        0                         
+        Add                                    
+        PushI        7                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        4                         
+        Add                                    
+        PushI        2                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        16                        
+        Add                                    
+        PushD        $array-datasize-temp      
+        LoadI                                  
+        Call         $clear-n-bytes            
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        8                         
+        Add                                    
+        PushI        4                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        StoreI                                 
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
-        LoadF                                  
-        PushD        $print-format-floating    
-        Printf                                 
+        LoadI                                  
+        PushI        3                         
+        PushD        $a-indexing-index         
+        Exchange                               
+        StoreI                                 
+        PushD        $a-indexing-array         
+        Exchange                               
+        StoreI                                 
+        PushD        $a-indexing-array         
+        LoadI                                  
+        JumpFalse    $$null-array              
+        PushD        $a-indexing-index         
+        LoadI                                  
+        JumpNeg      $$index-out-of-bounds     
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        LoadI                                  
+        Subtract                               
+        JumpNeg      -array-indexing-1-in-bounds 
+        Jump         $$index-out-of-bounds     
+        Label        -array-indexing-1-in-bounds 
+        Nop                                    
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        16                        
+        Add                                    
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushI        4                         
+        Multiply                               
+        Add                                    
+        PushI        333                       
+        StoreI                                 
         Halt                                   
         Label        -mem-manager-make-tags    
         DLabel       $mmgr-tags-size           

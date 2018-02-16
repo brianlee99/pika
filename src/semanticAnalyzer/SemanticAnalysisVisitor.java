@@ -1,5 +1,6 @@
 package semanticAnalyzer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import lexicalAnalyzer.Lextant;
 import logging.PikaLogger;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
@@ -26,6 +28,7 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
+import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
@@ -91,72 +94,100 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	@Override
 	public void visitLeave(AssignmentNode node) {
-		IdentifierNode identifier = (IdentifierNode) node.child(0);
+		ParseNode target = node.child(0);
 		ParseNode expression = node.child(1);
 		
-		if (!identifier.isMutable()) {
-			logError("the identifier was declared as const at " + node.getToken().getLocation());
+		Type expressionType = expression.getType();
+		Type targetType = target.getType();
+		
+		// check that the target node is actually targetable
+		
+		// target could be an IdentifierNode, OperatorNode (array Indexing), or a ParenthesesNode
+		if (target instanceof IdentifierNode) {
+			IdentifierNode identifier = (IdentifierNode) node.child(0);
+			
+			if (!identifier.isMutable()) {
+				logError("the identifier was declared as const at " + node.getToken().getLocation());
+			}
+
+			if (expressionType != targetType) {
+				logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
+			}
+		}
+		else if (target instanceof OperatorNode) {
+			// check that it's an array indexing node
 		}
 
-		Type expressionType = expression.getType();
-		Type identifierType = identifier.getType();
-		
-		if (expressionType != identifierType) {
-			logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
-		}
 	}
 	///////////////////////////////////////////////////////////////////////////
 	// expressions
-	
-	// TODO: Refactor to get rid of duplicate code
 	@Override
-	public void visitLeave(OperatorNode node) {
-		// binary operator
-		if (node.nChildren() == 2) {
-			ParseNode left  = node.child(0);
-			ParseNode right = node.child(1);
-			List<Type> childTypes = Arrays.asList(left.getType(), right.getType());
-			
-			// here, the operator is just a [ (casting expression start)
-			Lextant operator = operatorFor(node);
-			FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-			
-			FunctionSignature signature = signatures.acceptingSignature(childTypes);
-			
-			if(signature.accepts(childTypes)) {
-				node.setType(signature.resultType());
-				node.setSignature(signature);
-			}
-			else {
-				typeCheckError(node, childTypes);
-				node.setType(PrimitiveType.ERROR);
-			}
+	public void visitLeave(ArrayPopulationNode node) {
+		// int numChildren = node.nChildren();
+		List<Type> childTypes = new ArrayList<>();
+		for (ParseNode child : node.getChildren()) {
+			childTypes.add(child.getType());
 		}
-		// unary operator
-		else if (node.nChildren() == 1) {
-			ParseNode left  = node.child(0);
-			List<Type> childTypes = Arrays.asList(left.getType());
-			
-			Lextant operator = operatorFor(node);
-			FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-			
-			FunctionSignature signature = signatures.acceptingSignature(childTypes);
-			
-			if(signature.accepts(childTypes)) {
-				node.setType(signature.resultType());
-				node.setSignature(signature);
-			}
-			else {
-				typeCheckError(node, childTypes);
-				node.setType(PrimitiveType.ERROR);
-			}
-		}
-		else {
-			assert false;
-		}
+		
+		Array arrayType = new Array(childTypes.get(0));
+		node.setType(arrayType);
 	}
 	
-	// Todo: Probably should check if the left side evaluates to a boolean or something.
+//	@Override
+//	public void visitLeave(NewArrayNode node) {
+////		ParseNode left = node.child(0);
+////		ParseNode right = node.child(1);
+//        List<ParseNode> children = node.getChildren();
+//        List<Type> childTypes = new ArrayList<>();
+//        for (ParseNode child : children) {
+//            childTypes.add(child.getType());
+//        }
+////		Array arrayType = new Array(left.getType());
+////		node.setType(arrayType);
+////		
+////		Type rightType = right.getType();
+////		if (rightType != PrimitiveType.INTEGER) {
+////			logError("non-integer length");
+////			node.setType(PrimitiveType.ERROR);
+////		}
+//        Lextant operator = Keyword.NEW;
+//        FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+//        FunctionSignature signature = signatures.acceptingSignature(childTypes);
+//
+//        if (signature.accepts(childTypes)) {
+//            node.setType(signature.resultType());
+//            node.setSignature(signature);
+//        }
+//        else {
+//            typeCheckError(node, childTypes);
+//            node.setType(PrimitiveType.ERROR);
+//        }
+//	}
+	
+	@Override
+	public void visitLeave(OperatorNode node) {
+        List<ParseNode> children = node.getChildren();
+        List<Type> childTypes = new ArrayList<>();
+        for (ParseNode child : children) {
+            childTypes.add(child.getType());
+        }
+
+        Lextant operator = operatorFor(node);
+        FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
+        FunctionSignature signature = signatures.acceptingSignature(childTypes);
+
+        if (signature.accepts(childTypes)) {
+            node.setType(signature.resultType());
+            node.setSignature(signature);
+        }
+        else {
+            typeCheckError(node, childTypes);
+            node.setType(PrimitiveType.ERROR);
+        }
+
+	}
+	
+	// TODO: Probably should check if the left side evaluates to a boolean or something.
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
 		ParseNode condition = node.child(0);

@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.PrimitiveType;
+
 import static semanticAnalyzer.types.PrimitiveType.*;
 
+import asmCodeGenerator.ArrayCloningCodeGenerator;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
@@ -15,6 +18,7 @@ import asmCodeGenerator.FloatingRationalizeCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.IntegerToRationalCodeGenerator;
+import asmCodeGenerator.NewArrayCodeGenerator;
 import asmCodeGenerator.RationalAdditionCodeGenerator;
 import asmCodeGenerator.RationalDivisionCodeGenerator;
 import asmCodeGenerator.RationalExpressOverCodeGenerator;
@@ -24,6 +28,7 @@ import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
+import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
 import semanticAnalyzer.types.Type;
 import semanticAnalyzer.types.TypeVariable;
@@ -56,6 +61,28 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 				return functionSignature;
 			}
 		}
+		
+//		// try the left promotion
+//		int numChildren = types.size();
+//		Type leftType = types.get(0);
+//		// if char -> try 1) int, 2) float, 3) rat
+//		// if int -> try 1) float, 2) rat
+//		if (leftType == PrimitiveType.CHARACTER) {
+//			// promote to int and do a check
+//			
+//		}
+//		if (leftType == PrimitiveType.INTEGER) {
+//			// promote to a float and do a check
+//			// promote to a rat and do a check
+//		}
+//		
+//		// try the right promotion
+//		Type rightType = types.get(1);
+//		if (rightType == PrimitiveType.CHARACTER) {
+//			
+//		}
+		
+		
 		return FunctionSignature.nullInstance();
 	}
 	public boolean accepts(List<Type> types) {
@@ -187,21 +214,47 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN)
 		);
 		
-		// NOT
-		new FunctionSignatures(Punctuator.NOT,
-			new FunctionSignature(1, BOOLEAN, BOOLEAN)
-		);
+
 		
 		// Array Indexing
 		TypeVariable S = new TypeVariable("S");
+		
 		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
 			new FunctionSignature(
 				new ArrayIndexingCodeGenerator(),
 				new Array(S), INTEGER, S
 			)
 		);
-						
 		
+		////////////////////////////////////////////////////
+		// Unary Operators
+		
+		// NOT
+		new FunctionSignatures(Punctuator.NOT,
+			new FunctionSignature(1, BOOLEAN, BOOLEAN)
+		);
+		
+		// Clone operation
+		// Array(S) -> Array(S)
+		new FunctionSignatures(Keyword.CLONE,
+			new FunctionSignature(
+				new ArrayCloningCodeGenerator(), new Array(S), new Array(S)
+			)
+		);
+						
+		// Empty array generation
+		new FunctionSignatures(Keyword.NEW,
+			new FunctionSignature(
+				new NewArrayCodeGenerator(), S, INTEGER, new Array(S)
+			)
+		);
+		
+		// length
+		new FunctionSignatures(Keyword.CLONE,
+			new FunctionSignature(
+				new ArrayCloningCodeGenerator(), new Array(S), new Array(S)
+			)
+		);
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

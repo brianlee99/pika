@@ -1,4 +1,5 @@
 exec {
-	var x := [10 | float].
-	print x.
+	const x := new[int](3).
+	
+	x[3] := 333.
 }

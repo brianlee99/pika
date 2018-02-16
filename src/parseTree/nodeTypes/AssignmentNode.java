@@ -12,7 +12,6 @@ public class AssignmentNode extends ParseNode {
 
 	public AssignmentNode(Token token) {
 		super(token);
-		assert(token instanceof IdentifierToken);
 	}
 
 	public AssignmentNode(ParseNode node) {

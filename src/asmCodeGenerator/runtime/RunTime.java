@@ -34,7 +34,6 @@ public class RunTime {
 	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
 	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";
 	
-	
 	public static final String LOWEST_TERMS    = "$lowest-terms";
 	public static final String RETURN_ADDRESS  = "$return-address";
 	
@@ -44,7 +43,6 @@ public class RunTime {
 	public static final String RATIONAL_PRINT_CAlCULATE_QUOTIENT = "$rat-print-calculate-quotient";
 	public static final String RATIONAL_PRINT_NEGATIVE_DENOMINATOR = "$rat-print-negative-denominator";
 	public static final String RATIONAL_PRINT_END = "$rat-print-end";
-	
 	
 	public static final String RATIONAL_ADD      = "$rational-add";
 	public static final String RATIONAL_SUBTRACT = "$rational-subtract";
@@ -60,12 +58,17 @@ public class RunTime {
 	
 	public static final String EXPRESS_OVER_DENOMINATOR = "$express-over-denominator";
 	
+	
+	// Array Subroutines
+	public static final String CREATE_EMPTY_ARRAY_RECORD 	= "$create-empty-arr";
+	public static final String CLEAR_N_BYTES	 			= "$clear-n-bytes";
+	
+	// Array subroutine variables
 	public static final String RECORD_CREATION_TEMP     = "$record-creation-temp";
 	public static final String ARRAY_DATASIZE_TEMPORARY = "$array-datasize-temp";
-	public static final String CLEAR_N_BYTES	 		= "$clear-n-bytes";
-	
-	public static final String ARRAY_INDEXING_ARRAY = "$a-indexing-array";
-	public static final String ARRAY_INDEXING_INDEX = "$a-indexing-index";
+	public static final String ARRAY_INDEXING_ARRAY 	= "$a-indexing-array";
+	public static final String ARRAY_INDEXING_INDEX 	= "$a-indexing-index";
+	public static final String CLEAR_N_BYTES_OFFSET_TEMP = "$clear-n-bytes-offset-temp";
 	
 	
 	private ASMCodeFragment environmentASM() {
@@ -99,34 +102,16 @@ public class RunTime {
 		frag.add(DLabel, RETURN_ADDRESS);
 		frag.add(DataZ, 4);  // maybe 8
 
-		frag.add(DLabel, NUMERATOR_1);
-		frag.add(DataZ, 4);
+		declareI(frag, NUMERATOR_1);
+		declareI(frag, NUMERATOR_2);
+		declareI(frag, DENOMINATOR_1);
+		declareI(frag, DENOMINATOR_2);
+		declareI(frag, QUOTIENT);
+		declareI(frag, REMAINDER);
+		declareI(frag, EXPRESS_OVER_DENOMINATOR);
 
-		frag.add(DLabel, NUMERATOR_2);
-		frag.add(DataZ, 4);
-
-		frag.add(DLabel, DENOMINATOR_1);
-		frag.add(DataZ, 4);
-
-		frag.add(DLabel, DENOMINATOR_2);
-		frag.add(DataZ, 4);
-		
-		frag.add(DLabel, QUOTIENT);
-		frag.add(DataZ, 4);
-
-		frag.add(DLabel, REMAINDER);
-		frag.add(DataZ, 4);	
-		
-		frag.add(DLabel, EXPRESS_OVER_DENOMINATOR);
-		frag.add(DataZ, 4);
-		
-		frag.add(DLabel, RECORD_CREATION_TEMP);
-		frag.add(DataZ, 4);
-		// dataZ
-		
-		frag.add(DLabel, ARRAY_DATASIZE_TEMPORARY);
-		frag.add(DataZ, 4);
-		
+		declareI(frag, RECORD_CREATION_TEMP);
+		declareI(frag, ARRAY_DATASIZE_TEMPORARY);
 		declareI(frag, ARRAY_INDEXING_ARRAY);
 		declareI(frag, ARRAY_INDEXING_INDEX);
 		
@@ -579,50 +564,73 @@ public class RunTime {
 	private ASMCodeFragment clearNBytes() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
 		frag.add(Label, CLEAR_N_BYTES);
-		storeITo(frag, RETURN_ADDRESS);
+		storeITo(frag, RETURN_ADDRESS);	// [ ... base numBytes]
 		
-		// [... nElems elemsPtr elemSize]
+		frag.add(Label, "$clear-n-bytes-loop");
+		frag.add(Duplicate);
+		frag.add(JumpNeg, "$clear-n-bytes-end");
 		
-		// start at elemsPtr, and set Zero for nelems * elemSize
+		frag.add(PushI, 1);
+		frag.add(Subtract);							// [ ... base offset]
+		storeITo(frag, CLEAR_N_BYTES_OFFSET_TEMP);	// [ ... base]
+		frag.add(Duplicate);						// [ ... base base]
+		loadIFrom(frag, CLEAR_N_BYTES_OFFSET_TEMP);	// [ ... base base offset]
+		frag.add(Add);								// [ ... base base+offset]
+		frag.add(PushI, 0);							// [ ... base base+offset 0]
+		frag.add(StoreC); 							// [ ... base]
+		loadIFrom(frag, CLEAR_N_BYTES_OFFSET_TEMP);
+		frag.add(Jump, "$clear-n-bytes-loop");
 		
-		
+		frag.add(Label, "$clear-n-bytes-end");		// [ ... base -1 ]
+		frag.add(Pop);
+		frag.add(Pop);
 		
 		loadIFrom(frag, RETURN_ADDRESS);
+		frag.add(Return);
 		return frag;
 	}
 		
 	public static void createRecord(ASMCodeFragment code, int typecode, int statusFlags) {
-		code.add(Call, MemoryManager.MEM_MANAGER_ALLOCATE);
+		code.add(Call, MemoryManager.MEM_MANAGER_ALLOCATE);		// [ ... addr]
 		storeITo(code, RECORD_CREATION_TEMP);
+		
 		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_TYPEID_OFFSET, typecode);
 		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_STATUS_OFFSET, statusFlags);	
 	}
 	
+	// Subroutine (NOT at the ASM level) that creates an empty array record.
 	public static void createEmptyArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize) {
 		final int typecode = Record.ARRAY_TYPE_ID;
-		code.add(Duplicate);		// [ ... nElems nElems]
+		
+		code.add(Duplicate);									// [ ... nElems nElems]
 		code.add(JumpNeg, NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR);
 		
-		code.add(Duplicate);
-		code.add(PushI, subtypeSize);
-		code.add(Multiply);
-		code.add(Duplicate);
-		storeITo(code, ARRAY_DATASIZE_TEMPORARY);
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);
-		code.add(Add);
+		code.add(Duplicate);									// [ ... nElems nElems]
+		code.add(PushI, subtypeSize);							// [ ... nElems nElems subtypeSize]
+		code.add(Multiply);										// [ ... nElems arraySize]
+		code.add(Duplicate);									// [ ... nElems arraySize arraySize]
+		storeITo(code, ARRAY_DATASIZE_TEMPORARY);				// [ ... nElems arraySize]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ ... nElems arraySize 16]
+		code.add(Add);											// [ ... nElems totalArraySize]
 		
-		createRecord(code, typecode, statusFlags);
+		createRecord(code, typecode, statusFlags);				// [ ... nElems]
 		
-		loadIFrom(code, RECORD_CREATION_TEMP);
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);
-		code.add(Add);
-		loadIFrom(code, ARRAY_DATASIZE_TEMPORARY);
-		code.add(Call, CLEAR_N_BYTES);
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... nElems ptr]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ ... nElems ptr 16]
+		code.add(Add);											// [ ... nElems elemsPtr]
+		loadIFrom(code, ARRAY_DATASIZE_TEMPORARY);				// [ ... nElems elemsPtr arraySize]
+		code.add(Call, CLEAR_N_BYTES);							// [ ... nElems]
 		
+		// Write subtype size + array length
 		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_SUBTYPE_SIZE_OFFSET, subtypeSize);
-		// writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET);
+		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET);
 		
-		
+		// The array resides in record_creation_temp 
+		loadIFrom(code, RECORD_CREATION_TEMP);
+	}
+	
+	public static void createStringRecord() {
+		// todo: complete
 	}
 		
 	private ASMCodeFragment runtimeErrors() {
@@ -644,7 +652,6 @@ public class RunTime {
 
 		frag.add(DLabel, generalErrorMessage);
 		frag.add(DataS, "Runtime error: %s\n");
-		
 		frag.add(Label, GENERAL_RUNTIME_ERROR);
 		frag.add(PushD, generalErrorMessage);
 		frag.add(Printf);

@@ -65,12 +65,22 @@ public class Macros {
 	}
 	
 	public static void writeIPBaseOffset(ASMCodeFragment frag, String baseAddress, int offset, int value) {
-		frag.add(PushD, baseAddress);
-		frag.add(PushI, offset);
-		frag.add(Add);
-		frag.add(PushI, value);
-		frag.add(Exchange);
+		frag.add(PushD, baseAddress);	// [base]
+		frag.add(LoadI); 				// [actual_base]
+		frag.add(PushI, offset);		// [base+offset]
+		frag.add(Add);	
+		frag.add(PushI, value);			
+//		frag.add(Exchange);
 		frag.add(StoreI);
+	}
+	
+	public static void writeIPtrOffset(ASMCodeFragment frag, String baseAddress, int offset) {
+		frag.add(PushD, baseAddress);
+		frag.add(LoadI);
+		frag.add(PushI, offset);
+		frag.add(Add);					// [data base+offset]
+		frag.add(Exchange);				// [base+off data]
+		frag.add(StoreI);				// []
 	}
 	
 	

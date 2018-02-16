@@ -1,6 +1,7 @@
 package asmCodeGenerator;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
@@ -12,6 +13,7 @@ import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
 import parseTree.*;
+import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
@@ -28,14 +30,13 @@ import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
+import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
 import symbolTable.Scope;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
-import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
-import static asmCodeGenerator.runtime.RunTime.RATIONAL_MULTIPLY;
 
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
@@ -52,10 +53,10 @@ public class ASMCodeGenerator {
 	
 	public ASMCodeFragment makeASM() {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
-		
+
+		code.append( MemoryManager.codeForInitialization());
 		code.append( RunTime.getEnvironment() );
 		code.append( globalVariableBlockASM() );
-		code.append( MemoryManager.codeForInitialization()); // not sure if this goes here
 		code.append( programASM() );
 		code.append( MemoryManager.codeForAfterApplication() );
 		
@@ -162,7 +163,6 @@ public class ASMCodeGenerator {
 				code.add(LoadC);
 			}
 			else if (nodeType == PrimitiveType.RATIONAL) {
-				// needs to bring up both num and denom
 				code.add(Duplicate);
 				code.add(LoadI);
 				code.add(Exchange);
@@ -171,6 +171,9 @@ public class ASMCodeGenerator {
 				code.add(LoadI);
 			}
 			else if (nodeType == PrimitiveType.STRING) {
+				code.add(LoadI);
+			}
+			else if (nodeType instanceof Array) {
 				code.add(LoadI);
 			}
 			else {
@@ -184,8 +187,6 @@ public class ASMCodeGenerator {
 		public void visitLeave(ParseNode node) {
 			assert false : "node " + node + " not handled in ASMCodeGenerator";
 		}
-		
-		
 		
 		///////////////////////////////////////////////////////////////////////////
 		// constructs larger than statements
@@ -291,9 +292,9 @@ public class ASMCodeGenerator {
 			if (type == PrimitiveType.RATIONAL) {
 				code.append(rationalFragmentForStore());
 			}
-			code.add(opcodeForStore(type));
-			
-			
+			else {
+				code.add(opcodeForStore(type));
+			}
 		}
 	
 		private ASMOpcode opcodeForStore(Type type) {
@@ -309,10 +310,13 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
-			if(type == PrimitiveType.RATIONAL) {
+//			if(type == PrimitiveType.RATIONAL) {
+//				return StoreI;
+//			}
+			if (type == PrimitiveType.STRING) {
 				return StoreI;
 			}
-			if (type == PrimitiveType.STRING) {
+			if (type instanceof Array) {
 				return StoreI;
 			}
 
@@ -384,22 +388,27 @@ public class ASMCodeGenerator {
 		public void visitLeave(OperatorNode node) {
 			Lextant operator = node.getOperator();
 			
-			if(operator == Punctuator.GREATER ||
-					operator == Punctuator.LESS ||
-					operator == Punctuator.EQUALS ||
-					operator == Punctuator.NOT_EQUALS ||
-					operator == Punctuator.GREATER_EQUALS ||
+			if(operator == Punctuator.GREATER 				||
+					operator == Punctuator.LESS 			||
+					operator == Punctuator.EQUALS 			||
+					operator == Punctuator.NOT_EQUALS 		||
+					operator == Punctuator.GREATER_EQUALS 	||
 					operator == Punctuator.LESS_EQUALS ) {
 				visitComparisonOperatorNode(node, operator);
 			}
 			else if (operator == Punctuator.OR || operator == Punctuator.AND) {
 				visitBooleanOperatorNode(node, operator);
 			}
-			else if (operator == Punctuator.NOT) {
+			else if (operator == Punctuator.NOT    	||
+					 operator == Keyword.LENGTH 	||
+					 operator == Keyword.CLONE) {
 				visitUnaryOperatorNode(node, operator);
 			}
 			else if (operator == Punctuator.CASTING) {
 				visitCastingOperatorNode(node);
+			}
+			else if (operator == Keyword.NEW) {
+				visitNewArrayNode(node);
 			}
 			else {
 				visitNormalBinaryOperatorNode(node);
@@ -429,9 +438,9 @@ public class ASMCodeGenerator {
 			code.append(arg2);
 			code.add(Label, subLabel);
 			
-			if (leftNodeType == PrimitiveType.INTEGER ||
+			if (leftNodeType == PrimitiveType.INTEGER 		||
 					leftNodeType == PrimitiveType.CHARACTER ||
-					leftNodeType == PrimitiveType.BOOLEAN ||
+					leftNodeType == PrimitiveType.BOOLEAN 	||
 					leftNodeType == PrimitiveType.STRING)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
@@ -461,9 +470,9 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
+				if (leftNodeType == PrimitiveType.INTEGER 		||
 						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN ||
+						leftNodeType == PrimitiveType.BOOLEAN 	||
 						leftNodeType == PrimitiveType.STRING)
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
@@ -474,9 +483,9 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.NOT_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER ||
+				if (leftNodeType == PrimitiveType.INTEGER 		||
 						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN ||
+						leftNodeType == PrimitiveType.BOOLEAN 	||
 						leftNodeType == PrimitiveType.STRING) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
@@ -569,10 +578,9 @@ public class ASMCodeGenerator {
 			code.add(Label, joinLabel);
 		}
 		
-		private void visitUnaryOperatorNode(OperatorNode node,
-				Lextant operator) {
-			
-			Type leftNodeType = node.child(0).getType();
+		private void visitNotOperatorNode(OperatorNode node) {
+
+			// Type leftNodeType = node.child(0).getType();
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			
 			Labeller labeller = new Labeller("compare");
@@ -588,13 +596,7 @@ public class ASMCodeGenerator {
 			code.append(arg1);
 			code.add(Label, opLabel);
 			
-			// we need to check the node signatures
-			if (operator == Punctuator.NOT) {
-				code.add(BNegate);
-			}
-			else {
-				assert false : "unrecognized operator";
-			}
+			code.add(BNegate);
 			
 			code.add(JumpTrue, trueLabel);
 			code.add(Jump, falseLabel);
@@ -606,6 +608,49 @@ public class ASMCodeGenerator {
 			code.add(PushI, 0);
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
+		}
+		                                                      
+		private void visitUnaryOperatorNode(OperatorNode node,
+				Lextant operator) {
+			
+			// NOT
+			if (operator == Punctuator.NOT) {
+				visitNotOperatorNode(node);
+			}
+			else {
+				newValueCode(node);
+				ASMCodeFragment arg1 = removeValueCode(node.child(0));
+				
+				Object variant = node.getSignature().getVariant();
+				if(variant instanceof ASMOpcode) {
+					code.append(arg1);
+					ASMOpcode opcode = (ASMOpcode) variant;
+					code.add(opcode);
+				}
+				else if (variant instanceof SimpleCodeGenerator) {
+					code.append(arg1);
+					SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+					ASMCodeFragment fragment = generator.generate(node);
+					code.append(fragment);
+					
+					if (fragment.isAddress()) {
+						code.markAsAddress();
+					}
+				}
+				else if (variant instanceof FullCodeGenerator) {
+					FullCodeGenerator generator = (FullCodeGenerator) variant;
+					ASMCodeFragment fragment = generator.generate(node);
+					code.append(fragment);
+					
+					if (fragment.isAddress()) {
+						code.markAsAddress();
+					}
+				}
+				else {
+					assert false : "unknown variant in UnaryOperatorNode";
+				}
+			}
+			
 		}
 		private void visitCastingOperatorNode(OperatorNode node) {
 			newValueCode(node);
@@ -630,7 +675,47 @@ public class ASMCodeGenerator {
 				assert false : "unknown variant in CastingExpressionNode";
 			}
 		}
+		
+		public void visitLeave(ArrayPopulationNode node) {
+			newValueCode(node);
+			// List<ParseNode> children = node.getChildren();
+			int subtypeSize = node.getType().getSize();
+			code.add(PushI, subtypeSize);
+			int length = node.nChildren();
+			code.add(PushI, length);
+			
+			SimpleCodeGenerator generator = new ArrayPopulationCodeGenerator();
+			ASMCodeFragment fragment = generator.generate(node);
+			code.append(fragment);
+			if (fragment.isAddress()) {
+				code.markAsAddress();
+			}
 
+		}
+		public void visitNewArrayNode(OperatorNode node) {
+			newValueCode(node);
+//			ASMCodeFragment length = removeValueCode(node.child(1));
+//			code.append(length);										// [ ...subtype_size, length]
+
+			code.append(removeValueCode(node.child(1)));
+			
+			Object variant = node.getSignature().getVariant();
+			if(variant instanceof ASMOpcode) {
+				ASMOpcode opcode = (ASMOpcode) variant;
+				code.add(opcode);
+			}
+			else if (variant instanceof SimpleCodeGenerator) {
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+			}
+			else {
+				assert false : "unknown variant in NewArrayNode";
+			}
+		}
 		
 		private void visitNormalBinaryOperatorNode(OperatorNode node) {
 			newValueCode(node);
