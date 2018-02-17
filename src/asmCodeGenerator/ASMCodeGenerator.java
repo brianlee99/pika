@@ -8,6 +8,7 @@ import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import asmCodeGenerator.runtime.MemoryManager;
+import asmCodeGenerator.runtime.Record;
 import asmCodeGenerator.runtime.RunTime;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
@@ -37,6 +38,7 @@ import symbolTable.Binding;
 import symbolTable.Scope;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
+import static asmCodeGenerator.runtime.RunTime.populateArray;
 
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
@@ -678,15 +680,23 @@ public class ASMCodeGenerator {
 		
 		public void visitLeave(ArrayPopulationNode node) {
 			newValueCode(node);
-			// List<ParseNode> children = node.getChildren();
-			int subtypeSize = node.getType().getSize();
-			code.add(PushI, subtypeSize);
 			int length = node.nChildren();
+			int subtypeSize = node.child(0).getType().getSize(); // todo: fix this
+			Type type = node.child(0).getType();
 			code.add(PushI, length);
 			
-			SimpleCodeGenerator generator = new ArrayPopulationCodeGenerator();
+			SimpleCodeGenerator generator = new NewArrayCodeGenerator();
 			ASMCodeFragment fragment = generator.generate(node);
 			code.append(fragment);
+			
+			for (int i = 0; i < length; i++) {
+				ASMCodeFragment childFragment = removeValueCode(node.child(i));
+				code.append(childFragment);							// [ ... element_i ]
+				int offset = i * subtypeSize;
+				ASMCodeFragment anotherFragment = new ASMCodeFragment(CodeType.GENERATES_VOID);
+				populateArray(anotherFragment, offset, type);					// [ ... ]
+			}
+			
 			if (fragment.isAddress()) {
 				code.markAsAddress();
 			}
@@ -694,26 +704,13 @@ public class ASMCodeGenerator {
 		}
 		public void visitNewArrayNode(OperatorNode node) {
 			newValueCode(node);
-//			ASMCodeFragment length = removeValueCode(node.child(1));
-//			code.append(length);										// [ ...subtype_size, length]
-
 			code.append(removeValueCode(node.child(1)));
 			
-			Object variant = node.getSignature().getVariant();
-			if(variant instanceof ASMOpcode) {
-				ASMOpcode opcode = (ASMOpcode) variant;
-				code.add(opcode);
-			}
-			else if (variant instanceof SimpleCodeGenerator) {
-				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
-				ASMCodeFragment fragment = generator.generate(node);
-				code.append(fragment);
-				if (fragment.isAddress()) {
-					code.markAsAddress();
-				}
-			}
-			else {
-				assert false : "unknown variant in NewArrayNode";
+			SimpleCodeGenerator generator = (SimpleCodeGenerator) node.getSignature().getVariant();
+			ASMCodeFragment fragment = generator.generate(node);
+			code.append(fragment);
+			if (fragment.isAddress()) {
+				code.markAsAddress();
 			}
 		}
 		
@@ -797,14 +794,30 @@ public class ASMCodeGenerator {
 
 		public void visit(StringConstantNode node) {
 			newValueCode(node);
+			ASMCodeFragment arg = removeValueCode(node);
+			String string = node.getValue();
+			code.add(PushI, string.length());
 			
-			String preLabel = node.getValue();
-			Labeller labeller = new Labeller("string-constant");
-			String label = labeller.newLabel("");
+			int statusFlags = Record.STRING_STATUS;
+			RunTime.createStringRecord(code, statusFlags, string);
 			
-			code.add(DLabel, label);
-			code.add(DataS, preLabel);
-			code.add(PushD, label);
+//			String preLabel = node.getValue();
+//			Labeller labeller = new Labeller("string-constant");
+//			String label = labeller.newLabel("");
+//			
+//			code.add(DLabel, label);
+//			code.add(DataS, preLabel);
+//			code.add(PushD, label);
+			
+//			newValueCode(node);
+//			code.append(removeValueCode(node.child(1)));
+			
+//			SimpleCodeGenerator generator = (SimpleCodeGenerator) node.getSignature().getVariant();
+//			ASMCodeFragment fragment = generator.generate(node);
+//			code.append(fragment);
+//			if (fragment.isAddress()) {
+//				code.markAsAddress();
+//			}
 		}
 	}
 

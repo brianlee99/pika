@@ -284,6 +284,16 @@
         DataZ        4                         
         DLabel       $a-indexing-index         
         DataZ        4                         
+        DLabel       $string-len-temp          
+        DataZ        4                         
+        DLabel       $clear-n-bytes-offset-temp 
+        DataZ        4                         
+        DLabel       $printf-arr-base          
+        DataZ        4                         
+        DLabel       $printf-arr-length        
+        DataZ        4                         
+        DLabel       $printf-arr-i             
+        DataZ        4                         
         Label        $lowest-terms             
         PushD        $return-address           
         Exchange                               
@@ -602,7 +612,7 @@
         Return                                 
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        4                         
+        DataZ        8                         
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
@@ -611,7 +621,7 @@
         Duplicate                              
         JumpNeg      $$negative-length-arr     
         Duplicate                              
-        PushI        4                         
+        PushI        8                         
         Multiply                               
         Duplicate                              
         PushD        $array-datasize-temp      
@@ -646,7 +656,7 @@
         LoadI                                  
         PushI        8                         
         Add                                    
-        PushI        4                         
+        PushI        8                         
         StoreI                                 
         PushD        $record-creation-temp     
         LoadI                                  
@@ -661,7 +671,7 @@
         PushI        0                         
         Add                                    %% x
         LoadI                                  
-        PushI        3                         
+        PushI        0                         
         PushD        $a-indexing-index         
         Exchange                               
         StoreI                                 
@@ -692,11 +702,156 @@
         Add                                    
         PushD        $a-indexing-index         
         LoadI                                  
-        PushI        4                         
+        PushI        8                         
         Multiply                               
         Add                                    
-        PushI        333                       
+        PushF        1.100000                  
+        StoreF                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        LoadI                                  
+        PushI        1                         
+        PushD        $a-indexing-index         
+        Exchange                               
         StoreI                                 
+        PushD        $a-indexing-array         
+        Exchange                               
+        StoreI                                 
+        PushD        $a-indexing-array         
+        LoadI                                  
+        JumpFalse    $$null-array              
+        PushD        $a-indexing-index         
+        LoadI                                  
+        JumpNeg      $$index-out-of-bounds     
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        LoadI                                  
+        Subtract                               
+        JumpNeg      -array-indexing-2-in-bounds 
+        Jump         $$index-out-of-bounds     
+        Label        -array-indexing-2-in-bounds 
+        Nop                                    
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        16                        
+        Add                                    
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushI        8                         
+        Multiply                               
+        Add                                    
+        PushF        4.700000                  
+        StoreF                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        LoadI                                  
+        PushI        2                         
+        PushD        $a-indexing-index         
+        Exchange                               
+        StoreI                                 
+        PushD        $a-indexing-array         
+        Exchange                               
+        StoreI                                 
+        PushD        $a-indexing-array         
+        LoadI                                  
+        JumpFalse    $$null-array              
+        PushD        $a-indexing-index         
+        LoadI                                  
+        JumpNeg      $$index-out-of-bounds     
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        LoadI                                  
+        Subtract                               
+        JumpNeg      -array-indexing-3-in-bounds 
+        Jump         $$index-out-of-bounds     
+        Label        -array-indexing-3-in-bounds 
+        Nop                                    
+        PushD        $a-indexing-array         
+        LoadI                                  
+        PushI        16                        
+        Add                                    
+        PushD        $a-indexing-index         
+        LoadI                                  
+        PushI        8                         
+        Multiply                               
+        Add                                    
+        PushF        -7.110000                 
+        StoreF                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% x
+        LoadI                                  
+        PushI        91                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushD        $printf-arr-base          
+        Exchange                               
+        StoreI                                 
+        PushD        $printf-arr-base          
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        LoadI                                  
+        PushD        $printf-arr-length        
+        Exchange                               
+        StoreI                                 
+        PushI        0                         
+        PushD        $printf-arr-i             
+        Exchange                               
+        StoreI                                 
+        Label        $printf-arr-loop-body     
+        PushD        $printf-arr-i             
+        LoadI                                  
+        PushD        $printf-arr-length        
+        LoadI                                  
+        Subtract                               
+        JumpFalse    $printf-arr-loop-end      
+        PushD        $printf-arr-base          
+        LoadI                                  
+        PushI        16                        
+        Add                                    
+        PushD        $printf-arr-i             
+        LoadI                                  
+        PushI        8                         
+        Multiply                               
+        Add                                    
+        LoadF                                  
+        PushD        $print-format-floating    
+        Printf                                 
+        PushD        $printf-arr-i             
+        LoadI                                  
+        PushI        1                         
+        Add                                    
+        PushD        $printf-arr-i             
+        Exchange                               
+        StoreI                                 
+        PushD        $printf-arr-i             
+        LoadI                                  
+        PushD        $printf-arr-length        
+        LoadI                                  
+        Subtract                               
+        JumpFalse    $printf-arr-loop-end      
+        PushI        44                        
+        PushD        $print-format-character   
+        Printf                                 
+        PushI        32                        
+        PushD        $print-format-character   
+        Printf                                 
+        Jump         $printf-arr-loop-body     
+        Label        $printf-arr-loop-end      
+        PushI        93                        
+        PushD        $print-format-character   
+        Printf                                 
         Halt                                   
         Label        -mem-manager-make-tags    
         DLabel       $mmgr-tags-size           

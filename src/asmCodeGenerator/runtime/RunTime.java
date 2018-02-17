@@ -2,10 +2,17 @@ package asmCodeGenerator.runtime;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 
+import java.util.List;
+
 import com.sun.org.apache.bcel.internal.classfile.Code;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMOpcode;
+import parseTree.ParseNode;
+import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.PrimitiveType;
+import semanticAnalyzer.types.Type;
+
 import static asmCodeGenerator.Macros.*;
 public class RunTime {
 	public static final String EAT_LOCATION_ZERO      = "$eat-location-zero";		// helps us distinguish null pointers from real ones.
@@ -58,14 +65,19 @@ public class RunTime {
 	
 	public static final String EXPRESS_OVER_DENOMINATOR = "$express-over-denominator";
 	
+	// Printf array
+	public static final String PRINTF_ARR_BASE		= "$printf-arr-base";
+	public static final String PRINTF_ARR_LENGTH	= "$printf-arr-length";
+	public static final String PRINTF_ARR_I			= "$printf-arr-i";
 	
 	// Array Subroutines
-	public static final String CREATE_EMPTY_ARRAY_RECORD 	= "$create-empty-arr";
+	// public static final String CREATE_EMPTY_ARRAY_RECORD 	= "$create-empty-arr";
 	public static final String CLEAR_N_BYTES	 			= "$clear-n-bytes";
 	
 	// Array subroutine variables
 	public static final String RECORD_CREATION_TEMP     = "$record-creation-temp";
 	public static final String ARRAY_DATASIZE_TEMPORARY = "$array-datasize-temp";
+	public static final String STRING_LENGTH_TEMPORARY  = "$string-len-temp";
 	public static final String ARRAY_INDEXING_ARRAY 	= "$a-indexing-array";
 	public static final String ARRAY_INDEXING_INDEX 	= "$a-indexing-index";
 	public static final String CLEAR_N_BYTES_OFFSET_TEMP = "$clear-n-bytes-offset-temp";
@@ -114,9 +126,14 @@ public class RunTime {
 		declareI(frag, ARRAY_DATASIZE_TEMPORARY);
 		declareI(frag, ARRAY_INDEXING_ARRAY);
 		declareI(frag, ARRAY_INDEXING_INDEX);
+		declareI(frag, STRING_LENGTH_TEMPORARY);
+		declareI(frag, CLEAR_N_BYTES_OFFSET_TEMP);
+		
+		declareI(frag, PRINTF_ARR_BASE);
+		declareI(frag, PRINTF_ARR_LENGTH);
+		declareI(frag, PRINTF_ARR_I);
 		
 		return frag;
-		
 	}
 
 	private ASMCodeFragment stringsForPrintf() {
@@ -629,8 +646,160 @@ public class RunTime {
 		loadIFrom(code, RECORD_CREATION_TEMP);
 	}
 	
-	public static void createStringRecord() {
-		// todo: complete
+	// Subroutine that populates an array
+	public static void populateArray(ASMCodeFragment code, int offset, Type type) {
+		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... item arrPtr]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);
+		code.add(Add);										// [ ... item elemsPtr]
+		code.add(PushI, offset);
+		code.add(Add);										// [ ... item addr]
+		code.add(Exchange);
+		// code.add(StoreI);
+		
+		if(type == PrimitiveType.INTEGER) {
+			code.add(StoreI);
+		}
+		if(type == PrimitiveType.FLOATING) {
+			code.add(StoreF);
+		}
+		if(type == PrimitiveType.BOOLEAN) {
+			code.add(StoreC);
+		}
+		if(type == PrimitiveType.CHARACTER) {
+			code.add(StoreC);
+		}
+//		if(type == PrimitiveType.RATIONAL) {
+//			return StoreI;
+//		}
+		if (type == PrimitiveType.STRING) {
+			code.add(StoreI);
+		}
+		if (type instanceof Array) {
+			code.add(StoreI);
+		}
+	}
+	
+	public static void createStringRecord(ASMCodeFragment code, int statusFlags, String string)  {
+		final int typecode = Record.STRING_TYPE_ID;
+		
+		code.add(Duplicate);									// [ ... length length]
+		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
+		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE + 1);			// [ ... length length 16+1]
+		code.add(Add);											// [ ... length totalStringSize]
+		
+		createRecord(code, typecode, statusFlags);				// [ ... length]
+		
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... length ptr]
+		code.add(PushI, Record.STRING_HEADER_SIZE);				// [ ... length ptr 12]
+		code.add(Add);											// [ ... length firstCharPtr]
+		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length firstCharPtr length]
+		code.add(PushI, 1);										
+		code.add(Add);											// [ ... length firstCharPtr length+1]
+		code.add(Call, CLEAR_N_BYTES);							// [ ... length ]
+		
+		// Write subtype size + array length
+		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.STRING_LENGTH_OFFSET);
+		
+		// Actually write the contents of the string
+		for (int i = 0; i < string.length(); i++) {
+			code.add(PushI, string.charAt(i)); 					// [ ... ch ]
+			loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
+			code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
+			code.add(Add);										// [ ... ch firstCharPtr]
+			writeCOffset(code, i);								// []
+		}
+		
+		// write the null terminator
+		code.add(PushI, 0); 								// [ ... ch ]
+		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
+		code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
+		code.add(Add);										// [ ... ch firstCharPtr]
+		writeCOffset(code, string.length());				// []
+		
+		// The array resides in record_creation_temp 
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
+	}
+	
+	public static void printfArray(ASMCodeFragment code, Type subtype) {
+		//	[ ... base ]
+		final String PRINTF_ARR_LOOP_BODY = "$printf-arr-loop-body";
+		final String PRINTF_ARR_LOOP_END  = "$printf-arr-loop-end";
+		
+		code.add(PushI, (int) '[' );
+		code.add(PushD, CHARACTER_PRINT_FORMAT);
+		code.add(Printf);
+		
+		// Retrieve the length of the array
+		storeITo(code, PRINTF_ARR_BASE);
+		
+		loadIFrom(code, PRINTF_ARR_BASE);
+		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+		code.add(Add);										// [ ... &length]
+		code.add(LoadI);									// [ ... length]
+		storeITo(code, PRINTF_ARR_LENGTH);
+		code.add(PushI, 0);
+		storeITo(code, PRINTF_ARR_I);
+		
+		// main loop
+		code.add(Label, PRINTF_ARR_LOOP_BODY);
+		loadIFrom(code, PRINTF_ARR_I);						// [ ... i]
+		loadIFrom(code, PRINTF_ARR_LENGTH);					// [ ... i length]
+		code.add(Subtract);
+		code.add(JumpFalse, PRINTF_ARR_LOOP_END);			// [ ... ]
+		
+		loadIFrom(code, PRINTF_ARR_BASE);					// [ base ]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);
+		code.add(Add);
+		loadIFrom(code, PRINTF_ARR_I);
+		if (subtype == PrimitiveType.INTEGER) {
+			code.add(PushI, 4);
+		}
+		else if (subtype == PrimitiveType.FLOATING) {
+			code.add(PushI, 8);
+		}
+		code.add(Multiply);									// [ base offset]
+		code.add(Add); 										// [ elemAddr ]
+		if (subtype == PrimitiveType.INTEGER) { 
+			code.add(LoadI);								// [ value ]
+			code.add(PushD, INTEGER_PRINT_FORMAT);
+			code.add(Printf);
+		}
+		else if (subtype == PrimitiveType.FLOATING) {
+			code.add(LoadF);
+			code.add(PushD, FLOATING_PRINT_FORMAT);
+			code.add(Printf);
+		}
+		
+	
+		
+		
+		// Increment i
+		loadIFrom(code, PRINTF_ARR_I);
+		code.add(PushI, 1);
+		code.add(Add);
+		storeITo(code, PRINTF_ARR_I);
+		
+		// print comma space, BUT ONLY IF i - length is not Zero
+		loadIFrom(code, PRINTF_ARR_I);
+		loadIFrom(code, PRINTF_ARR_LENGTH);
+		code.add(Subtract);
+		code.add(JumpFalse, PRINTF_ARR_LOOP_END);
+		
+		code.add(PushI, (int) ',');
+		code.add(PushD, CHARACTER_PRINT_FORMAT);
+		code.add(Printf);
+		code.add(PushI, (int) ' ');
+		code.add(PushD, CHARACTER_PRINT_FORMAT);
+		code.add(Printf);
+		
+		code.add(Jump, PRINTF_ARR_LOOP_BODY);
+		
+		code.add(Label, PRINTF_ARR_LOOP_END);
+		code.add(PushI, (int) ']' );
+		code.add(PushD, CHARACTER_PRINT_FORMAT);
+		code.add(Printf);
+		
 	}
 		
 	private ASMCodeFragment runtimeErrors() {

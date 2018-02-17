@@ -1,22 +1,18 @@
 package asmCodeGenerator;
 
-import static asmCodeGenerator.codeStorage.ASMOpcode.Call;
-import static asmCodeGenerator.codeStorage.ASMOpcode.Jump;
-import static asmCodeGenerator.codeStorage.ASMOpcode.JumpTrue;
-import static asmCodeGenerator.codeStorage.ASMOpcode.Label;
-import static asmCodeGenerator.codeStorage.ASMOpcode.Printf;
-import static asmCodeGenerator.codeStorage.ASMOpcode.PushD;
-import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
+import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 
 import parseTree.ParseNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.TabNode;
+import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import asmCodeGenerator.ASMCodeGenerator.CodeVisitor;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
+import asmCodeGenerator.runtime.Record;
 import asmCodeGenerator.runtime.RunTime;
 
 public class PrintStatementGenerator {
@@ -32,7 +28,7 @@ public class PrintStatementGenerator {
 
 	public void generate(PrintStatementNode node) {
 		for(ParseNode child : node.getChildren()) {
-			if(child instanceof NewlineNode ||
+			if(child instanceof NewlineNode    ||
 					child instanceof SpaceNode ||
 					child instanceof TabNode) {
 				ASMCodeFragment childCode = visitor.removeVoidCode(child);
@@ -49,6 +45,27 @@ public class PrintStatementGenerator {
 		if (type == PrimitiveType.RATIONAL) {
 			code.append(visitor.removeValueCode(node));
 			code.add(Call, RunTime.PRINTF_RATIONAL);
+		}
+		if (type == PrimitiveType.STRING) {
+			code.append(visitor.removeValueCode(node));
+			// add header size to offset
+			code.add(PushI, Record.STRING_HEADER_SIZE);
+			code.add(Add);
+			String format = printFormat(node.getType());
+			code.add(PushD, format);
+			code.add(Printf);
+		}
+		if (type instanceof Array) {
+			// print the [
+			
+			// start with the base address
+			// calculate the length of the array
+			// pass in the subtype (deal with strings and arrays later)
+			// 
+			Type subtype = ((Array) type).getSubtype();
+			code.append(visitor.removeValueCode(node));		// [ ... base]
+			RunTime.printfArray(code, subtype);						// [ ... ]
+
 		}
 		else {
 			String format = printFormat(node.getType());

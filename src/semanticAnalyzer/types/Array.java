@@ -36,7 +36,6 @@ public class Array implements Type {
 	@Override
 	public Type getConcreteType() {
 		Type concreteSubtype = subtype.getConcreteType();
-		
 		return new Array(concreteSubtype);
 	}
 
