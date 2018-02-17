@@ -81,7 +81,6 @@ public class ASMCodeGenerator {
 		code.append( programCode());
 		code.add(    Halt );
 	
-		
 		return code;
 	}
 	private ASMCodeFragment programCode() {
@@ -166,8 +165,10 @@ public class ASMCodeGenerator {
 			}
 			else if (nodeType == PrimitiveType.RATIONAL) {
 				code.add(Duplicate);
+				// load numerator
 				code.add(LoadI);
 				code.add(Exchange);
+				// load denominator
 				code.add(PushI, 4);
 				code.add(Add);
 				code.add(LoadI);
@@ -250,9 +251,8 @@ public class ASMCodeGenerator {
 			ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VOID);
 
 			// [addr num denom] -> [addr num denom addr]
-			// save num and denum in temp variables
+			// save num and denom in temp variables
 			Macros.storeITo(fragment, "$denominator-1");
-
 			Macros.storeITo(fragment, "$numerator-1");
 			// make a copy of addr
 			fragment.add(Duplicate);
@@ -278,7 +278,6 @@ public class ASMCodeGenerator {
 			fragment.add(StoreI);
 			fragment.add(StoreI);
 			
-
 			return fragment;
 			
 		}
@@ -312,9 +311,6 @@ public class ASMCodeGenerator {
 			if(type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
-//			if(type == PrimitiveType.RATIONAL) {
-//				return StoreI;
-//			}
 			if (type == PrimitiveType.STRING) {
 				return StoreI;
 			}
@@ -330,9 +326,6 @@ public class ASMCodeGenerator {
 
 		///////////////////////////////////////////////////////////////////////////
 		// expressions
-
-		
-		
 		public void visitLeave(ControlFlowStatementNode node) {
 			if (! node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
 				assert false;
@@ -398,11 +391,12 @@ public class ASMCodeGenerator {
 					operator == Punctuator.LESS_EQUALS ) {
 				visitComparisonOperatorNode(node, operator);
 			}
-			else if (operator == Punctuator.OR || operator == Punctuator.AND) {
-				visitBooleanOperatorNode(node, operator);
-			}
-			else if (operator == Punctuator.NOT    	||
-					 operator == Keyword.LENGTH 	||
+//			else if (operator == Punctuator.OR 				|| 
+//					 operator == Punctuator.AND) {
+//				visitBooleanOperatorNode(node, operator);
+//			}
+			else if (operator == Punctuator.NOT    			||
+					 operator == Keyword.LENGTH 			||
 					 operator == Keyword.CLONE) {
 				visitUnaryOperatorNode(node, operator);
 			}
@@ -534,50 +528,63 @@ public class ASMCodeGenerator {
 		}
 		private void visitBooleanOperatorNode(OperatorNode node,
 				Lextant operator) {
-			
-			// Type leftNodeType = node.child(0).getType();
-
+			newValueCode(node);
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));
 			
-			Labeller labeller = new Labeller("compare");
 			
-			String startLabel = labeller.newLabel("arg1");
-			String arg2Label  = labeller.newLabel("arg2");
-			String trueLabel  = labeller.newLabel("true");
-			String falseLabel = labeller.newLabel("false");
-			String joinLabel  = labeller.newLabel("join");
+			Object variant = node.getSignature().getVariant();
 			
-			String opLabel    = labeller.newLabel("op");
-
-			newValueCode(node);
-			code.add(Label, startLabel);
 			code.append(arg1);
-			code.add(Label, arg2Label);
 			code.append(arg2);
-			code.add(Label, opLabel);
 			
-			// we need to check the node signatures
-			if (operator == Punctuator.OR) {
-				code.add(Or);
-			}
-			else if (operator == Punctuator.AND) {
-				code.add(And);
-			}
-			else {
-				assert false : "unrecognized operator";
-			}
+			SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+			ASMCodeFragment fragment = generator.generate(node);
+			code.append(fragment);
 			
-			code.add(JumpTrue, trueLabel);
-			code.add(Jump, falseLabel);
+			if (fragment.isAddress()) {
+				code.markAsAddress();
+			}
+
 			
-			code.add(Label, trueLabel);
-			code.add(PushI, 1);
-			code.add(Jump, joinLabel);
-			code.add(Label, falseLabel);
-			code.add(PushI, 0);
-			code.add(Jump, joinLabel);
-			code.add(Label, joinLabel);
+//			Labeller labeller = new Labeller("compare");
+//			
+//			String startLabel = labeller.newLabel("arg1");
+//			String arg2Label  = labeller.newLabel("arg2");
+//			String trueLabel  = labeller.newLabel("true");
+//			String falseLabel = labeller.newLabel("false");
+//			String joinLabel  = labeller.newLabel("join");
+//			
+//			String opLabel    = labeller.newLabel("op");
+//
+//			newValueCode(node);
+//			code.add(Label, startLabel);
+//			code.append(arg1);
+//			code.add(Label, arg2Label);
+//			code.append(arg2);
+//			code.add(Label, opLabel);
+//			
+//			// we need to check the node signatures
+//			if (operator == Punctuator.OR) {
+//				code.add(Or);
+//			}
+//			else if (operator == Punctuator.AND) {
+//				code.add(And);
+//			}
+//			else {
+//				assert false : "unrecognized operator";
+//			}
+//			
+//			code.add(JumpTrue, trueLabel);
+//			code.add(Jump, falseLabel);
+//			
+//			code.add(Label, trueLabel);
+//			code.add(PushI, 1);
+//			code.add(Jump, joinLabel);
+//			code.add(Label, falseLabel);
+//			code.add(PushI, 0);
+//			code.add(Jump, joinLabel);
+//			code.add(Label, joinLabel);
 		}
 		
 		private void visitNotOperatorNode(OperatorNode node) {
@@ -741,7 +748,7 @@ public class ASMCodeGenerator {
 			}
 			else if (variant instanceof FullCodeGenerator) {
 				FullCodeGenerator generator = (FullCodeGenerator) variant;
-				ASMCodeFragment fragment = generator.generate(node);
+				ASMCodeFragment fragment = generator.generate(node, arg1, arg2);
 				code.append(fragment);
 				
 				if (fragment.isAddress()) {

@@ -6,15 +6,16 @@ import java.util.List;
 import java.util.Map;
 
 import semanticAnalyzer.types.Array;
-import semanticAnalyzer.types.PrimitiveType;
 
 import static semanticAnalyzer.types.PrimitiveType.*;
 
 import asmCodeGenerator.ArrayCloningCodeGenerator;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
+import asmCodeGenerator.ArrayLengthCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
 import asmCodeGenerator.FloatingRationalizeCodeGenerator;
+import asmCodeGenerator.FloatingToRationalCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.IntegerToRationalCodeGenerator;
@@ -27,6 +28,8 @@ import asmCodeGenerator.RationalMultiplicationCodeGenerator;
 import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
+import asmCodeGenerator.ShortCircuitAndCodeGenerator;
+import asmCodeGenerator.ShortCircuitOrCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
@@ -140,16 +143,18 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		    new FunctionSignature(new RationalDivisionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
 		);
 		
-		// Rational initialization
+		// Over
 		new FunctionSignatures(Punctuator.OVER,
 			new FunctionSignature(new RationalInitializerCodeGenerator(), INTEGER, INTEGER, RATIONAL)
 		);
 		
+		// Express Over
 		new FunctionSignatures(Punctuator.EXPRESS_OVER,
 			new FunctionSignature(new RationalExpressOverCodeGenerator(), RATIONAL, INTEGER, INTEGER),
 			new FunctionSignature(new FloatingExpressOverCodeGenerator(), FLOATING, INTEGER, INTEGER)
 		);
 		
+		// Rationalize
 		new FunctionSignatures(Punctuator.RATIONALIZE,
 			new FunctionSignature(new RationalRationalizeCodeGenerator(), RATIONAL, INTEGER, RATIONAL),
 			new FunctionSignature(new FloatingRationalizeCodeGenerator(), FLOATING, INTEGER, RATIONAL)
@@ -194,7 +199,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			
 			new FunctionSignature(ASMOpcode.ConvertI, FLOATING, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, FLOATING, FLOATING, FLOATING),
-//			new FunctionSignature(new FloatingToRationalCodeGenerator(), FLOATING, RATIONAL, RATIONAL),
+			new FunctionSignature(new FloatingToRationalCodeGenerator(), FLOATING, RATIONAL, RATIONAL),
 			new FunctionSignature(1, FLOATING, RATIONAL, RATIONAL),
 			
 			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
@@ -208,13 +213,11 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		
 		// OR and AND
 		new FunctionSignatures(Punctuator.OR,
-			new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN)
+			new FunctionSignature(new ShortCircuitOrCodeGenerator(), BOOLEAN, BOOLEAN, BOOLEAN)
 		);
 		new FunctionSignatures(Punctuator.AND,
-			new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN)
+			new FunctionSignature(new ShortCircuitAndCodeGenerator(), BOOLEAN, BOOLEAN, BOOLEAN)
 		);
-		
-
 		
 		// Array Indexing
 		TypeVariable S = new TypeVariable("S");
@@ -238,23 +241,27 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// Array(S) -> Array(S)
 		new FunctionSignatures(Keyword.CLONE,
 			new FunctionSignature(
-				new ArrayCloningCodeGenerator(), new Array(S), new Array(S)
+				new ArrayCloningCodeGenerator(),
+				new Array(S), new Array(S)
 			)
 		);
 						
 		// Empty array generation
 		new FunctionSignatures(Keyword.NEW,
 			new FunctionSignature(
-				new NewArrayCodeGenerator(), S, INTEGER, new Array(S)
+				new NewArrayCodeGenerator(),
+				S, INTEGER, new Array(S)
 			)
 		);
 		
 		// length
-		new FunctionSignatures(Keyword.CLONE,
+		new FunctionSignatures(Keyword.LENGTH,
 			new FunctionSignature(
-				new ArrayCloningCodeGenerator(), new Array(S), new Array(S)
+				new ArrayLengthCodeGenerator(),
+				new Array(S), INTEGER
 			)
 		);
+
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

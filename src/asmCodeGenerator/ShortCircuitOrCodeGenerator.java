@@ -28,7 +28,7 @@ public class ShortCircuitOrCodeGenerator implements FullCodeGenerator {
 		fragment.add(Jump, endLabel);
 		
 		// the end
-		fragment.add(Label, trueLabel); // [... 1]
+		fragment.add(Label, trueLabel); 		// [... 1]
 		fragment.add(Label, endLabel);
 		
 		return fragment;

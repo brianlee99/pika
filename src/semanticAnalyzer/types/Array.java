@@ -6,7 +6,6 @@ public class Array implements Type {
 	
 	public Array(Type subtype) {
 		this.subtype = subtype;
-		//this.infoString = toString();
 		this.infoString = "arr[" + this.subtype.infoString() + "]";
 	}
 	
@@ -33,6 +32,7 @@ public class Array implements Type {
 		return false;
 	}
 	
+
 	@Override
 	public Type getConcreteType() {
 		Type concreteSubtype = subtype.getConcreteType();

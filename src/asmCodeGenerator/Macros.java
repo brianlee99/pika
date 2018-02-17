@@ -1,9 +1,7 @@
 package asmCodeGenerator;
 
-import static asmCodeGenerator.Macros.writeIPBaseOffset;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
-import asmCodeGenerator.runtime.Record;
 
 public class Macros {
 	
@@ -64,13 +62,13 @@ public class Macros {
 		frag.add(StoreI);			// []
 	}
 	
+	
 	public static void writeIPBaseOffset(ASMCodeFragment frag, String baseAddress, int offset, int value) {
 		frag.add(PushD, baseAddress);	// [base]
 		frag.add(LoadI); 				// [actual_base]
 		frag.add(PushI, offset);		// [base+offset]
 		frag.add(Add);	
-		frag.add(PushI, value);			
-//		frag.add(Exchange);
+		frag.add(PushI, value);		
 		frag.add(StoreI);
 	}
 	

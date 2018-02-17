@@ -1,7 +1,6 @@
 exec {
-	const x := new[float](3).
-	x[0] := 1.1.
-	x[1] := 4.7.
-	x[2] := -7.11.
-	print x.
+	const x := [3.0 | rat].
+	# print x.
+	
+	print 3 // 4.
 }

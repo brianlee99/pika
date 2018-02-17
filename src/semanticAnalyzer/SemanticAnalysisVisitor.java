@@ -102,7 +102,7 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		
 		// check that the target node is actually targetable
 		
-		// target could be an IdentifierNode, OperatorNode (array Indexing), or a ParenthesesNode
+		// target could be an IdentifierNode, OperatorNode (array Indexing)
 		if (target instanceof IdentifierNode) {
 			IdentifierNode identifier = (IdentifierNode) node.child(0);
 			
@@ -190,11 +190,11 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	// TODO: Probably should check if the left side evaluates to a boolean or something.
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
-		ParseNode condition = node.child(0);
-		ParseNode thenStatement = node.child(1);
-		if (node.nChildren() == 3) {
-			ParseNode elseStatement = node.child(2);
-		}
+//		ParseNode condition = node.child(0);
+//		ParseNode thenStatement = node.child(1);
+//		if (node.nChildren() == 3) {
+//			ParseNode elseStatement = node.child(2);
+//		}
 	}
 	
 	private Lextant operatorFor(OperatorNode node) {

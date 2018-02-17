@@ -3,9 +3,7 @@ package asmCodeGenerator;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
-import asmCodeGenerator.codeStorage.ASMOpcode;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
-import asmCodeGenerator.runtime.RunTime;
 import parseTree.ParseNode;
 
 public class RationalInitializerCodeGenerator implements SimpleCodeGenerator {
