@@ -4,8 +4,6 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
-import asmCodeGenerator.codeStorage.ASMOpcode;
-import asmCodeGenerator.runtime.RunTime;
 import parseTree.ParseNode;
 
 public class IntegerToRationalCodeGenerator implements SimpleCodeGenerator {

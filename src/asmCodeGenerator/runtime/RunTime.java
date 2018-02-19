@@ -150,12 +150,7 @@ public class RunTime {
 		frag.add(DataS, "%c");
 		frag.add(DLabel, STRING_PRINT_FORMAT);
 		frag.add(DataS, "%s");
-		
-		// TODO: fix this
-		frag.add(DLabel, RATIONAL_PRINT_FORMAT);
-		//frag.add(DataS, "%d_%d/%d");
-		frag.add(DataS, "%d");
-		
+		// Note: Rationals are dealt with separately
 		frag.add(DLabel, NEWLINE_PRINT_FORMAT);
 		frag.add(DataS, "\n");
 		frag.add(DLabel, TAB_PRINT_FORMAT);
@@ -217,7 +212,6 @@ public class RunTime {
 		frag.add(PushD, "$b");
 		frag.add(LoadI);
 		frag.add(JumpFalse, "$gcd-end");
-		
 
 		frag.add(PushD, "$a");
 		frag.add(LoadI);
@@ -494,6 +488,7 @@ public class RunTime {
 		frag.add(PushI, 45); 						// negative sign
 		frag.add(PushD, CHARACTER_PRINT_FORMAT);
 		frag.add(Printf);
+		
 		// turn numerator into a positive
 		loadIFrom(frag, NUMERATOR_1);
 		frag.add(Negate);
@@ -508,6 +503,7 @@ public class RunTime {
 		frag.add(PushI, 45); 						// negative sign
 		frag.add(PushD, CHARACTER_PRINT_FORMAT);
 		frag.add(Printf);
+		
 		// turn denominator into a positive
 		loadIFrom(frag, DENOMINATOR_1);
 		frag.add(Negate);
@@ -524,7 +520,6 @@ public class RunTime {
 		loadIFrom(frag, DENOMINATOR_1);
 		frag.add(Remainder);
 		storeITo(frag, REMAINDER);					// [.. 4 ]
-
 		
 		// print the leading number if it exists
 		// if both quotient and remainder are 0, then just print 0.
@@ -570,18 +565,19 @@ public class RunTime {
 		frag.add(Printf);			
 		
 		frag.add(Label, RATIONAL_PRINT_END);
+		
 		// load return address
-		frag.add(PushD, RETURN_ADDRESS);
-		frag.add(LoadI);
+		loadIFrom(frag, RETURN_ADDRESS);
 		frag.add(Return);
 		
 		return frag;
 	}
 	
+	// Set N bytes to 0
 	private ASMCodeFragment clearNBytes() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
 		frag.add(Label, CLEAR_N_BYTES);
-		storeITo(frag, RETURN_ADDRESS);	// [ ... base numBytes]
+		storeITo(frag, RETURN_ADDRESS);				// [ ... base numBytes]
 		
 		frag.add(Label, "$clear-n-bytes-loop");
 		frag.add(Duplicate);
@@ -607,13 +603,7 @@ public class RunTime {
 		return frag;
 	}
 		
-	public static void createRecord(ASMCodeFragment code, int typecode, int statusFlags) {
-		code.add(Call, MemoryManager.MEM_MANAGER_ALLOCATE);		// [ ... addr]
-		storeITo(code, RECORD_CREATION_TEMP);
-		
-		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_TYPEID_OFFSET, typecode);
-		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_STATUS_OFFSET, statusFlags);	
-	}
+
 	
 	// Subroutine (NOT at the ASM level) that creates an empty array record.
 	public static void createEmptyArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize) {

@@ -42,20 +42,21 @@ public class PrintStatementGenerator {
 
 	private void appendPrintCode(ParseNode node) {
 		Type type = node.getType();
+		
 		if (type == PrimitiveType.RATIONAL) {
 			code.append(visitor.removeValueCode(node));
 			code.add(Call, RunTime.PRINTF_RATIONAL);
 		}
-		if (type == PrimitiveType.STRING) {
+		else if (type == PrimitiveType.STRING) {
 			code.append(visitor.removeValueCode(node));
-			// add header size to offset
+			// ignore header
 			code.add(PushI, Record.STRING_HEADER_SIZE);
 			code.add(Add);
 			String format = printFormat(node.getType());
 			code.add(PushD, format);
 			code.add(Printf);
 		}
-		if (type instanceof Array) {
+		else if (type instanceof Array) {
 			// print the [
 			
 			// start with the base address
@@ -103,7 +104,6 @@ public class PrintStatementGenerator {
 		case BOOLEAN:	return RunTime.BOOLEAN_PRINT_FORMAT;
 		case CHARACTER: return RunTime.CHARACTER_PRINT_FORMAT;
 		case STRING:	return RunTime.STRING_PRINT_FORMAT;
-		// case RATIONAL:  return RunTime.RATIONAL_PRINT_FORMAT;
 		default:		
 			assert false : "Type " + type + " unimplemented in PrintStatementGenerator.printFormat()";
 			return "";

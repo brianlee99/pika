@@ -1,5 +1,12 @@
 package asmCodeGenerator.runtime;
 
+import static asmCodeGenerator.Macros.storeITo;
+import static asmCodeGenerator.Macros.writeIPBaseOffset;
+import static asmCodeGenerator.codeStorage.ASMOpcode.Call;
+import static asmCodeGenerator.runtime.RunTime.*;
+
+import asmCodeGenerator.codeStorage.ASMCodeFragment;
+
 public class Record {
 	public static final int RECORD_TYPEID_OFFSET 		= 0;
 	public static final int RECORD_STATUS_OFFSET 		= 4;
@@ -23,4 +30,14 @@ public class Record {
 	public static final int ARRAY_SUBTYPE_REF_STATUS		= 2;
 	public static final int ARRAY_SUBTYPE_NOT_REF_STATUS 	= 0;
 	public static final int STRING_STATUS					= 9;
+	
+	public static void createRecord(ASMCodeFragment code, int typecode, int statusFlags) {
+		code.add(Call, MemoryManager.MEM_MANAGER_ALLOCATE);						// [ ... addr]
+		storeITo(code, RECORD_CREATION_TEMP);
+		
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_TYPEID_OFFSET, typecode);
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_STATUS_OFFSET, statusFlags);	
+	}
+	
+	
 }

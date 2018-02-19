@@ -1,7 +1,6 @@
 package asmCodeGenerator;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
@@ -526,25 +525,24 @@ public class ASMCodeGenerator {
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
 		}
-		private void visitBooleanOperatorNode(OperatorNode node,
-				Lextant operator) {
-			newValueCode(node);
-			ASMCodeFragment arg1 = removeValueCode(node.child(0));
-			ASMCodeFragment arg2 = removeValueCode(node.child(1));
-			
-			
-			Object variant = node.getSignature().getVariant();
-			
-			code.append(arg1);
-			code.append(arg2);
-			
-			SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
-			ASMCodeFragment fragment = generator.generate(node);
-			code.append(fragment);
-			
-			if (fragment.isAddress()) {
-				code.markAsAddress();
-			}
+//		private void visitBooleanOperatorNode(OperatorNode node, Lextant operator) {
+//			newValueCode(node);
+//			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+//			ASMCodeFragment arg2 = removeValueCode(node.child(1));
+//			
+//			
+//			Object variant = node.getSignature().getVariant();
+//			
+//			code.append(arg1);
+//			code.append(arg2);
+//			
+//			SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+//			ASMCodeFragment fragment = generator.generate(node);
+//			code.append(fragment);
+//			
+//			if (fragment.isAddress()) {
+//				code.markAsAddress();
+//			}
 
 			
 //			Labeller labeller = new Labeller("compare");
@@ -585,7 +583,7 @@ public class ASMCodeGenerator {
 //			code.add(PushI, 0);
 //			code.add(Jump, joinLabel);
 //			code.add(Label, joinLabel);
-		}
+//		}
 		
 		private void visitNotOperatorNode(OperatorNode node) {
 
@@ -762,6 +760,7 @@ public class ASMCodeGenerator {
 //			ASMOpcode opcode = opcodeForOperator(node.getOperator());
 //			code.add(opcode);							// type-dependent! (opcode is different for floats and for ints)
 		}
+		
 		private ASMOpcode opcodeForOperator(Lextant lextant) {
 			assert(lextant instanceof Punctuator);
 			Punctuator punctuator = (Punctuator)lextant;
@@ -798,7 +797,6 @@ public class ASMCodeGenerator {
 			newValueCode(node);
 			code.add(PushI, node.getValue());
 		}
-
 		public void visit(StringConstantNode node) {
 			newValueCode(node);
 			ASMCodeFragment arg = removeValueCode(node);

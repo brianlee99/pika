@@ -617,241 +617,47 @@
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
-        PushI        3                         
-        Duplicate                              
-        JumpNeg      $$negative-length-arr     
-        Duplicate                              
-        PushI        8                         
-        Multiply                               
-        Duplicate                              
-        PushD        $array-datasize-temp      
+        PushF        3.726000                  
+        PushI        223092870                 
+        PushD        $express-over-denominator 
         Exchange                               
         StoreI                                 
-        PushI        16                        
-        Add                                    
-        Call         -mem-manager-allocate     
-        PushD        $record-creation-temp     
+        PushD        $express-over-denominator 
+        LoadI                                  
+        ConvertF                               
+        FMultiply                              
+        ConvertI                               
+        PushD        $express-over-denominator 
+        LoadI                                  
+        Call         $lowest-terms             
+        PushD        $denominator-1            
         Exchange                               
         StoreI                                 
-        PushD        $record-creation-temp     
-        LoadI                                  
-        PushI        0                         
-        Add                                    
-        PushI        7                         
+        PushD        $numerator-1              
+        Exchange                               
         StoreI                                 
-        PushD        $record-creation-temp     
+        Duplicate                              
+        PushD        $numerator-1              
         LoadI                                  
+        Exchange                               
+        PushD        $denominator-1            
+        LoadI                                  
+        Exchange                               
         PushI        4                         
         Add                                    
-        PushI        2                         
-        StoreI                                 
-        PushD        $record-creation-temp     
-        LoadI                                  
-        PushI        16                        
-        Add                                    
-        PushD        $array-datasize-temp      
-        LoadI                                  
-        Call         $clear-n-bytes            
-        PushD        $record-creation-temp     
-        LoadI                                  
-        PushI        8                         
-        Add                                    
-        PushI        8                         
-        StoreI                                 
-        PushD        $record-creation-temp     
-        LoadI                                  
-        PushI        12                        
-        Add                                    
         Exchange                               
         StoreI                                 
-        PushD        $record-creation-temp     
-        LoadI                                  
         StoreI                                 
         PushD        $global-memory-block      
         PushI        0                         
         Add                                    %% x
+        Duplicate                              
         LoadI                                  
-        PushI        0                         
-        PushD        $a-indexing-index         
         Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        LoadI                                  
-        JumpFalse    $$null-array              
-        PushD        $a-indexing-index         
-        LoadI                                  
-        JumpNeg      $$index-out-of-bounds     
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        12                        
+        PushI        4                         
         Add                                    
         LoadI                                  
-        Subtract                               
-        JumpNeg      -array-indexing-1-in-bounds 
-        Jump         $$index-out-of-bounds     
-        Label        -array-indexing-1-in-bounds 
-        Nop                                    
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        16                        
-        Add                                    
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushI        8                         
-        Multiply                               
-        Add                                    
-        PushF        1.100000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
-        LoadI                                  
-        PushI        1                         
-        PushD        $a-indexing-index         
-        Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        LoadI                                  
-        JumpFalse    $$null-array              
-        PushD        $a-indexing-index         
-        LoadI                                  
-        JumpNeg      $$index-out-of-bounds     
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        12                        
-        Add                                    
-        LoadI                                  
-        Subtract                               
-        JumpNeg      -array-indexing-2-in-bounds 
-        Jump         $$index-out-of-bounds     
-        Label        -array-indexing-2-in-bounds 
-        Nop                                    
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        16                        
-        Add                                    
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushI        8                         
-        Multiply                               
-        Add                                    
-        PushF        4.700000                  
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
-        LoadI                                  
-        PushI        2                         
-        PushD        $a-indexing-index         
-        Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        Exchange                               
-        StoreI                                 
-        PushD        $a-indexing-array         
-        LoadI                                  
-        JumpFalse    $$null-array              
-        PushD        $a-indexing-index         
-        LoadI                                  
-        JumpNeg      $$index-out-of-bounds     
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        12                        
-        Add                                    
-        LoadI                                  
-        Subtract                               
-        JumpNeg      -array-indexing-3-in-bounds 
-        Jump         $$index-out-of-bounds     
-        Label        -array-indexing-3-in-bounds 
-        Nop                                    
-        PushD        $a-indexing-array         
-        LoadI                                  
-        PushI        16                        
-        Add                                    
-        PushD        $a-indexing-index         
-        LoadI                                  
-        PushI        8                         
-        Multiply                               
-        Add                                    
-        PushF        -7.110000                 
-        StoreF                                 
-        PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% x
-        LoadI                                  
-        PushI        91                        
-        PushD        $print-format-character   
-        Printf                                 
-        PushD        $printf-arr-base          
-        Exchange                               
-        StoreI                                 
-        PushD        $printf-arr-base          
-        LoadI                                  
-        PushI        12                        
-        Add                                    
-        LoadI                                  
-        PushD        $printf-arr-length        
-        Exchange                               
-        StoreI                                 
-        PushI        0                         
-        PushD        $printf-arr-i             
-        Exchange                               
-        StoreI                                 
-        Label        $printf-arr-loop-body     
-        PushD        $printf-arr-i             
-        LoadI                                  
-        PushD        $printf-arr-length        
-        LoadI                                  
-        Subtract                               
-        JumpFalse    $printf-arr-loop-end      
-        PushD        $printf-arr-base          
-        LoadI                                  
-        PushI        16                        
-        Add                                    
-        PushD        $printf-arr-i             
-        LoadI                                  
-        PushI        8                         
-        Multiply                               
-        Add                                    
-        LoadF                                  
-        PushD        $print-format-floating    
-        Printf                                 
-        PushD        $printf-arr-i             
-        LoadI                                  
-        PushI        1                         
-        Add                                    
-        PushD        $printf-arr-i             
-        Exchange                               
-        StoreI                                 
-        PushD        $printf-arr-i             
-        LoadI                                  
-        PushD        $printf-arr-length        
-        LoadI                                  
-        Subtract                               
-        JumpFalse    $printf-arr-loop-end      
-        PushI        44                        
-        PushD        $print-format-character   
-        Printf                                 
-        PushI        32                        
-        PushD        $print-format-character   
-        Printf                                 
-        Jump         $printf-arr-loop-body     
-        Label        $printf-arr-loop-end      
-        PushI        93                        
-        PushD        $print-format-character   
-        Printf                                 
+        Call         $printf-rational          
         Halt                                   
         Label        -mem-manager-make-tags    
         DLabel       $mmgr-tags-size           
