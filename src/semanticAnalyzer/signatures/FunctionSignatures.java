@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.PrimitiveType;
 
 import static semanticAnalyzer.types.PrimitiveType.*;
 
@@ -64,28 +65,6 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 				return functionSignature;
 			}
 		}
-		
-//		// try the left promotion
-//		int numChildren = types.size();
-//		Type leftType = types.get(0);
-//		// if char -> try 1) int, 2) float, 3) rat
-//		// if int -> try 1) float, 2) rat
-//		if (leftType == PrimitiveType.CHARACTER) {
-//			// promote to int and do a check
-//			
-//		}
-//		if (leftType == PrimitiveType.INTEGER) {
-//			// promote to a float and do a check
-//			// promote to a rat and do a check
-//		}
-//		
-//		// try the right promotion
-//		Type rightType = types.get(1);
-//		if (rightType == PrimitiveType.CHARACTER) {
-//			
-//		}
-		
-		
 		return FunctionSignature.nullInstance();
 	}
 	public boolean accepts(List<Type> types) {

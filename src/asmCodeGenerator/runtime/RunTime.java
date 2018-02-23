@@ -70,7 +70,6 @@ public class RunTime {
 	public static final String PRINTF_ARR_I			= "$printf-arr-i";
 	
 	// Array Subroutines
-	// public static final String CREATE_EMPTY_ARRAY_RECORD 	= "$create-empty-arr";
 	public static final String CLEAR_N_BYTES	 			= "$clear-n-bytes";
 	
 	// Array subroutine variables
@@ -81,6 +80,8 @@ public class RunTime {
 	public static final String ARRAY_INDEXING_INDEX 		= "$a-indexing-index";
 	public static final String CLEAR_N_BYTES_OFFSET_TEMP 	= "$clear-n-bytes-offset-temp";
 	public static final String POPULATE_ARRAY_ADDRESS_TEMP 	= "$pop-arr-addr-temp";
+	
+	// public static final String RELEASE_RECORD				= "$release-record";
 	
 	
 	private ASMCodeFragment environmentASM() {

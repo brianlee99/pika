@@ -385,7 +385,8 @@ public class ASMCodeGenerator {
 			newVoidCode(node);
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			code.append(arg1);
-			Record.releaseRecord(code);
+			Type type = node.getType();
+			code.append(Record.releaseRecord(type));
 			
 		}
 		                                                   

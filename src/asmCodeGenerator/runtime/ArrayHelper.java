@@ -39,7 +39,6 @@ public class ArrayHelper {
 		code.add(Add);										// [ &length ]
 		code.add(LoadI);									// [ length ]
 		storeITo(code, PRINTF_ARR_LENGTH);					// [ ]
-
 		
 		// i <- 0
 		code.add(PushI, 0);									// [ 0 ]
@@ -77,7 +76,6 @@ public class ArrayHelper {
 		}
 		else if (subtype == PrimitiveType.BOOLEAN) {
 			code.add(LoadC);								// [ value ]
-			
 			// convertToStringIfBoolean
 			Labeller boolLabeller = new Labeller("print-boolean");
 			String trueLabel = boolLabeller.newLabel("true");

@@ -23,10 +23,6 @@ public class FunctionSignature {
 	
 	public FunctionSignature(Object whichVariant, Type ...types) {
 		this(whichVariant, new ArrayList<TypeVariable>(), types);
-//		assert(types.length >= 1);
-//		storeParamTypes(types);
-//		resultType = types[types.length-1];
-//		this.whichVariant = whichVariant;
 	}
 	
 	// Constructor with type variables
@@ -66,12 +62,12 @@ public class FunctionSignature {
 	public boolean accepts(List<Type> types) {
 		 resetTypeVariables();
 		
-		if(types.size() != paramTypes.length) {
+		if (types.size() != paramTypes.length) {
 			return false;
 		}
 		
-		for(int i=0; i<paramTypes.length; i++) {
-			if(!assignableTo(paramTypes[i], types.get(i))) {
+		for (int i=0; i<paramTypes.length; i++) {
+			if (!assignableTo(paramTypes[i], types.get(i))) {
 				return false;
 			}
 		}		

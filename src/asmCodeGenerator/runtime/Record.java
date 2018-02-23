@@ -7,6 +7,7 @@ import static asmCodeGenerator.runtime.RunTime.*;
 import asmCodeGenerator.Labeller;
 import asmCodeGenerator.Macros;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
+import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -304,11 +305,14 @@ public class Record {
 		// code.add(PStack);
 	}
 	
-	public static void releaseRecord(ASMCodeFragment code) {	// [ ptr ]
+	public static ASMCodeFragment releaseRecord(Type type) {
+		ASMCodeFragment code = new ASMCodeFragment(CodeType.GENERATES_VOID);
+		final int subtypeSize = 4;
 		Labeller labeller = new Labeller("release");
 		String endLabel = labeller.newLabel("end");
 		String loop = labeller.newLabel("loop");
 		String iLabel = labeller.newLabel("i");
+
 		
 		code.add(Duplicate); 									// [ ptr ptr ]
 		code.add(PushI, RECORD_STATUS_OFFSET);					// [ ptr ptr 4 ]
@@ -338,7 +342,6 @@ public class Record {
 		code.add(LoadI); 										// [ ptr status ]
 		code.add(PushI, 2); 									// [ ptr status 2 ]
 		code.add(BTAnd); 										// [ ptr subtypeIsReference ]
-		code.add(PStack);
 		code.add(JumpFalse, endLabel); 							// [ ptr ]
 		
 		// recurse if necessary
@@ -346,14 +349,44 @@ public class Record {
 		code.add(PushI, 0);
 		storeITo(code, iLabel);
 		
+		// loop start
 		code.add(Label, loop);
 		
+		// bounds checking
+		code.add(Duplicate); 									// [ ptr ptr ]
+		code.add(PushI, ARRAY_LENGTH_OFFSET);
+		code.add(Add); 											// [ ptr &length ]
+		code.add(LoadI); 										// [ ptr length ]
+		loadIFrom(code, iLabel); 								// [ ptr length i ]
+		code.add(Subtract); 									// [ ptr length-i ]
+		code.add(JumpFalse, endLabel);							// [ ptr ]
 		
+		code.add(Duplicate);									// [ ptr ptr ]
+		code.add(PushI, ARRAY_HEADER_SIZE); 					// [ ptr ptr 16 ]
+		code.add(Add); 											// [ ptr &firstEl ]
+		loadIFrom(code, iLabel);								// [ ptr &firstEl i ]
 		
+		code.add(PushI, subtypeSize);							// [ ptr &firstEl i 4 ]
+		code.add(Multiply); 									// [ ptr &firstEl offset ]
+		code.add(Add); 											// [ ptr &ithEl ]
+		code.add(LoadI); 										// [ ptr ithEl ]
 		
+		if (type instanceof Array) {							// [ ptr ]
+			code.append(releaseRecord(((Array) type).getSubtype()));
+		} else {
+			code.add(Pop);
+		}
 		
+
+		loadIFrom(code, iLabel); 								// [ ptr i ]
+		code.add(PushI, 1); 									// [ ptr i 1 ]
+		code.add(Add); 											// [ ptr i+1 ]
+		storeITo(code, iLabel);									// [ ptr ]
+		code.add(Jump, loop);
 		
-		code.add(Label, endLabel);
+		code.add(Label, endLabel);								// [ ptr ]
+		code.add(Pop);											// [ ]
 		
+		return code;
 	}
 }

@@ -28,6 +28,7 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
+import semanticAnalyzer.signatures.PromotionChecker;
 import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -141,37 +142,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		node.setType(arrayType);
 	}
 	
-//	@Override
-//	public void visitLeave(NewArrayNode node) {
-////		ParseNode left = node.child(0);
-////		ParseNode right = node.child(1);
-//        List<ParseNode> children = node.getChildren();
-//        List<Type> childTypes = new ArrayList<>();
-//        for (ParseNode child : children) {
-//            childTypes.add(child.getType());
-//        }
-////		Array arrayType = new Array(left.getType());
-////		node.setType(arrayType);
-////		
-////		Type rightType = right.getType();
-////		if (rightType != PrimitiveType.INTEGER) {
-////			logError("non-integer length");
-////			node.setType(PrimitiveType.ERROR);
-////		}
-//        Lextant operator = Keyword.NEW;
-//        FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-//        FunctionSignature signature = signatures.acceptingSignature(childTypes);
-//
-//        if (signature.accepts(childTypes)) {
-//            node.setType(signature.resultType());
-//            node.setSignature(signature);
-//        }
-//        else {
-//            typeCheckError(node, childTypes);
-//            node.setType(PrimitiveType.ERROR);
-//        }
-//	}
-	
 	@Override
 	public void visitLeave(OperatorNode node) {
         List<ParseNode> children = node.getChildren();
@@ -183,12 +153,16 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
         Lextant operator = operatorFor(node);
         FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
         FunctionSignature signature = signatures.acceptingSignature(childTypes);
+        // if signature 
 
         if (signature.accepts(childTypes)) {
             node.setType(signature.resultType());
             node.setSignature(signature);
         }
         else {
+        	signature = PromotionChecker.promote(childTypes, signatures);
+        	
+        	
             typeCheckError(node, childTypes);
             node.setType(PrimitiveType.ERROR);
         }
@@ -198,11 +172,10 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	// TODO: Probably should check if the left side evaluates to a boolean or something.
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
-//		ParseNode condition = node.child(0);
-//		ParseNode thenStatement = node.child(1);
-//		if (node.nChildren() == 3) {
-//			ParseNode elseStatement = node.child(2);
-//		}
+		Type conditionType = node.child(0).getType();
+		if (conditionType != PrimitiveType.BOOLEAN) {
+			logError("the condition must evaluate to a boolean at " + node.getToken().getLocation());
+		}
 	}
 	
 	private Lextant operatorFor(OperatorNode node) {
