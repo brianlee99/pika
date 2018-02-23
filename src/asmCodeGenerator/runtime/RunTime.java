@@ -36,7 +36,6 @@ public class RunTime {
 	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR  = "$$i-divide-by-zero";
 	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	public static final String RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$r-divide-by-zero";
-	// public static final String DENOMINATOR_ZERO_RUNTIME_ERROR        = "$$denominator-zero";
 	public static final String NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR   = "$$negative-length-arr";
 	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
 	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";

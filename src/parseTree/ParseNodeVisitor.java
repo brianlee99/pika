@@ -15,6 +15,7 @@ import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
+import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
@@ -50,6 +51,9 @@ public interface ParseNodeVisitor {
 
 	void visitEnter(ArrayPopulationNode node);
 	void visitLeave(ArrayPopulationNode node);
+	
+	void visitEnter(ReleaseStatementNode node);
+	void visitLeave(ReleaseStatementNode node);
 
 	// leaf nodes: visitLeaf only
 	void visit(BooleanConstantNode node);
@@ -129,6 +133,12 @@ public interface ParseNodeVisitor {
 			defaultVisitEnter(node);
 		}
 		public void visitLeave(ArrayPopulationNode node) {
+			defaultVisitLeave(node);
+		}
+		public void visitEnter(ReleaseStatementNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(ReleaseStatementNode node) {
 			defaultVisitLeave(node);
 		}
 		

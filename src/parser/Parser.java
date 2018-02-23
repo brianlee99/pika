@@ -20,6 +20,7 @@ import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
+import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
@@ -121,14 +122,18 @@ public class Parser {
 		if(startsControlFlowStatement(nowReading)) {
 			return parseControlFlowStatement();
 		}
+		if(startsReleaseStatement(nowReading)) {
+			return parseReleaseStatement();
+		}
 		return syntaxErrorNode("statement");
 	}
 	private boolean startsStatement(Token token) {
-		return startsPrintStatement(token) ||
-				startsDeclaration(token) ||
-				startsAssignment(token) ||
-				startsBlock(token) ||
-				startsControlFlowStatement(token);
+		return startsPrintStatement(token) 			||
+				startsDeclaration(token) 			||
+				startsAssignment(token) 			||
+				startsBlock(token) 					||
+				startsControlFlowStatement(token) 	||
+				startsReleaseStatement(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
@@ -300,6 +305,21 @@ public class Parser {
 	
 	private boolean startsElseStatement(Token token) {
 		return token.isLextant(Keyword.ELSE);
+	}
+	
+	// Release
+	private ParseNode parseReleaseStatement() {
+		if (!startsReleaseStatement(nowReading)) {
+			return syntaxErrorNode("control flow");
+		}
+		Token releaseToken = nowReading;
+		readToken();
+		ParseNode expression = parseExpression();
+		expect(Punctuator.TERMINATOR);
+		return ReleaseStatementNode.withChildren(releaseToken, expression);
+	}
+	private boolean startsReleaseStatement(Token token) {
+		return token.isLextant(Keyword.RELEASE);
 	}
 	///////////////////////////////////////////////////////////
 	// expressions

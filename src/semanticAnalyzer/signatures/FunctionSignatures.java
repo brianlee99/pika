@@ -116,6 +116,8 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	// Put the signatures for operators in the following static block.
 	
 	static {
+		TypeVariable S = new TypeVariable("S");
+		
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
 		// for this to work, you should statically import *
 
@@ -176,9 +178,10 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			FunctionSignature bSignature = new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN);
 			FunctionSignature sSignature = new FunctionSignature(1, STRING, STRING, BOOLEAN);
 			FunctionSignature rSignature = new FunctionSignature(1, RATIONAL, RATIONAL, BOOLEAN);
+			FunctionSignature aSignature = new FunctionSignature(1, new Array(S), new Array(S), BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
-				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature, rSignature);
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature, rSignature, aSignature);
 			}
 			else {
 				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, rSignature);
@@ -227,8 +230,6 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		);
 		
 		// Array Indexing
-		TypeVariable S = new TypeVariable("S");
-		
 		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
 			new FunctionSignature(
 				new ArrayIndexingCodeGenerator(),

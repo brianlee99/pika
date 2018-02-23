@@ -1,15 +1,9 @@
 package asmCodeGenerator.runtime;
 
-import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import static asmCodeGenerator.runtime.RunTime.*;
-import java.util.List;
-import com.sun.org.apache.bcel.internal.classfile.Code;
-
 import asmCodeGenerator.Labeller;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
-import asmCodeGenerator.codeStorage.ASMOpcode;
-import parseTree.ParseNode;
 import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -25,6 +19,14 @@ public class ArrayHelper {
 		final String PRINTF_ARR_LOOP_BODY = labeller.newLabel("loop-body");
 		final String PRINTF_ARR_LOOP_END  = labeller.newLabel("loop-end");
 		
+		final String PRINTF_ARR_BASE = labeller.newLabel("base");
+		final String PRINTF_ARR_I = labeller.newLabel("i");
+		final String PRINTF_ARR_LENGTH = labeller.newLabel("length");
+		
+		declareI(code, PRINTF_ARR_BASE);
+		declareI(code, PRINTF_ARR_I);
+		declareI(code, PRINTF_ARR_LENGTH);
+		
 		// start array
 		code.add(PushI, (int) '[' );
 		code.add(PushD, CHARACTER_PRINT_FORMAT);
@@ -32,32 +34,31 @@ public class ArrayHelper {
 		
 		// Retrieve the length of the array
 		storeITo(code, PRINTF_ARR_BASE);
-		
 		loadIFrom(code, PRINTF_ARR_BASE);
-		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
-		code.add(Add);										// [ ... &length]
-		code.add(LoadI);									// [ ... length]
-		storeITo(code, PRINTF_ARR_LENGTH);
+		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);		// [ base lengthOffset ]
+		code.add(Add);										// [ &length ]
+		code.add(LoadI);									// [ length ]
+		storeITo(code, PRINTF_ARR_LENGTH);					// [ ]
+
 		
 		// i <- 0
-		code.add(PushI, 0);
-		storeITo(code, PRINTF_ARR_I);
+		code.add(PushI, 0);									// [ 0 ]
+		storeITo(code, PRINTF_ARR_I); 						// [ ]
 		
 		// main loop
 		code.add(Label, PRINTF_ARR_LOOP_BODY);
-		loadIFrom(code, PRINTF_ARR_I);						// [ ... i]
-		loadIFrom(code, PRINTF_ARR_LENGTH);					// [ ... i length]
+		loadIFrom(code, PRINTF_ARR_I);						// [ i ]
+		loadIFrom(code, PRINTF_ARR_LENGTH);					// [ i length ]
 		code.add(Subtract);
-		code.add(JumpFalse, PRINTF_ARR_LOOP_END);			// [ ... ]
+		code.add(JumpFalse, PRINTF_ARR_LOOP_END);			// []
 		
 		loadIFrom(code, PRINTF_ARR_BASE);					// [ base ]
 		code.add(PushI, Record.ARRAY_HEADER_SIZE);			
-		code.add(Add);										// [ firstElPtr]
-		loadIFrom(code, PRINTF_ARR_I);						// [ firstElementPtr i ]
-		
-		code.add(PushI, subtype.getSize());					// [ firstElPtr i subtypeSize ]
-		code.add(Multiply);									// [ base offset ]
-		code.add(Add); 										// [ ithElementPtr ]
+		code.add(Add);										// [ &firstElement ]
+		loadIFrom(code, PRINTF_ARR_I);						// [ &firstElement i ]
+		code.add(PushI, subtype.getSize());					// [ &firstElement i subtypeSize ]
+		code.add(Multiply);									// [ &firstElement offset ]
+		code.add(Add); 										// [ &ithElement ]
 		
 		if (subtype == PrimitiveType.INTEGER) { 
 			code.add(LoadI);								// [ value ]
@@ -87,7 +88,6 @@ public class ArrayHelper {
 			code.add(Label, trueLabel);
 			code.add(PushD, RunTime.BOOLEAN_TRUE_STRING);
 			code.add(Label, endLabel);
-
 			code.add(PushD, BOOLEAN_PRINT_FORMAT);
 			code.add(Printf);
 		}
@@ -138,5 +138,6 @@ public class ArrayHelper {
 		code.add(PushI, (int) ']' );
 		code.add(PushD, CHARACTER_PRINT_FORMAT);
 		code.add(Printf);
+		
 	}
 }

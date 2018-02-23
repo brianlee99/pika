@@ -50,20 +50,17 @@ public class PrintStatementGenerator {
 		}
 		else if (type == PrimitiveType.STRING) {
 			code.append(visitor.removeValueCode(node));
-			
 			// ignore header
 			code.add(PushI, Record.STRING_HEADER_SIZE);
 			code.add(Add);
-			
 			String format = printFormat(node.getType());
 			code.add(PushD, format);
 			code.add(Printf);
 		}
 		else if (type instanceof Array) {
-			Type subtype = ((Array) type).getSubtype();
-			code.append(visitor.removeValueCode(node));					// [ ... base]
+			Type subtype = ((Array) type).getSubtype();	
+			code.append(visitor.removeValueCode(node));					// [ ... base]		
 			ArrayHelper.printfArray(code, subtype);						// [ ... ]
-
 		}
 		else {
 			String format = printFormat(node.getType());

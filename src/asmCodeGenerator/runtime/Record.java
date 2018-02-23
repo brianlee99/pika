@@ -79,12 +79,14 @@ public class Record {
 	
 	// Subroutine that populates an array
 	public static void populateArray(ASMCodeFragment code, int offset, Type type) {
-
-		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... item arrPtr]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);
-		code.add(Add);										// [ ... item elemsPtr]
-		code.add(PushI, offset);
-		code.add(Add);										// [ ... item addr]
+		
+		// loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... &arr item ]
+		code.add(Exchange); 									// [ ... item &arr ]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE); 				// [ ... item &arr 16 ]
+		code.add(Add);											// [ ... item &firstElem ]
+		code.add(PushI, offset); 								// [ ... item &firstElem offset ]
+		code.add(Add);											// [ ... item &ithElem ]
+		
 		storeITo(code, POPULATE_ARRAY_ADDRESS_TEMP);
 		loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);
 		
@@ -123,9 +125,144 @@ public class Record {
 		}
 	}
 	
+	// Subroutine (NOT at the ASM level) that creates an empty array record.
+	public static void cloneArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize, Type subtype) {
+		final int typecode = Record.ARRAY_TYPE_ID;				// [ &arr ]
+		code.add(Duplicate);									// [ &arr &arr ]
+		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);  			
+		code.add(Add); 											// [ &arr &length ]
+		code.add(LoadI);  										// [ &arr nElems ]
+		code.add(Duplicate);  									// [ &arr nElems nElems ]
+		
+		code.add(PushI, subtypeSize);							// [ &arr nElems nElems subtypeSize]
+		code.add(Multiply);										// [ &arr nElems arraySize]
+		code.add(Duplicate);									// [ &arr nElems arraySize arraySize]
+		storeITo(code, ARRAY_DATASIZE_TEMPORARY);				// [ &arr nElems arraySize]
+		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ &arr nElems arraySize 16]
+		code.add(Add);											// [ &arr nElems totalArraySize]
+		
+		createRecord(code, typecode, statusFlags);				// [ &arr nElems]
+		
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ &arr nElems &newArr ]
+		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &arr nElems &newArr 16]
+		code.add(Add);											// [ &arr nElems &newFirstElem ]
+		loadIFrom(code, ARRAY_DATASIZE_TEMPORARY);				// [ &arr nElems &newFirstElem arraySize]
+		code.add(Call, CLEAR_N_BYTES);							// [ &arr nElems]
+		
+		// Write subtype size + array length
+		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_SUBTYPE_SIZE_OFFSET, subtypeSize);
+		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET); 
+																// [ &oldArr ]
+		
+		code.add(PushI, 0);
+		storeITo(code, "clone-array-i");
+		
+		// loop body
+		code.add(Label, "clone-array-loop-body");
+		
+		// bounds checking
+		code.add(Duplicate);									// [ &oldArr &oldArr ]
+		code.add(PushI, ARRAY_LENGTH_OFFSET);					// [ &oldArr &oldArr 12 ]
+		code.add(Add); 											// [ &oldArr &length ]
+		code.add(LoadI); 										// [ &oldArr length ]
+		loadIFrom(code, "clone-array-i");                       // [ &oldArr length i ]
+		code.add(Subtract);
+		code.add(JumpFalse, "clone-array-loop-end");            // [ &oldArr ]
+		
+		// extract the ith element
+		code.add(Duplicate);									// [ &oldArr &oldArr ]
+		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &oldArr &oldArr 16 ]
+		code.add(Add);											// [ &oldArr &oldFirstElem ]
+		loadIFrom(code, "clone-array-i");						// [ &oldArr &oldFirstElem i ]
+		code.add(PushI, subtypeSize);							// [ &oldArr &oldFirstElem i subtypesize ]
+		code.add(Multiply);										// [ &oldArr &oldFirstElem offset ]
+		code.add(Add);											// [ &oldArr &ithElem ]
+		
+		if (subtype == PrimitiveType.RATIONAL) {
+//			code.add(PushI, 4);
+//			code.add(Add); 										// [ ... num denom denomAddr ]
+//			code.add(Exchange);									// [ ... num denomAddr denom ]
+//			code.add(StoreI);									// [ ... num  ]
+//			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  		// [ ... num numAddr ]
+//			code.add(Exchange);
+//			code.add(StoreI);
+		}
+		if(subtype == PrimitiveType.INTEGER) {
+			code.add(LoadI);
+		}
+		if(subtype == PrimitiveType.FLOATING) {
+			code.add(LoadF);
+		}
+		if(subtype == PrimitiveType.BOOLEAN) {
+			code.add(LoadC);
+		}
+		if(subtype == PrimitiveType.CHARACTER) {
+			code.add(LoadC);
+		}
+		if (subtype == PrimitiveType.STRING) {
+			code.add(LoadI);
+		}
+		if (subtype instanceof Array) {
+			code.add(LoadI);
+		}
+																// [ &oldArr ithElem ]
+		// copy into new array
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ &oldArr ithElem &newArr ]
+		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &oldArr ithElem &newArr 16 ]
+		code.add(Add);											// [ &oldArr ithElem &newFirstElem ]
+		loadIFrom(code, "clone-array-i");						// [ &oldArr ithElem &newFirstElem i ]
+		code.add(PushI, subtypeSize);							// [ &oldArr ithElem &newFirstElem i subtypesize ]
+		code.add(Multiply);										// [ &oldArr ithElem &newFirstElem offset ]
+		code.add(Add);											// [ &oldArr ithElem &ithElem ]
+		
+		if (subtype == PrimitiveType.RATIONAL) {
+//			code.add(PushI, 4);
+//			code.add(Add); 										// [ ... num denom denomAddr ]
+//			code.add(Exchange);									// [ ... num denomAddr denom ]
+//			code.add(StoreI);									// [ ... num  ]
+//			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  		// [ ... num numAddr ]
+//			code.add(Exchange);
+//			code.add(StoreI);
+		}
+		if (subtype == PrimitiveType.INTEGER) {
+			code.add(Exchange);
+			code.add(StoreI);
+		}
+		if (subtype == PrimitiveType.FLOATING) {
+			code.add(Exchange);
+			code.add(StoreF);
+		}
+		if (subtype == PrimitiveType.BOOLEAN) {
+			code.add(Exchange);
+			code.add(StoreC);
+		}
+		if (subtype == PrimitiveType.CHARACTER) {
+			code.add(Exchange);
+			code.add(StoreC);
+		}
+		if (subtype == PrimitiveType.STRING) {
+			code.add(Exchange);
+			code.add(StoreI);
+		}
+		if (subtype instanceof Array) {
+			code.add(Exchange);
+			code.add(StoreI);
+		}
+																// [ &oldArr ]
+		loadIFrom(code, "clone-array-i");						// [ &oldArr i ]
+		code.add(PushI, 1);										// [ &oldArr i 1 ]
+		code.add(Add);											// [ &oldArr i+1 ]
+		storeITo(code, "clone-array-i");
+		code.add(Jump, "clone-array-loop-body");
+		
+		code.add(Label, "clone-array-loop-end");				// [ &oldArr ]
+		code.add(Pop);											// [ ]
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ &newArr ]
+	}
+	
 	public static void createStringRecord(ASMCodeFragment code, int statusFlags, String string)  {
 		final int typecode = Record.STRING_TYPE_ID;
-		
+
 		code.add(Duplicate);									// [ ... length length]
 		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
 		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
@@ -149,22 +286,30 @@ public class Record {
 		for (int i = 0; i < string.length(); i++) {
 			code.add(PushI, string.charAt(i)); 					// [ ... ch ]
 			loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
-			code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
+			code.add(PushI, STRING_HEADER_SIZE); 				// [ ... ch ptr 12]
 			code.add(Add);										// [ ... ch firstCharPtr]
 			writeCOffset(code, i);								// []
 		}
 		
 		// write the null terminator
-		code.add(PushI, 0); 								// [ ... ch ]
-		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
-		code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
-		code.add(Add);										// [ ... ch firstCharPtr]
-		writeCOffset(code, string.length());				// []
+		code.add(PushI, 0); 									// [ ... ch ]
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ch ptr]
+		code.add(PushI, STRING_HEADER_SIZE); 					// [ ... ch ptr 12]
+		code.add(Add);											// [ ... ch firstCharPtr]
+		writeCOffset(code, string.length());					// []
 		
 		// The array resides in record_creation_temp 
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
+		// code.add(PStack);
 	}
 	
-
-	
+	public static void releaseRecord(ASMCodeFragment code) {	// [ ptr ]
+		code.add(Duplicate); 									// [ ptr ptr ]
+		code.add(PushI, RECORD_STATUS_OFFSET);					// [ ptr ptr 4 ]
+		code.add(Add); 											// [ ptr &status ]
+		code.add(LoadI); 										// [ ptr status ]
+		
+		
+		
+	}
 }

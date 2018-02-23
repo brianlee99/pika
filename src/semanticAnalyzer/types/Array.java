@@ -11,7 +11,8 @@ public class Array implements Type {
 	
 	@Override
 	public int getSize() {
-		return subtype.getSize();
+		return 4;
+		//return subtype.getSize();
 	}
 	
 	public Type getSubtype() {

@@ -27,6 +27,7 @@ import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
+import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
@@ -37,7 +38,6 @@ import symbolTable.Binding;
 import symbolTable.Scope;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
-import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
 import static asmCodeGenerator.runtime.RunTime.RATIONAL_SUBTRACT;
 
 // do not call the code generator if any errors have occurred during analysis.
@@ -325,7 +325,7 @@ public class ASMCodeGenerator {
 		///////////////////////////////////////////////////////////////////////////
 		// expressions
 		public void visitLeave(ControlFlowStatementNode node) {
-			if (! node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
+			if (!node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
 				assert false;
 			}
 			Lextant controlFlowType = node.getControlFlowType();
@@ -378,6 +378,17 @@ public class ASMCodeGenerator {
 			}
 		}
 		
+		public void visitLeave(ReleaseStatementNode node) {
+			if (!node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
+				assert false;
+			}
+			newVoidCode(node);
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			code.append(arg1);
+			Record.releaseRecord(code);
+			
+		}
+		                                                   
 		public void visitLeave(OperatorNode node) {
 			Lextant operator = node.getOperator();
 			
@@ -389,13 +400,10 @@ public class ASMCodeGenerator {
 					operator == Punctuator.LESS_EQUALS ) {
 				visitComparisonOperatorNode(node, operator);
 			}
-//			else if (operator == Punctuator.OR 				|| 
-//					 operator == Punctuator.AND) {
-//				visitBooleanOperatorNode(node, operator);
-//			}
-			else if (operator == Punctuator.NOT    			||
-					 operator == Keyword.LENGTH 			||
-					 operator == Keyword.CLONE) {
+			else if (operator == Punctuator.NOT) {
+				visitNotOperatorNode(node);
+			}
+			else if (operator == Keyword.LENGTH || operator == Keyword.CLONE) {
 				visitUnaryOperatorNode(node, operator);
 			}
 			else if (operator == Punctuator.CASTING) {
@@ -432,17 +440,23 @@ public class ASMCodeGenerator {
 			code.add(Label, arg2Label);
 			code.append(arg2);										
 			code.add(Label, subLabel);
-			
-			// just for rationals! 
+			 
 			if (leftNodeType == PrimitiveType.RATIONAL) {			// [ .. num1 den1 num2 den2 ]
 				code.add(Call, RATIONAL_SUBTRACT);					// [ .. resultNum resultDen ]
 				// Assume for now that the denominator is positive
 				code.add(Pop);										// [ .. resultNum ]
 			}
-			else if (leftNodeType == PrimitiveType.INTEGER 		||
-					leftNodeType == PrimitiveType.CHARACTER 	||
-					leftNodeType == PrimitiveType.BOOLEAN 		||
-					leftNodeType == PrimitiveType.STRING)
+			else if (leftNodeType == PrimitiveType.INTEGER)
+				code.add(Subtract);
+			else if (leftNodeType == PrimitiveType.CHARACTER)
+				code.add(Subtract);
+			else if (leftNodeType == PrimitiveType.BOOLEAN)
+				code.add(Subtract);
+			else if (leftNodeType == PrimitiveType.BOOLEAN)
+				code.add(Subtract);
+			else if (leftNodeType == PrimitiveType.STRING)
+				code.add(Subtract);
+			else if (leftNodeType instanceof Array)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
 				code.add(FSubtract);
@@ -485,12 +499,15 @@ public class ASMCodeGenerator {
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.BOOLEAN)
 					code.add(JumpFalse, trueLabel);
-				else if (leftNodeType == PrimitiveType.STRING)
-					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFZero, trueLabel);
+				else if (leftNodeType == PrimitiveType.STRING)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType instanceof Array){
+					code.add(JumpFalse, trueLabel);
+				}
 				else
 					assert false : "type not supported for operation";
 				
@@ -509,10 +526,6 @@ public class ASMCodeGenerator {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
-				else if (leftNodeType == PrimitiveType.STRING) {
-					code.add(JumpTrue, trueLabel);
-					code.add(Jump, falseLabel);
-				}
 				else if (leftNodeType == PrimitiveType.RATIONAL) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
@@ -520,6 +533,14 @@ public class ASMCodeGenerator {
 				else if (leftNodeType == PrimitiveType.FLOATING) {
 					code.add(JumpFZero, falseLabel);
 					code.add(Jump, trueLabel);
+				}
+				else if (leftNodeType == PrimitiveType.STRING) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType instanceof Array) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
 				}
 				else {
 					assert false : "type not supported for operation";
@@ -565,66 +586,6 @@ public class ASMCodeGenerator {
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
 		}
-		
-//		private void visitBooleanOperatorNode(OperatorNode node, Lextant operator) {
-//			newValueCode(node);
-//			ASMCodeFragment arg1 = removeValueCode(node.child(0));
-//			ASMCodeFragment arg2 = removeValueCode(node.child(1));
-//			
-//			
-//			Object variant = node.getSignature().getVariant();
-//			
-//			code.append(arg1);
-//			code.append(arg2);
-//			
-//			SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
-//			ASMCodeFragment fragment = generator.generate(node);
-//			code.append(fragment);
-//			
-//			if (fragment.isAddress()) {
-//				code.markAsAddress();
-//			}
-
-			
-//			Labeller labeller = new Labeller("compare");
-//			
-//			String startLabel = labeller.newLabel("arg1");
-//			String arg2Label  = labeller.newLabel("arg2");
-//			String trueLabel  = labeller.newLabel("true");
-//			String falseLabel = labeller.newLabel("false");
-//			String joinLabel  = labeller.newLabel("join");
-//			
-//			String opLabel    = labeller.newLabel("op");
-//
-//			newValueCode(node);
-//			code.add(Label, startLabel);
-//			code.append(arg1);
-//			code.add(Label, arg2Label);
-//			code.append(arg2);
-//			code.add(Label, opLabel);
-//			
-//			// we need to check the node signatures
-//			if (operator == Punctuator.OR) {
-//				code.add(Or);
-//			}
-//			else if (operator == Punctuator.AND) {
-//				code.add(And);
-//			}
-//			else {
-//				assert false : "unrecognized operator";
-//			}
-//			
-//			code.add(JumpTrue, trueLabel);
-//			code.add(Jump, falseLabel);
-//			
-//			code.add(Label, trueLabel);
-//			code.add(PushI, 1);
-//			code.add(Jump, joinLabel);
-//			code.add(Label, falseLabel);
-//			code.add(PushI, 0);
-//			code.add(Jump, joinLabel);
-//			code.add(Label, joinLabel);
-//		}
 		
 		private void visitNotOperatorNode(OperatorNode node) {
 			// Type leftNodeType = node.child(0).getType();
@@ -726,21 +687,22 @@ public class ASMCodeGenerator {
 		public void visitLeave(ArrayPopulationNode node) {
 			newValueCode(node);
 			int length = node.nChildren();
-			int subtypeSize = node.child(0).getType().getSize(); // todo: fix this
+			int subtypeSize = node.child(0).getType().getSize();
 			Type type = node.child(0).getType();
-			code.add(PushI, length);
+			code.add(PushI, length);												// [ ... length ]
+			
 			
 			SimpleCodeGenerator generator = new NewArrayCodeGenerator();
 			ASMCodeFragment fragment = generator.generate(node);
-			code.append(fragment);
+			code.append(fragment);													// [ ... &arr ]
 			
 			for (int i = 0; i < length; i++) {
+				code.add(Duplicate); 												// [ ... &arr &arr ]
 				ASMCodeFragment childFragment = removeValueCode(node.child(i));
-				code.append(childFragment);									// [ ... element_i ]
+				code.append(childFragment);											// [ ... &arr &arr item ]
 				int offset = i * subtypeSize;
-				Record.populateArray(code, offset, type);					// [ ... ]
+				Record.populateArray(code, offset, type);							// [ ... &arr ]
 			}
-			
 			if (fragment.isAddress()) {
 				code.markAsAddress();
 			}
@@ -838,30 +800,10 @@ public class ASMCodeGenerator {
 		}
 		public void visit(StringConstantNode node) {
 			newValueCode(node);
-			ASMCodeFragment arg = removeValueCode(node);
 			String string = node.getValue();
 			code.add(PushI, string.length());
-			
 			int statusFlags = Record.STRING_STATUS;
 			Record.createStringRecord(code, statusFlags, string);
-			
-//			String preLabel = node.getValue();
-//			Labeller labeller = new Labeller("string-constant");
-//			String label = labeller.newLabel("");
-//			
-//			code.add(DLabel, label);
-//			code.add(DataS, preLabel);
-//			code.add(PushD, label);
-			
-//			newValueCode(node);
-//			code.append(removeValueCode(node.child(1)));
-			
-//			SimpleCodeGenerator generator = (SimpleCodeGenerator) node.getSignature().getVariant();
-//			ASMCodeFragment fragment = generator.generate(node);
-//			code.append(fragment);
-//			if (fragment.isAddress()) {
-//				code.markAsAddress();
-//			}
 		}
 	}
 

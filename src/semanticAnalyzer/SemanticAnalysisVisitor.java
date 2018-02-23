@@ -1,7 +1,6 @@
 package semanticAnalyzer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import lexicalAnalyzer.Keyword;
@@ -24,6 +23,7 @@ import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
+import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import semanticAnalyzer.signatures.FunctionSignature;
@@ -117,8 +117,16 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		else if (target instanceof OperatorNode) {
 			// check that it's an array indexing node
 		}
-
 	}
+	
+	public void visitLeave(ReleaseStatementNode node) {
+		ParseNode child = node.child(0);
+		Type childType = child.getType();
+		if (!(childType instanceof Array) && childType != PrimitiveType.STRING) {
+			logError("the expression must be a reference type at " + node.getToken().getLocation());
+		}
+	}
+	
 	///////////////////////////////////////////////////////////////////////////
 	// expressions
 	@Override
