@@ -2,7 +2,6 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
-import semanticAnalyzer.signatures.FunctionSignature;
 
 import java.util.List;
 

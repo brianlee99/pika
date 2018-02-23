@@ -1,7 +1,6 @@
 exec {
-	# const a := [ new(int)[3] ].
-	# const a := [1, 2, 3].
-	const a := ["one", "two"].
-	# const a := [[^1^], [^2^]].
-	release a.
+	
+	const a := [new[int](3), [1,2,3]] .
+	var b := length a.
+	print b.
 }

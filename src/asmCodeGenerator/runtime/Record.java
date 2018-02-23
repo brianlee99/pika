@@ -302,7 +302,6 @@ public class Record {
 		
 		// The array resides in record_creation_temp 
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
-		// code.add(PStack);
 	}
 	
 	public static ASMCodeFragment releaseRecord(Type type) {

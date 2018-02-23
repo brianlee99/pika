@@ -532,7 +532,7 @@ public class Parser {
 			return syntaxErrorNode("brackets");
 		}
 		
-		Token token = nowReading;						// [
+		// Token token = nowReading;						// [
 		readToken();
 		ParseNode expression = parseExpression();		// [ expr
 		
@@ -580,11 +580,38 @@ public class Parser {
 		if(!startsType(nowReading)) {
 			return syntaxErrorNode("type");
 		}
+		
+		if (startsTypeLiteral(nowReading)) {
+			return parseTypeLiteral();
+		}
+		if (startsArrayType(nowReading)) {
+			return parseArrayType();
+		}
+		
+		return syntaxErrorNode("type");
+	}
+	
+	private ParseNode parseTypeLiteral() {
 		readToken();
 		return new TypeNode(previouslyRead);
+	}	
+	private ParseNode parseArrayType() {
+		// artificial token
+		Token realToken = nowReading;
+		Token arrayToken = LextantToken.artificial(realToken, Punctuator.ARRAY_TYPE);
+		
+		expect(Punctuator.OPEN_BRACKET);
+		ParseNode type = parseType();
+		expect(Punctuator.CLOSE_BRACKET);
+
+		return TypeNode.withChildren(arrayToken, type);
 	}
 	
 	private boolean startsType(Token token) {
+		return startsTypeLiteral(token) || startsArrayType(token);
+	}
+	
+	private boolean startsTypeLiteral(Token token) {
 		return token.isLextant(
 				Keyword.BOOL,
 				Keyword.CHAR,
@@ -592,6 +619,10 @@ public class Parser {
 				Keyword.FLOAT,
 				Keyword.STRING,
 				Keyword.RAT);
+	}
+	
+	private boolean startsArrayType(Token token) {
+		return token.isLextant(Punctuator.OPEN_BRACKET);
 	}
 	
 	

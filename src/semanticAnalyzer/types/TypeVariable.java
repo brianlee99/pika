@@ -46,7 +46,7 @@ public class TypeVariable implements Type {
 			setType(otherType);
 			return true;
 		}
-		return getType().equivalent(otherType);
+		return this.getType().equivalent(otherType);
 	}
 	
 	@Override

@@ -5,6 +5,7 @@ import java.util.List;
 
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
+import lexicalAnalyzer.Punctuator;
 import logging.PikaLogger;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
@@ -26,6 +27,7 @@ import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
+import parseTree.nodeTypes.TypeNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
 import semanticAnalyzer.signatures.PromotionChecker;
@@ -153,14 +155,14 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
         Lextant operator = operatorFor(node);
         FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
         FunctionSignature signature = signatures.acceptingSignature(childTypes);
+        
         // if signature 
-
         if (signature.accepts(childTypes)) {
             node.setType(signature.resultType());
             node.setSignature(signature);
         }
         else {
-        	signature = PromotionChecker.promote(childTypes, signatures);
+        	// signature = PromotionChecker.promote(childTypes, signatures);
         	
         	
             typeCheckError(node, childTypes);
@@ -169,7 +171,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
 	}
 	
-	// TODO: Probably should check if the left side evaluates to a boolean or something.
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
 		Type conditionType = node.child(0).getType();
@@ -178,10 +179,39 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 	}
 	
+	@Override
+	public void visitLeave(TypeNode node) {
+		Token token = node.getToken();
+		if (token.isLextant(Keyword.BOOL)) {
+			node.setType(PrimitiveType.BOOLEAN);
+		}
+		else if (token.isLextant(Keyword.CHAR)) {
+			node.setType(PrimitiveType.CHARACTER);
+		}
+		else if (token.isLextant(Keyword.INT)) {
+			node.setType(PrimitiveType.INTEGER);
+		}
+		else if (token.isLextant(Keyword.FLOAT)) {
+			node.setType(PrimitiveType.FLOATING);
+		}
+		else if (token.isLextant(Keyword.STRING)) {
+			node.setType(PrimitiveType.STRING);
+		}
+		else if (token.isLextant(Keyword.RAT)) {
+			node.setType(PrimitiveType.RATIONAL);
+		}
+		else if (token.isLextant(Punctuator.ARRAY_TYPE)) {
+			TypeNode subtypeNode = (TypeNode) node.child(0);
+			node.setType(new Array(subtypeNode.getType()));
+		}
+	}
+	
 	private Lextant operatorFor(OperatorNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
 	}
+	
+	
 
 	///////////////////////////////////////////////////////////////////////////
 	// simple leaf nodes
@@ -239,12 +269,12 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	///////////////////////////////////////////////////////////////////////////
 	// error logging/printing
-	private void castingTypeCheckError(ParseNode node, List<Type> operandTypes) {
-		Token token = node.getToken();
-		
-		logError("casting operator not defined for types " 
-				 + operandTypes  + " at " + token.getLocation());	
-	}
+//	private void castingTypeCheckError(ParseNode node, List<Type> operandTypes) {
+//		Token token = node.getToken();
+//		
+//		logError("casting operator not defined for types " 
+//				 + operandTypes  + " at " + token.getLocation());	
+//	}
 	private void typeCheckError(ParseNode node, List<Type> operandTypes) {
 		Token token = node.getToken();
 		

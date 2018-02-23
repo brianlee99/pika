@@ -1,12 +1,12 @@
 package semanticAnalyzer.signatures;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import semanticAnalyzer.types.Array;
-import semanticAnalyzer.types.PrimitiveType;
 
 import static semanticAnalyzer.types.PrimitiveType.*;
 
@@ -96,6 +96,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	
 	static {
 		TypeVariable S = new TypeVariable("S");
+		List<TypeVariable> setS = Arrays.asList(S);
 		
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
 		// for this to work, you should statically import *
@@ -157,7 +158,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			FunctionSignature bSignature = new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN);
 			FunctionSignature sSignature = new FunctionSignature(1, STRING, STRING, BOOLEAN);
 			FunctionSignature rSignature = new FunctionSignature(1, RATIONAL, RATIONAL, BOOLEAN);
-			FunctionSignature aSignature = new FunctionSignature(1, new Array(S), new Array(S), BOOLEAN);
+			FunctionSignature aSignature = new FunctionSignature(1, setS, new Array(S), new Array(S), BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
 				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature, rSignature, aSignature);
@@ -188,16 +189,19 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(new FloatingToRationalCodeGenerator(), FLOATING, RATIONAL, RATIONAL),
 			new FunctionSignature(1, FLOATING, RATIONAL, RATIONAL),
 			
-			// Boolean -> target type
+			// Boolean -> Boolean
 			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
 			
-			// String -> target type
+			// String -> String
 			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING),
 			
 			// Rational -> target type
 			new FunctionSignature(ASMOpcode.Nop, RATIONAL, RATIONAL, RATIONAL),
 			new FunctionSignature(new RationalToFloatingCodeGenerator(), RATIONAL, FLOATING, FLOATING),
-			new FunctionSignature(ASMOpcode.Divide, RATIONAL, INTEGER, INTEGER)
+			new FunctionSignature(ASMOpcode.Divide, RATIONAL, INTEGER, INTEGER),
+			
+			// Array -> Array
+			new FunctionSignature(ASMOpcode.Nop, setS, new Array(S), new Array(S), new Array(S))
 		);
 		
 		// OR and AND
@@ -211,7 +215,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// Array Indexing
 		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
 			new FunctionSignature(
-				new ArrayIndexingCodeGenerator(),
+				new ArrayIndexingCodeGenerator(), setS,
 				new Array(S), INTEGER, S
 			)
 		);
@@ -228,7 +232,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// Array(S) -> Array(S)
 		new FunctionSignatures(Keyword.CLONE,
 			new FunctionSignature(
-				new ArrayCloningCodeGenerator(),
+				new ArrayCloningCodeGenerator(), setS,
 				new Array(S), new Array(S)
 			)
 		);
@@ -236,15 +240,15 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// Empty array generation
 		new FunctionSignatures(Keyword.NEW,
 			new FunctionSignature(
-				new NewArrayCodeGenerator(),
+				new NewArrayCodeGenerator(), setS,
 				S, INTEGER, new Array(S)
 			)
 		);
-		
+
 		// length
 		new FunctionSignatures(Keyword.LENGTH,
 			new FunctionSignature(
-				new ArrayLengthCodeGenerator(),
+				new ArrayLengthCodeGenerator(), setS,
 				new Array(S), INTEGER
 			)
 		);

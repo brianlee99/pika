@@ -54,6 +54,9 @@ public interface ParseNodeVisitor {
 	
 	void visitEnter(ReleaseStatementNode node);
 	void visitLeave(ReleaseStatementNode node);
+	
+	void visitEnter(TypeNode node);
+	void visitLeave(TypeNode node);
 
 	// leaf nodes: visitLeaf only
 	void visit(BooleanConstantNode node);
@@ -66,7 +69,6 @@ public interface ParseNodeVisitor {
 	void visit(NewlineNode node);
 	void visit(SpaceNode node);
 	void visit(TabNode node);
-	void visit(TypeNode node);
 	
 	public static class Default implements ParseNodeVisitor
 	{
@@ -141,6 +143,12 @@ public interface ParseNodeVisitor {
 		public void visitLeave(ReleaseStatementNode node) {
 			defaultVisitLeave(node);
 		}
+		public void visitEnter(TypeNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(TypeNode node) {
+			defaultVisitLeave(node);
+		}
 		
 		public void visit(BooleanConstantNode node) {
 			defaultVisitForLeaf(node);
@@ -172,12 +180,6 @@ public interface ParseNodeVisitor {
 		public void visit(SpaceNode node) {
 			defaultVisitForLeaf(node);
 		}
-		public void visit(TypeNode node) {
-			defaultVisitForLeaf(node);
-		}
-//		public void visit(ControlFlowStatementNode node) {
-//			defaultVisitForLeaf(node);
-//		}
 	}
 
 }

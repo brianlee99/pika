@@ -2,8 +2,8 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
-import semanticAnalyzer.types.PrimitiveType;
 import lexicalAnalyzer.Keyword;
+import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
 import tokens.Token;
 
@@ -12,27 +12,7 @@ public class TypeNode extends ParseNode {
 	
 	public TypeNode(Token token) {
 		super(token);
-		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT));
-		
-		if (token.isLextant(Keyword.BOOL)) {
-			setType(PrimitiveType.BOOLEAN);
-		}
-		else if (token.isLextant(Keyword.CHAR)) {
-			setType(PrimitiveType.CHARACTER);
-		}
-		else if (token.isLextant(Keyword.INT)) {
-			setType(PrimitiveType.INTEGER);
-		}
-		else if (token.isLextant(Keyword.FLOAT)) {
-			setType(PrimitiveType.FLOATING);
-		}
-		else if (token.isLextant(Keyword.STRING)) {
-			setType(PrimitiveType.STRING);
-		}
-		else if (token.isLextant(Keyword.RAT)) {
-			setType(PrimitiveType.RATIONAL);
-		}
-		
+		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE));
 	}
 	public TypeNode(ParseNode node) {
 		super(node);
@@ -44,12 +24,23 @@ public class TypeNode extends ParseNode {
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
+	
+////////////////////////////////////////////////////////////
+// factory method
+	
+	public static TypeNode withChildren(Token token, ParseNode child) {
+		TypeNode node = new TypeNode(token);
+		node.appendChild(child);
+		return node;
+	}
 
 ///////////////////////////////////////////////////////////
 // accept a visitor
 	
 	public void accept(ParseNodeVisitor visitor) {
-		visitor.visit(this);
+		visitor.visitEnter(this);
+		visitChildren(visitor);
+		visitor.visitLeave(this);
 	}
 
 }

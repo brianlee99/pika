@@ -763,17 +763,17 @@ public class ASMCodeGenerator {
 //			code.add(opcode);							// type-dependent! (opcode is different for floats and for ints)
 		}
 		
-		private ASMOpcode opcodeForOperator(Lextant lextant) {
-			assert(lextant instanceof Punctuator);
-			Punctuator punctuator = (Punctuator)lextant;
-			switch(punctuator) {
-			case ADD: 	   		return Add;				// type-dependent!
-			case MULTIPLY: 		return Multiply;		// type-dependent!
-			default:
-				assert false : "unimplemented operator in opcodeForOperator";
-			}
-			return null;
-		}
+//		private ASMOpcode opcodeForOperator(Lextant lextant) {
+//			assert(lextant instanceof Punctuator);
+//			Punctuator punctuator = (Punctuator)lextant;
+//			switch(punctuator) {
+//			case ADD: 	   		return Add;				// type-dependent!
+//			case MULTIPLY: 		return Multiply;		// type-dependent!
+//			default:
+//				assert false : "unimplemented operator in opcodeForOperator";
+//			}
+//			return null;
+//		}
 
 		///////////////////////////////////////////////////////////////////////////
 		// leaf nodes (ErrorNode not necessary)
