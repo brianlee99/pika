@@ -379,7 +379,7 @@ public class ASMCodeGenerator {
 		}
 		
 		public void visitLeave(ReleaseStatementNode node) {
-			if (!node.getToken().isLextant(Keyword.IF, Keyword.WHILE)) {
+			if (!node.getToken().isLextant(Keyword.RELEASE)) {
 				assert false;
 			}
 			newVoidCode(node);

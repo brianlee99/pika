@@ -1,14 +1,11 @@
 package asmCodeGenerator.runtime;
 
-import static asmCodeGenerator.Macros.loadIFrom;
-import static asmCodeGenerator.Macros.storeITo;
-import static asmCodeGenerator.Macros.writeCOffset;
-import static asmCodeGenerator.Macros.writeIPBaseOffset;
-import static asmCodeGenerator.Macros.writeIPtrOffset;
+import static asmCodeGenerator.Macros.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import static asmCodeGenerator.runtime.RunTime.*;
 
 import asmCodeGenerator.Labeller;
+import asmCodeGenerator.Macros;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
@@ -79,10 +76,8 @@ public class Record {
 	
 	// Subroutine that populates an array
 	public static void populateArray(ASMCodeFragment code, int offset, Type type) {
-		
-		// loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... &arr item ]
 		code.add(Exchange); 									// [ ... item &arr ]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE); 				// [ ... item &arr 16 ]
+		code.add(PushI, ARRAY_HEADER_SIZE); 				// [ ... item &arr 16 ]
 		code.add(Add);											// [ ... item &firstElem ]
 		code.add(PushI, offset); 								// [ ... item &firstElem offset ]
 		code.add(Add);											// [ ... item &ithElem ]
@@ -127,9 +122,14 @@ public class Record {
 	
 	// Subroutine (NOT at the ASM level) that creates an empty array record.
 	public static void cloneArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize, Type subtype) {
-		final int typecode = Record.ARRAY_TYPE_ID;				// [ &arr ]
+		Labeller labeller = new Labeller("clone-arr");
+		String loopBody = labeller.newLabel("loop-body");
+		String loopEnd = labeller.newLabel("loop-end");
+		String iLabel = labeller.newLabel("i");
+		
+		final int typecode = ARRAY_TYPE_ID;				// [ &arr ]
 		code.add(Duplicate);									// [ &arr &arr ]
-		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);  			
+		code.add(PushI, ARRAY_LENGTH_OFFSET);  			
 		code.add(Add); 											// [ &arr &length ]
 		code.add(LoadI);  										// [ &arr nElems ]
 		code.add(Duplicate);  									// [ &arr nElems nElems ]
@@ -138,7 +138,7 @@ public class Record {
 		code.add(Multiply);										// [ &arr nElems arraySize]
 		code.add(Duplicate);									// [ &arr nElems arraySize arraySize]
 		storeITo(code, ARRAY_DATASIZE_TEMPORARY);				// [ &arr nElems arraySize]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ &arr nElems arraySize 16]
+		code.add(PushI, ARRAY_HEADER_SIZE);				// [ &arr nElems arraySize 16]
 		code.add(Add);											// [ &arr nElems totalArraySize]
 		
 		createRecord(code, typecode, statusFlags);				// [ &arr nElems]
@@ -154,26 +154,27 @@ public class Record {
 		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET); 
 																// [ &oldArr ]
 		
+		declareI(code, iLabel);
 		code.add(PushI, 0);
-		storeITo(code, "clone-array-i");
+		storeITo(code, iLabel);
 		
 		// loop body
-		code.add(Label, "clone-array-loop-body");
+		code.add(Label, loopBody);
 		
 		// bounds checking
 		code.add(Duplicate);									// [ &oldArr &oldArr ]
 		code.add(PushI, ARRAY_LENGTH_OFFSET);					// [ &oldArr &oldArr 12 ]
 		code.add(Add); 											// [ &oldArr &length ]
 		code.add(LoadI); 										// [ &oldArr length ]
-		loadIFrom(code, "clone-array-i");                       // [ &oldArr length i ]
+		loadIFrom(code, iLabel);                       			// [ &oldArr length i ]
 		code.add(Subtract);
-		code.add(JumpFalse, "clone-array-loop-end");            // [ &oldArr ]
+		code.add(JumpFalse, loopEnd);           				// [ &oldArr ]
 		
 		// extract the ith element
 		code.add(Duplicate);									// [ &oldArr &oldArr ]
 		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &oldArr &oldArr 16 ]
 		code.add(Add);											// [ &oldArr &oldFirstElem ]
-		loadIFrom(code, "clone-array-i");						// [ &oldArr &oldFirstElem i ]
+		loadIFrom(code, iLabel);								// [ &oldArr &oldFirstElem i ]
 		code.add(PushI, subtypeSize);							// [ &oldArr &oldFirstElem i subtypesize ]
 		code.add(Multiply);										// [ &oldArr &oldFirstElem offset ]
 		code.add(Add);											// [ &oldArr &ithElem ]
@@ -210,7 +211,7 @@ public class Record {
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ &oldArr ithElem &newArr ]
 		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &oldArr ithElem &newArr 16 ]
 		code.add(Add);											// [ &oldArr ithElem &newFirstElem ]
-		loadIFrom(code, "clone-array-i");						// [ &oldArr ithElem &newFirstElem i ]
+		loadIFrom(code, iLabel);								// [ &oldArr ithElem &newFirstElem i ]
 		code.add(PushI, subtypeSize);							// [ &oldArr ithElem &newFirstElem i subtypesize ]
 		code.add(Multiply);										// [ &oldArr ithElem &newFirstElem offset ]
 		code.add(Add);											// [ &oldArr ithElem &ithElem ]
@@ -249,13 +250,13 @@ public class Record {
 			code.add(StoreI);
 		}
 																// [ &oldArr ]
-		loadIFrom(code, "clone-array-i");						// [ &oldArr i ]
+		loadIFrom(code, iLabel);								// [ &oldArr i ]
 		code.add(PushI, 1);										// [ &oldArr i 1 ]
 		code.add(Add);											// [ &oldArr i+1 ]
-		storeITo(code, "clone-array-i");
-		code.add(Jump, "clone-array-loop-body");
+		storeITo(code, iLabel);
+		code.add(Jump, loopBody);
 		
-		code.add(Label, "clone-array-loop-end");				// [ &oldArr ]
+		code.add(Label, loopEnd);								// [ &oldArr ]
 		code.add(Pop);											// [ ]
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ &newArr ]
 	}
@@ -266,13 +267,13 @@ public class Record {
 		code.add(Duplicate);									// [ ... length length]
 		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
 		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE + 1);			// [ ... length length 16+1]
+		code.add(PushI, ARRAY_HEADER_SIZE + 1);					// [ ... length length 16+1]
 		code.add(Add);											// [ ... length totalStringSize]
 		
 		createRecord(code, typecode, statusFlags);				// [ ... length]
 		
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... length ptr]
-		code.add(PushI, Record.STRING_HEADER_SIZE);				// [ ... length ptr 12]
+		code.add(PushI, STRING_HEADER_SIZE);					// [ ... length ptr 12]
 		code.add(Add);											// [ ... length firstCharPtr]
 		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length firstCharPtr length]
 		code.add(PushI, 1);										
@@ -288,7 +289,7 @@ public class Record {
 			loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
 			code.add(PushI, STRING_HEADER_SIZE); 				// [ ... ch ptr 12]
 			code.add(Add);										// [ ... ch firstCharPtr]
-			writeCOffset(code, i);								// []
+			writeCOffset(code, i);								// [ ]
 		}
 		
 		// write the null terminator
@@ -296,7 +297,7 @@ public class Record {
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ch ptr]
 		code.add(PushI, STRING_HEADER_SIZE); 					// [ ... ch ptr 12]
 		code.add(Add);											// [ ... ch firstCharPtr]
-		writeCOffset(code, string.length());					// []
+		writeCOffset(code, string.length());					// [ ]
 		
 		// The array resides in record_creation_temp 
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
@@ -304,12 +305,55 @@ public class Record {
 	}
 	
 	public static void releaseRecord(ASMCodeFragment code) {	// [ ptr ]
+		Labeller labeller = new Labeller("release");
+		String endLabel = labeller.newLabel("end");
+		String loop = labeller.newLabel("loop");
+		String iLabel = labeller.newLabel("i");
+		
+		code.add(Duplicate); 									// [ ptr ptr ]
+		code.add(PushI, RECORD_STATUS_OFFSET);					// [ ptr ptr 4 ]
+		code.add(Add); 											// [ ptr &status ]
+		code.add(Duplicate); 									// [ ptr &status &status ]
+		code.add(LoadI); 										// [ ptr &status status ]
+		
+		// perform bit checks
+		code.add(Duplicate); 									// [ ptr &status status status ]
+		code.add(Duplicate); 									// [ ptr &status status status status ]
+		code.add(PushI, 4);
+		code.add(BTAnd);										// [ ptr &status status status isDeleted ]
+		code.add(JumpTrue, endLabel); 							// [ ptr &status status status ]
+		code.add(PushI, 8);
+		code.add(BTAnd); 										// [ ptr &status status isPermanent ]
+		code.add(JumpTrue, endLabel); 							// [ ptr &status status ]
+		
+		// set is-deleted to 1 (bit 2)
+		code.add(PushI, 4); 									// [ ptr &status status 4 ]
+		code.add(BTOr); 										// [ ptr &status newStatus ]
+		code.add(StoreI); 										// [ ptr ]
+		
+		// check if reference type		
 		code.add(Duplicate); 									// [ ptr ptr ]
 		code.add(PushI, RECORD_STATUS_OFFSET);					// [ ptr ptr 4 ]
 		code.add(Add); 											// [ ptr &status ]
 		code.add(LoadI); 										// [ ptr status ]
+		code.add(PushI, 2); 									// [ ptr status 2 ]
+		code.add(BTAnd); 										// [ ptr subtypeIsReference ]
+		code.add(PStack);
+		code.add(JumpFalse, endLabel); 							// [ ptr ]
+		
+		// recurse if necessary
+		declareI(code, iLabel);
+		code.add(PushI, 0);
+		storeITo(code, iLabel);
+		
+		code.add(Label, loop);
 		
 		
+		
+		
+		
+		
+		code.add(Label, endLabel);
 		
 	}
 }

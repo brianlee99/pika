@@ -1,5 +1,7 @@
 exec {
 	# const a := [ new(int)[3] ].
-	const a := [1, 2, 3].
+	# const a := [1, 2, 3].
+	const a := ["one", "two"].
+	# const a := [[^1^], [^2^]].
 	release a.
 }
