@@ -37,7 +37,8 @@ import symbolTable.Binding;
 import symbolTable.Scope;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
-import static asmCodeGenerator.runtime.RunTime.populateArray;
+import static asmCodeGenerator.runtime.RunTime.LOWEST_TERMS;
+import static asmCodeGenerator.runtime.RunTime.RATIONAL_SUBTRACT;
 
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
@@ -164,13 +165,11 @@ public class ASMCodeGenerator {
 			}
 			else if (nodeType == PrimitiveType.RATIONAL) {
 				code.add(Duplicate);
-				// load numerator
-				code.add(LoadI);
+				code.add(LoadI);			// load numerator
 				code.add(Exchange);
-				// load denominator
 				code.add(PushI, 4);
 				code.add(Add);
-				code.add(LoadI);
+				code.add(LoadI);			// load denominator
 			}
 			else if (nodeType == PrimitiveType.STRING) {
 				code.add(LoadI);
@@ -251,18 +250,18 @@ public class ASMCodeGenerator {
 
 			// [addr num denom] -> [addr num denom addr]
 			// save num and denom in temp variables
-			Macros.storeITo(fragment, "$denominator-1");
-			Macros.storeITo(fragment, "$numerator-1");
+			Macros.storeITo(fragment, RunTime.DENOMINATOR_1);
+			Macros.storeITo(fragment, RunTime.NUMERATOR_1);
 			// make a copy of addr
 			fragment.add(Duplicate);
 			// bring back num
-			Macros.loadIFrom(fragment, "$numerator-1");
+			Macros.loadIFrom(fragment, RunTime.NUMERATOR_1);
 
 			// swap					[addr num addr]
 			fragment.add(Exchange);
 			
 			// bring back denom     [addr num addr denom]
-			Macros.loadIFrom(fragment, "$denominator-1");
+			Macros.loadIFrom(fragment, RunTime.DENOMINATOR_1);
 			
 			// swap                 [addr num denom addr]
 			fragment.add(Exchange);
@@ -409,13 +408,14 @@ public class ASMCodeGenerator {
 				visitNormalBinaryOperatorNode(node);
 			}
 		}
+		
 		private void visitComparisonOperatorNode(OperatorNode node,
 				Lextant operator) {
 			
 			Type leftNodeType = node.child(0).getType();
 
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
-			ASMCodeFragment arg2 = removeValueCode(node.child(1));
+			ASMCodeFragment arg2 = removeValueCode(node.child(1));				
 			
 			Labeller labeller = new Labeller("compare");
 			
@@ -430,12 +430,18 @@ public class ASMCodeGenerator {
 			code.add(Label, startLabel);
 			code.append(arg1);
 			code.add(Label, arg2Label);
-			code.append(arg2);
+			code.append(arg2);										
 			code.add(Label, subLabel);
 			
-			if (leftNodeType == PrimitiveType.INTEGER 		||
-					leftNodeType == PrimitiveType.CHARACTER ||
-					leftNodeType == PrimitiveType.BOOLEAN 	||
+			// just for rationals! 
+			if (leftNodeType == PrimitiveType.RATIONAL) {			// [ .. num1 den1 num2 den2 ]
+				code.add(Call, RATIONAL_SUBTRACT);					// [ .. resultNum resultDen ]
+				// Assume for now that the denominator is positive
+				code.add(Pop);										// [ .. resultNum ]
+			}
+			else if (leftNodeType == PrimitiveType.INTEGER 		||
+					leftNodeType == PrimitiveType.CHARACTER 	||
+					leftNodeType == PrimitiveType.BOOLEAN 		||
 					leftNodeType == PrimitiveType.STRING)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
@@ -445,7 +451,11 @@ public class ASMCodeGenerator {
 			
 			// we need to check the node signatures
 			if (operator == Punctuator.GREATER) {
-				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER)
+					code.add(JumpPos, trueLabel);
+				else if(leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpPos, trueLabel);
+				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpPos, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFPos, trueLabel);
@@ -455,7 +465,11 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.LESS) {
-				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER)
+					code.add(JumpNeg, trueLabel);
+				else if(leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpNeg, trueLabel);
+				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpNeg, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFNeg, trueLabel);
@@ -465,10 +479,15 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER 		||
-						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN 	||
-						leftNodeType == PrimitiveType.STRING)
+				if (leftNodeType == PrimitiveType.INTEGER)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType == PrimitiveType.BOOLEAN)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType == PrimitiveType.STRING)
+					code.add(JumpFalse, trueLabel);
+				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpFalse, trueLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING)
 					code.add(JumpFZero, trueLabel);
@@ -478,10 +497,23 @@ public class ASMCodeGenerator {
 				code.add(Jump, falseLabel);
 			}
 			else if (operator == Punctuator.NOT_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER 		||
-						leftNodeType == PrimitiveType.CHARACTER ||
-						leftNodeType == PrimitiveType.BOOLEAN 	||
-						leftNodeType == PrimitiveType.STRING) {
+				if (leftNodeType == PrimitiveType.INTEGER) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType == PrimitiveType.CHARACTER) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType == PrimitiveType.BOOLEAN) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType == PrimitiveType.STRING) {
+					code.add(JumpTrue, trueLabel);
+					code.add(Jump, falseLabel);
+				}
+				else if (leftNodeType == PrimitiveType.RATIONAL) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
@@ -494,7 +526,11 @@ public class ASMCodeGenerator {
 				}
 			}
 			else if (operator == Punctuator.GREATER_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER)
+					code.add(JumpNeg, falseLabel);
+				else if (leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpNeg, falseLabel);
+				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpNeg, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFNeg, falseLabel);
@@ -504,7 +540,11 @@ public class ASMCodeGenerator {
 				code.add(Jump, trueLabel);
 			}
 			else if (operator == Punctuator.LESS_EQUALS) {
-				if (leftNodeType == PrimitiveType.INTEGER || leftNodeType == PrimitiveType.CHARACTER)
+				if (leftNodeType == PrimitiveType.INTEGER)
+					code.add(JumpPos, falseLabel);
+				else if (leftNodeType == PrimitiveType.CHARACTER)
+					code.add(JumpPos, falseLabel);
+				else if (leftNodeType == PrimitiveType.RATIONAL)
 					code.add(JumpPos, falseLabel);
 				else if (leftNodeType == PrimitiveType.FLOATING) 
 					code.add(JumpFPos, falseLabel);
@@ -525,6 +565,7 @@ public class ASMCodeGenerator {
 			code.add(Jump, joinLabel);
 			code.add(Label, joinLabel);
 		}
+		
 //		private void visitBooleanOperatorNode(OperatorNode node, Lextant operator) {
 //			newValueCode(node);
 //			ASMCodeFragment arg1 = removeValueCode(node.child(0));
@@ -586,7 +627,6 @@ public class ASMCodeGenerator {
 //		}
 		
 		private void visitNotOperatorNode(OperatorNode node) {
-
 			// Type leftNodeType = node.child(0).getType();
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			
@@ -696,10 +736,9 @@ public class ASMCodeGenerator {
 			
 			for (int i = 0; i < length; i++) {
 				ASMCodeFragment childFragment = removeValueCode(node.child(i));
-				code.append(childFragment);							// [ ... element_i ]
+				code.append(childFragment);									// [ ... element_i ]
 				int offset = i * subtypeSize;
-				ASMCodeFragment anotherFragment = new ASMCodeFragment(CodeType.GENERATES_VOID);
-				populateArray(anotherFragment, offset, type);					// [ ... ]
+				Record.populateArray(code, offset, type);					// [ ... ]
 			}
 			
 			if (fragment.isAddress()) {
@@ -804,7 +843,7 @@ public class ASMCodeGenerator {
 			code.add(PushI, string.length());
 			
 			int statusFlags = Record.STRING_STATUS;
-			RunTime.createStringRecord(code, statusFlags, string);
+			Record.createStringRecord(code, statusFlags, string);
 			
 //			String preLabel = node.getValue();
 //			Labeller labeller = new Labeller("string-constant");

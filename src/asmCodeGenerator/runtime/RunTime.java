@@ -36,7 +36,7 @@ public class RunTime {
 	public static final String INTEGER_DIVIDE_BY_ZERO_RUNTIME_ERROR  = "$$i-divide-by-zero";
 	public static final String FLOATING_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$f-divide-by-zero";
 	public static final String RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR = "$$r-divide-by-zero";
-	public static final String DENOMINATOR_ZERO_RUNTIME_ERROR        = "$$denominator-zero";
+	// public static final String DENOMINATOR_ZERO_RUNTIME_ERROR        = "$$denominator-zero";
 	public static final String NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR   = "$$negative-length-arr";
 	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
 	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";
@@ -75,12 +75,13 @@ public class RunTime {
 	public static final String CLEAR_N_BYTES	 			= "$clear-n-bytes";
 	
 	// Array subroutine variables
-	public static final String RECORD_CREATION_TEMP     = "$record-creation-temp";
-	public static final String ARRAY_DATASIZE_TEMPORARY = "$array-datasize-temp";
-	public static final String STRING_LENGTH_TEMPORARY  = "$string-len-temp";
-	public static final String ARRAY_INDEXING_ARRAY 	= "$a-indexing-array";
-	public static final String ARRAY_INDEXING_INDEX 	= "$a-indexing-index";
-	public static final String CLEAR_N_BYTES_OFFSET_TEMP = "$clear-n-bytes-offset-temp";
+	public static final String RECORD_CREATION_TEMP     	= "$record-creation-temp";
+	public static final String ARRAY_DATASIZE_TEMPORARY 	= "$array-datasize-temp";
+	public static final String STRING_LENGTH_TEMPORARY  	= "$string-len-temp";
+	public static final String ARRAY_INDEXING_ARRAY 		= "$a-indexing-array";
+	public static final String ARRAY_INDEXING_INDEX 		= "$a-indexing-index";
+	public static final String CLEAR_N_BYTES_OFFSET_TEMP 	= "$clear-n-bytes-offset-temp";
+	public static final String POPULATE_ARRAY_ADDRESS_TEMP 	= "$pop-arr-addr-temp";
 	
 	
 	private ASMCodeFragment environmentASM() {
@@ -111,8 +112,7 @@ public class RunTime {
 	
 	private ASMCodeFragment variableStorage() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
-		frag.add(DLabel, RETURN_ADDRESS);
-		frag.add(DataZ, 4);  // maybe 8
+		declareI(frag, RETURN_ADDRESS);
 
 		declareI(frag, NUMERATOR_1);
 		declareI(frag, NUMERATOR_2);
@@ -132,6 +132,7 @@ public class RunTime {
 		declareI(frag, PRINTF_ARR_BASE);
 		declareI(frag, PRINTF_ARR_LENGTH);
 		declareI(frag, PRINTF_ARR_I);
+		declareI(frag, POPULATE_ARRAY_ADDRESS_TEMP);
 		
 		return frag;
 	}
@@ -150,7 +151,9 @@ public class RunTime {
 		frag.add(DataS, "%c");
 		frag.add(DLabel, STRING_PRINT_FORMAT);
 		frag.add(DataS, "%s");
+		
 		// Note: Rationals are dealt with separately
+		
 		frag.add(DLabel, NEWLINE_PRINT_FORMAT);
 		frag.add(DataS, "\n");
 		frag.add(DLabel, TAB_PRINT_FORMAT);
@@ -169,29 +172,27 @@ public class RunTime {
 	private ASMCodeFragment lowestTerms() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);  // [.. 6 27 43355(RA)]
 		frag.add(Label, LOWEST_TERMS);
-		frag.add(PushD, RETURN_ADDRESS);
+		storeITo(frag, RETURN_ADDRESS);
+		
+//		// check non-zero denominator
+//		frag.add(Duplicate);
+//		frag.add(JumpFalse, RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
+		
+		//frag.add(DLabel, DENOMINATOR_1);
+		frag.add(DataZ, 4);
+		frag.add(PushD, DENOMINATOR_1);
 		frag.add(Exchange);
 		frag.add(StoreI);
 		
-		// check non-zero denominator
-		frag.add(Duplicate);
-		frag.add(JumpFalse, DENOMINATOR_ZERO_RUNTIME_ERROR);
-
-		frag.add(DLabel, "$denominator");
+		//frag.add(DLabel, NUMERATOR_1);
 		frag.add(DataZ, 4);
-		frag.add(PushD, "$denominator");
-		frag.add(Exchange);
-		frag.add(StoreI);
-		
-		frag.add(DLabel, "$numerator");
-		frag.add(DataZ, 4);
-		frag.add(PushD, "$numerator");
+		frag.add(PushD, NUMERATOR_1);
 		frag.add(Exchange);
 		frag.add(StoreI);
 		
 		frag.add(DLabel, "$a");
 		frag.add(DataZ, 4);
-		frag.add(PushD, "$numerator");
+		frag.add(PushD, NUMERATOR_1);
 		frag.add(LoadI);
 		frag.add(PushD, "$a");
 		frag.add(Exchange);
@@ -200,7 +201,7 @@ public class RunTime {
 		
 		frag.add(DLabel, "$b");
 		frag.add(DataZ, 4);
-		frag.add(PushD, "$denominator");
+		frag.add(PushD, DENOMINATOR_1);
 		frag.add(LoadI);
 		frag.add(PushD, "$b");
 		frag.add(Exchange);
@@ -233,13 +234,13 @@ public class RunTime {
 		frag.add(Label, "$gcd-end");
 		// load up the lowest-terms rational
 
-		frag.add(PushD, "$numerator");
+		frag.add(PushD, NUMERATOR_1);
 		frag.add(LoadI);
 		frag.add(PushD, "$a");
 		frag.add(LoadI);
 		frag.add(Divide);
 		
-		frag.add(PushD, "$denominator");
+		frag.add(PushD, DENOMINATOR_1);
 		frag.add(LoadI);
 		frag.add(PushD, "$a");
 		frag.add(LoadI);
@@ -532,7 +533,6 @@ public class RunTime {
 		frag.add(Printf);
 		frag.add(Jump, RATIONAL_PRINT_END);
 		
-
 		// print the leading number if it exists
 		frag.add(Label, "$rat-print-check-leading-number");
 		loadIFrom(frag, QUOTIENT);
@@ -541,7 +541,6 @@ public class RunTime {
 		loadIFrom(frag, QUOTIENT);					// [ .. 1]
 		frag.add(PushD, INTEGER_PRINT_FORMAT); 		// [ .. 1 print_int ]
 		frag.add(Printf);
-		
 		
 		// print out the fraction part, if it exists
 		frag.add(Label, "$rat-print-check-fraction");
@@ -602,196 +601,7 @@ public class RunTime {
 		frag.add(Return);
 		return frag;
 	}
-		
 
-	
-	// Subroutine (NOT at the ASM level) that creates an empty array record.
-	public static void createEmptyArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize) {
-		final int typecode = Record.ARRAY_TYPE_ID;
-		
-		code.add(Duplicate);									// [ ... nElems nElems]
-		code.add(JumpNeg, NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR);
-		
-		code.add(Duplicate);									// [ ... nElems nElems]
-		code.add(PushI, subtypeSize);							// [ ... nElems nElems subtypeSize]
-		code.add(Multiply);										// [ ... nElems arraySize]
-		code.add(Duplicate);									// [ ... nElems arraySize arraySize]
-		storeITo(code, ARRAY_DATASIZE_TEMPORARY);				// [ ... nElems arraySize]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ ... nElems arraySize 16]
-		code.add(Add);											// [ ... nElems totalArraySize]
-		
-		createRecord(code, typecode, statusFlags);				// [ ... nElems]
-		
-		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... nElems ptr]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);				// [ ... nElems ptr 16]
-		code.add(Add);											// [ ... nElems elemsPtr]
-		loadIFrom(code, ARRAY_DATASIZE_TEMPORARY);				// [ ... nElems elemsPtr arraySize]
-		code.add(Call, CLEAR_N_BYTES);							// [ ... nElems]
-		
-		// Write subtype size + array length
-		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_SUBTYPE_SIZE_OFFSET, subtypeSize);
-		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET);
-		
-		// The array resides in record_creation_temp 
-		loadIFrom(code, RECORD_CREATION_TEMP);
-	}
-	
-	// Subroutine that populates an array
-	public static void populateArray(ASMCodeFragment code, int offset, Type type) {
-		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... item arrPtr]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);
-		code.add(Add);										// [ ... item elemsPtr]
-		code.add(PushI, offset);
-		code.add(Add);										// [ ... item addr]
-		code.add(Exchange);
-		// code.add(StoreI);
-		
-		if(type == PrimitiveType.INTEGER) {
-			code.add(StoreI);
-		}
-		if(type == PrimitiveType.FLOATING) {
-			code.add(StoreF);
-		}
-		if(type == PrimitiveType.BOOLEAN) {
-			code.add(StoreC);
-		}
-		if(type == PrimitiveType.CHARACTER) {
-			code.add(StoreC);
-		}
-//		if(type == PrimitiveType.RATIONAL) {
-//			return StoreI;
-//		}
-		if (type == PrimitiveType.STRING) {
-			code.add(StoreI);
-		}
-		if (type instanceof Array) {
-			code.add(StoreI);
-		}
-	}
-	
-	public static void createStringRecord(ASMCodeFragment code, int statusFlags, String string)  {
-		final int typecode = Record.STRING_TYPE_ID;
-		
-		code.add(Duplicate);									// [ ... length length]
-		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
-		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE + 1);			// [ ... length length 16+1]
-		code.add(Add);											// [ ... length totalStringSize]
-		
-		createRecord(code, typecode, statusFlags);				// [ ... length]
-		
-		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... length ptr]
-		code.add(PushI, Record.STRING_HEADER_SIZE);				// [ ... length ptr 12]
-		code.add(Add);											// [ ... length firstCharPtr]
-		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length firstCharPtr length]
-		code.add(PushI, 1);										
-		code.add(Add);											// [ ... length firstCharPtr length+1]
-		code.add(Call, CLEAR_N_BYTES);							// [ ... length ]
-		
-		// Write subtype size + array length
-		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.STRING_LENGTH_OFFSET);
-		
-		// Actually write the contents of the string
-		for (int i = 0; i < string.length(); i++) {
-			code.add(PushI, string.charAt(i)); 					// [ ... ch ]
-			loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
-			code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
-			code.add(Add);										// [ ... ch firstCharPtr]
-			writeCOffset(code, i);								// []
-		}
-		
-		// write the null terminator
-		code.add(PushI, 0); 								// [ ... ch ]
-		loadIFrom(code, RECORD_CREATION_TEMP);				// [ ... ch ptr]
-		code.add(PushI, Record.STRING_HEADER_SIZE); 		// [ ... ch ptr 12]
-		code.add(Add);										// [ ... ch firstCharPtr]
-		writeCOffset(code, string.length());				// []
-		
-		// The array resides in record_creation_temp 
-		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
-	}
-	
-	public static void printfArray(ASMCodeFragment code, Type subtype) {
-		//	[ ... base ]
-		final String PRINTF_ARR_LOOP_BODY = "$printf-arr-loop-body";
-		final String PRINTF_ARR_LOOP_END  = "$printf-arr-loop-end";
-		
-		code.add(PushI, (int) '[' );
-		code.add(PushD, CHARACTER_PRINT_FORMAT);
-		code.add(Printf);
-		
-		// Retrieve the length of the array
-		storeITo(code, PRINTF_ARR_BASE);
-		
-		loadIFrom(code, PRINTF_ARR_BASE);
-		code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
-		code.add(Add);										// [ ... &length]
-		code.add(LoadI);									// [ ... length]
-		storeITo(code, PRINTF_ARR_LENGTH);
-		code.add(PushI, 0);
-		storeITo(code, PRINTF_ARR_I);
-		
-		// main loop
-		code.add(Label, PRINTF_ARR_LOOP_BODY);
-		loadIFrom(code, PRINTF_ARR_I);						// [ ... i]
-		loadIFrom(code, PRINTF_ARR_LENGTH);					// [ ... i length]
-		code.add(Subtract);
-		code.add(JumpFalse, PRINTF_ARR_LOOP_END);			// [ ... ]
-		
-		loadIFrom(code, PRINTF_ARR_BASE);					// [ base ]
-		code.add(PushI, Record.ARRAY_HEADER_SIZE);
-		code.add(Add);
-		loadIFrom(code, PRINTF_ARR_I);
-		if (subtype == PrimitiveType.INTEGER) {
-			code.add(PushI, 4);
-		}
-		else if (subtype == PrimitiveType.FLOATING) {
-			code.add(PushI, 8);
-		}
-		code.add(Multiply);									// [ base offset]
-		code.add(Add); 										// [ elemAddr ]
-		if (subtype == PrimitiveType.INTEGER) { 
-			code.add(LoadI);								// [ value ]
-			code.add(PushD, INTEGER_PRINT_FORMAT);
-			code.add(Printf);
-		}
-		else if (subtype == PrimitiveType.FLOATING) {
-			code.add(LoadF);
-			code.add(PushD, FLOATING_PRINT_FORMAT);
-			code.add(Printf);
-		}
-		
-	
-		
-		
-		// Increment i
-		loadIFrom(code, PRINTF_ARR_I);
-		code.add(PushI, 1);
-		code.add(Add);
-		storeITo(code, PRINTF_ARR_I);
-		
-		// print comma space, BUT ONLY IF i - length is not Zero
-		loadIFrom(code, PRINTF_ARR_I);
-		loadIFrom(code, PRINTF_ARR_LENGTH);
-		code.add(Subtract);
-		code.add(JumpFalse, PRINTF_ARR_LOOP_END);
-		
-		code.add(PushI, (int) ',');
-		code.add(PushD, CHARACTER_PRINT_FORMAT);
-		code.add(Printf);
-		code.add(PushI, (int) ' ');
-		code.add(PushD, CHARACTER_PRINT_FORMAT);
-		code.add(Printf);
-		
-		code.add(Jump, PRINTF_ARR_LOOP_BODY);
-		
-		code.add(Label, PRINTF_ARR_LOOP_END);
-		code.add(PushI, (int) ']' );
-		code.add(PushD, CHARACTER_PRINT_FORMAT);
-		code.add(Printf);
-		
-	}
-		
 	private ASMCodeFragment runtimeErrors() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
 		
@@ -799,7 +609,7 @@ public class RunTime {
 		integerDivideByZeroError(frag);
 		floatingDivideByZeroError(frag);
 		rationalDivideByZeroError(frag);
-		denominatorZeroError(frag);
+		// denominatorZeroError(frag);
 		negativeLengthArrayError(frag);
 		indexOutOfBoundsError(frag);
 		nullArrayError(frag);
@@ -847,16 +657,16 @@ public class RunTime {
 		frag.add(PushD, rationalDivideByZeroMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
-	private void denominatorZeroError(ASMCodeFragment frag) {
-		String denominatorZeroMessage = "$errors-denominator-zero";
-		
-		frag.add(DLabel, denominatorZeroMessage);
-		frag.add(DataS, "denominator zero");
-		
-		frag.add(Label, DENOMINATOR_ZERO_RUNTIME_ERROR);
-		frag.add(PushD, denominatorZeroMessage);
-		frag.add(Jump, GENERAL_RUNTIME_ERROR);
-	}
+//	private void denominatorZeroError(ASMCodeFragment frag) {
+//		String denominatorZeroMessage = "$errors-denominator-zero";
+//		
+//		frag.add(DLabel, denominatorZeroMessage);
+//		frag.add(DataS, "denominator zero");
+//		
+//		frag.add(Label, DENOMINATOR_ZERO_RUNTIME_ERROR);
+//		frag.add(PushD, denominatorZeroMessage);
+//		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+//	}
 	private void negativeLengthArrayError(ASMCodeFragment frag) {
 		String negativeLengthArrayMessage = "$errors-negative-length-arr";
 		

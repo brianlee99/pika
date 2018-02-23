@@ -175,37 +175,44 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			FunctionSignature fSignature = new FunctionSignature(1, FLOATING, FLOATING, BOOLEAN);
 			FunctionSignature bSignature = new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN);
 			FunctionSignature sSignature = new FunctionSignature(1, STRING, STRING, BOOLEAN);
+			FunctionSignature rSignature = new FunctionSignature(1, RATIONAL, RATIONAL, BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
-				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature);
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature, rSignature);
 			}
 			else {
-				new FunctionSignatures(comparison, iSignature, cSignature, fSignature);
+				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, rSignature);
 			}
 		}
 		
 		// For Type Casting
 		new FunctionSignatures(Punctuator.CASTING,
+			// Integer -> target type
 			new FunctionSignature(ASMOpcode.ConvertF, INTEGER, FLOATING, FLOATING),
 			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, INTEGER, INTEGER),
 			new FunctionSignature(new IntegerToRationalCodeGenerator(), INTEGER, RATIONAL, RATIONAL),
 			
+			// Character -> target type
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, CHARACTER, CHARACTER),
 			new FunctionSignature(new IntegerToRationalCodeGenerator(), CHARACTER, RATIONAL, RATIONAL),
 			
+			// Floating -> target type
 			new FunctionSignature(ASMOpcode.ConvertI, FLOATING, INTEGER, INTEGER),
 			new FunctionSignature(ASMOpcode.Nop, FLOATING, FLOATING, FLOATING),
 			new FunctionSignature(new FloatingToRationalCodeGenerator(), FLOATING, RATIONAL, RATIONAL),
 			new FunctionSignature(1, FLOATING, RATIONAL, RATIONAL),
 			
+			// Boolean -> target type
 			new FunctionSignature(ASMOpcode.Nop, BOOLEAN, BOOLEAN, BOOLEAN),
 			
+			// String -> target type
 			new FunctionSignature(ASMOpcode.Nop, STRING, STRING, STRING),
 			
+			// Rational -> target type
 			new FunctionSignature(ASMOpcode.Nop, RATIONAL, RATIONAL, RATIONAL),
 			new FunctionSignature(new RationalToFloatingCodeGenerator(), RATIONAL, FLOATING, FLOATING),
 			new FunctionSignature(ASMOpcode.Divide, RATIONAL, INTEGER, INTEGER)

@@ -1,0 +1,7 @@
+exec {
+	const x := [1,2,3].
+	print x, _n_.
+	release x.
+	x := [4, 5, 6].
+	print x, _n_.
+}

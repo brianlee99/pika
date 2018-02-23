@@ -1,4 +1,4 @@
 exec {
-	const x := [3.726 | rat].
+	const x := [[1]].
 	print x.
 }

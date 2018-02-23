@@ -12,6 +12,7 @@ import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import asmCodeGenerator.ASMCodeGenerator.CodeVisitor;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
+import asmCodeGenerator.runtime.ArrayHelper;
 import asmCodeGenerator.runtime.Record;
 import asmCodeGenerator.runtime.RunTime;
 
@@ -49,23 +50,19 @@ public class PrintStatementGenerator {
 		}
 		else if (type == PrimitiveType.STRING) {
 			code.append(visitor.removeValueCode(node));
+			
 			// ignore header
 			code.add(PushI, Record.STRING_HEADER_SIZE);
 			code.add(Add);
+			
 			String format = printFormat(node.getType());
 			code.add(PushD, format);
 			code.add(Printf);
 		}
 		else if (type instanceof Array) {
-			// print the [
-			
-			// start with the base address
-			// calculate the length of the array
-			// pass in the subtype (deal with strings and arrays later)
-			// 
 			Type subtype = ((Array) type).getSubtype();
-			code.append(visitor.removeValueCode(node));		// [ ... base]
-			RunTime.printfArray(code, subtype);						// [ ... ]
+			code.append(visitor.removeValueCode(node));					// [ ... base]
+			ArrayHelper.printfArray(code, subtype);						// [ ... ]
 
 		}
 		else {
