@@ -1,4 +1,0 @@
-exec {
-	var goat := ["Tom", " ", "likes", " ", "cola", "." ].
-	print goat,  _n_.
-}
