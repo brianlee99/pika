@@ -1,6 +1,4 @@
 exec {
-	
-	const a := [new[int](3), [1,2,3]] .
-	var b := length a.
-	print b.
+    const a := [ ^1^, 2.2, 3].
+    print a.
 }

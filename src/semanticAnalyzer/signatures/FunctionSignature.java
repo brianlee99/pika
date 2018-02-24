@@ -54,6 +54,10 @@ public class FunctionSignature {
 	public boolean isNull() {
 		return false;
 	}
+	// getter for parameter types (for promotion)
+	public Type[] getParamTypes() {
+		return paramTypes;
+	}
 	
 	
 	///////////////////////////////////////////////////////////////

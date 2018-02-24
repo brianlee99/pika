@@ -140,8 +140,107 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			childTypes.add(child.getType());
 		}
 		
+		promoteArray(childTypes, node.getChildren(), node);
+		
 		Array arrayType = new Array(childTypes.get(0));
 		node.setType(arrayType);
+	}
+	
+	public void promoteArray(List<Type> childTypes, List<ParseNode> children, ParseNode node) {
+		Type highestType = childTypes.get(0);
+		for (Type type : childTypes) {
+			if (	type != PrimitiveType.CHARACTER &&
+					type != PrimitiveType.INTEGER 	&& 
+					type != PrimitiveType.RATIONAL	&& 
+					type != PrimitiveType.FLOATING	) {
+				return;
+			}
+			if (highestType == PrimitiveType.CHARACTER) {
+				if (type == PrimitiveType.RATIONAL || type == PrimitiveType.FLOATING || type == PrimitiveType.INTEGER)
+					highestType = type;
+			}
+			else if (highestType == PrimitiveType.INTEGER) {
+				if (type == PrimitiveType.RATIONAL || type == PrimitiveType.FLOATING)
+					highestType = type;
+			}
+			else if (highestType == PrimitiveType.RATIONAL) {
+				if (type == PrimitiveType.FLOATING)
+					return;
+			}
+			else if (highestType == PrimitiveType.FLOATING) {
+				if (type == PrimitiveType.RATIONAL)
+					return;
+			}
+		}
+		
+		List<ParseNode> childrenCopy = new ArrayList<>(children);
+		// once you determine the highest type, cast all nodes to that type
+		for (ParseNode child : childrenCopy) {
+			Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
+			Type childType = child.getType();
+			
+			if (highestType == PrimitiveType.INTEGER) {
+				if (childType == PrimitiveType.CHARACTER) {
+					Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+					TypeNode intNode = new TypeNode(intToken);
+
+					OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+					node.replaceChild(child, castingNode);
+					visitLeave(intNode);
+					visitLeave(castingNode);
+				}
+			}
+			else if (highestType == PrimitiveType.RATIONAL) {
+				if (childType == PrimitiveType.CHARACTER) {
+					Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+					TypeNode intNode = new TypeNode(intToken);
+					
+					Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+					TypeNode ratNode = new TypeNode(ratToken);
+					
+					OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
+					OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+					
+					node.replaceChild(child, ratCastingNode);
+					visitLeave(intNode);
+					visitLeave(ratNode);
+					visitLeave(intCastingNode);
+					visitLeave(ratCastingNode);
+				}
+				else if (childType == PrimitiveType.INTEGER) {
+					Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+					TypeNode intNode = new TypeNode(intToken);
+
+					OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+					node.replaceChild(child, castingNode);
+					visitLeave(intNode);
+					visitLeave(castingNode);
+				}
+
+			}
+			else if (highestType == PrimitiveType.FLOATING) {
+				if (childType == PrimitiveType.CHARACTER) {
+				
+				}
+				else if (childType == PrimitiveType.INTEGER) {
+					
+				}
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(child, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+		}
 	}
 	
 	@Override
@@ -154,23 +253,556 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
         Lextant operator = operatorFor(node);
         FunctionSignatures signatures = FunctionSignatures.signaturesOf(operator);
-        FunctionSignature signature = signatures.acceptingSignature(childTypes);
         
-        // if signature 
-        if (signature.accepts(childTypes)) {
-            node.setType(signature.resultType());
-            node.setSignature(signature);
+        // Try matching without promoting any of the operands.
+        FunctionSignature signature = matchSignatureWithoutPromotion(signatures, childTypes);
+		if (signature.accepts(childTypes)) {
+			node.setType(signature.resultType());
+			node.setSignature(signature);
+			return;
+		}
+		
+        // Try promoting just the left side.
+        List<FunctionSignature> matchingSignatures = matchSignatureWithLeftPromotion(signatures, childTypes);
+        int length = matchingSignatures.size();
+        if (length == 1) {
+        	signature = matchingSignatures.get(0);
+			node.setType(signature.resultType());
+			node.setSignature(signature);
+
+			ParseNode leftNode = children.get(0);
+			Type targetType = signature.getParamTypes()[0];
+			Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
+			
+			if (targetType == PrimitiveType.INTEGER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				node.replaceChild(leftNode, castingNode);
+				visitLeave(intNode);
+				visitLeave(castingNode);
+			}
+			else if (targetType == PrimitiveType.RATIONAL) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+				
+				node.replaceChild(leftNode, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(ratNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+			else if (targetType == PrimitiveType.FLOATING) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(leftNode, floatCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(floatCastingNode);
+			}
+        	return;
         }
-        else {
-        	// signature = PromotionChecker.promote(childTypes, signatures);
-        	
-        	
-            typeCheckError(node, childTypes);
-            node.setType(PrimitiveType.ERROR);
+        else if (length > 1) {
+	        typeCheckError(node, childTypes);
+	        node.setType(PrimitiveType.ERROR);
+        	return;
         }
+        
+        // Only proceed if there are 2 (or more) child types
+        if (childTypes.size() == 1) {
+	        typeCheckError(node, childTypes);
+	        node.setType(PrimitiveType.ERROR);
+        }
+        
+        // Try promoting just the right side.
+        matchingSignatures = matchSignatureWithRightPromotion(signatures, childTypes);
+        length = matchingSignatures.size();
+        if (length == 1) {
+        	signature = matchingSignatures.get(0);
+			node.setType(signature.resultType());
+			node.setSignature(signature);
+
+			ParseNode rightNode = children.get(1);
+			Type targetType = signature.getParamTypes()[1];
+			Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
+			
+			if (targetType == PrimitiveType.INTEGER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				node.replaceChild(rightNode, castingNode);
+				visitLeave(intNode);
+				visitLeave(castingNode);
+			}
+			else if (targetType == PrimitiveType.RATIONAL) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+				
+				node.replaceChild(rightNode, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(ratNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+			else if (targetType == PrimitiveType.FLOATING) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(rightNode, floatCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(floatCastingNode);
+			}
+        	return;
+        }
+        else if (length > 1) {
+	        typeCheckError(node, childTypes);
+	        node.setType(PrimitiveType.ERROR);
+        	return;
+        }
+        
+        // Try promoting both sides.
+        matchingSignatures = matchSignatureWithBothPromotion(signatures, childTypes);
+        length = matchingSignatures.size();
+        if (length == 1) {
+        	signature = matchingSignatures.get(0);
+			node.setType(signature.resultType());
+			node.setSignature(signature);
+
+			ParseNode leftNode = children.get(0);
+			ParseNode rightNode = children.get(1);
+			Type leftTarget = signature.getParamTypes()[0];
+			Type rightTarget = signature.getParamTypes()[1];
+			Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
+			
+			// lets do the left side first
+			if (leftTarget == PrimitiveType.INTEGER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				node.replaceChild(leftNode, castingNode);
+				visitLeave(intNode);
+				visitLeave(castingNode);
+			}
+			else if (leftTarget == PrimitiveType.RATIONAL) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+				
+				node.replaceChild(leftNode, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(ratNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+			else if (leftTarget == PrimitiveType.FLOATING) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, leftNode, intNode);
+				OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(leftNode, floatCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(floatCastingNode);
+			}
+			
+			// then the right side
+			if (rightTarget == PrimitiveType.INTEGER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				node.replaceChild(rightNode, castingNode);
+				visitLeave(intNode);
+				visitLeave(castingNode);
+			}
+			else if (rightTarget == PrimitiveType.RATIONAL) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+				
+				node.replaceChild(rightNode, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(ratNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+			else if (rightTarget == PrimitiveType.FLOATING) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, rightNode, intNode);
+				OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(rightNode, floatCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(floatCastingNode);
+			}
+			return;
+        }
+        
+        typeCheckError(node, childTypes);
+        node.setType(PrimitiveType.ERROR);
+    	return;
 
 	}
 	
+	public FunctionSignature matchSignatureWithoutPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+		return signatures.acceptingSignature(childTypes);
+	}
+	
+	public List<FunctionSignature> matchSignatureWithLeftPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+		List<FunctionSignature> matchingSignatures = new ArrayList<>();
+		List<Type> newChildTypes = new ArrayList<>(childTypes);
+		if (newChildTypes.get(0) == PrimitiveType.CHARACTER) {
+			// Try promoting to an integer
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+				return matchingSignatures;			// done
+			}
+		}
+		if (newChildTypes.get(0) == PrimitiveType.INTEGER) {
+			// Try promoting to a rational
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			// Try promoting to a float
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+		}
+		return matchingSignatures;
+	}
+	
+	public List<FunctionSignature> matchSignatureWithRightPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+		List<FunctionSignature> matchingSignatures = new ArrayList<>();
+		List<Type> newChildTypes = new ArrayList<>(childTypes);
+		if (newChildTypes.get(1) == PrimitiveType.CHARACTER) {
+			// Try promoting to an integer
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+				return matchingSignatures;			// done
+			}
+		}
+		if (newChildTypes.get(1) == PrimitiveType.INTEGER) {
+			// Try promoting to a rational
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			// Try promoting to a float
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+		}
+		return matchingSignatures;
+	}
+	
+	public List<FunctionSignature> matchSignatureWithBothPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+		List<FunctionSignature> matchingSignatures = new ArrayList<>();
+		List<Type> newChildTypes = new ArrayList<>(childTypes);
+		
+		// INT, INT => 4 possibilities:
+		// (rat, rat), (rat, float), (float, rat), (float, float)
+		if (childTypes.get(0) == PrimitiveType.INTEGER && childTypes.get(1) == PrimitiveType.INTEGER) {
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			return matchingSignatures;
+		}
+		
+		// CHAR, INT => 6 possibilities:
+		// (int, float), (int, rat) 								RANK 1
+		// (rat, rat), (rat, float), (float, rat), (float, float)	RANK 2
+		if (childTypes.get(0) == PrimitiveType.CHARACTER && childTypes.get(1) == PrimitiveType.INTEGER) {
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			if (matchingSignatures.size() > 0) {
+				return matchingSignatures;
+			} else {
+				matchingSignatures.clear();
+			}
+			// ----------------------
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			return matchingSignatures;
+		}
+		
+		// INT, CHAR => 6 possibilities:
+		// (float, int), (rat, int) 								RANK 1
+		// (rat, rat), (rat, float), (float, rat), (float, float)	RANK 2
+		if (childTypes.get(0) == PrimitiveType.INTEGER && childTypes.get(1) == PrimitiveType.CHARACTER) {
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			if (matchingSignatures.size() > 0) {
+				return matchingSignatures;
+			} else {
+				matchingSignatures.clear();
+			}
+			// ----------------------
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			return matchingSignatures;
+		}
+		
+		// CHAR, CHAR => 9 possibilities:
+		// (int, int)												RANK 1
+		// (float, int), (rat, int), (int, float), (int, rat)		RANK 2
+		// (rat, rat), (rat, float), (float, rat), (float, float)	RANK 3
+		if (childTypes.get(0) == PrimitiveType.CHARACTER && childTypes.get(1) == PrimitiveType.CHARACTER) {
+			// RANK 1
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			FunctionSignature signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+				return matchingSignatures;
+			}
+			// ----------------------
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.INTEGER);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.INTEGER);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			if (matchingSignatures.size() > 0) {
+				return matchingSignatures;
+			} else {
+				matchingSignatures.clear();
+			}
+			// ----------------------
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.RATIONAL);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.RATIONAL);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			newChildTypes.set(0,  PrimitiveType.FLOATING);
+			newChildTypes.set(1,  PrimitiveType.FLOATING);
+			signature = signatures.acceptingSignature(newChildTypes);
+			if (signature.accepts(newChildTypes)) {
+				matchingSignatures.add(signature);
+			}
+			
+			return matchingSignatures;
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		return matchingSignatures;
+	}
 	@Override
 	public void visitLeave(ControlFlowStatementNode node) {
 		Type conditionType = node.child(0).getType();
