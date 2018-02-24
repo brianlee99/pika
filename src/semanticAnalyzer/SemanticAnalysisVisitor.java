@@ -30,7 +30,6 @@ import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TypeNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
-import semanticAnalyzer.signatures.PromotionChecker;
 import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -877,21 +876,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			
 			return matchingSignatures;
 		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		return matchingSignatures;
 	}
 	@Override

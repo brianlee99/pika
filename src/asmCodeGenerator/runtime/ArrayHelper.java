@@ -93,6 +93,7 @@ public class ArrayHelper {
 			code.add(LoadI);								// [ stringAddr ]
 			code.add(PushI, Record.STRING_HEADER_SIZE);
 			code.add(Add);
+			// make sure the address is not a zero
 			code.add(PushD, STRING_PRINT_FORMAT);
 			code.add(Printf);
 		}

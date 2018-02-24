@@ -530,15 +530,11 @@ public class Parser {
 		if(!startsBracketExpression(nowReading)) {
 			return syntaxErrorNode("brackets");
 		}
-		
-		// Token token = nowReading;						// [
 		readToken();
-		ParseNode expression = parseExpression();		// [ expr
-		
+		ParseNode expression = parseExpression();
 		if (nowReading.isLextant(Punctuator.BAR)) {
 			return parseCastingExpression(expression);
 		}
-		
 		return parseArrayPopulationExpression(expression);
 	}
 	

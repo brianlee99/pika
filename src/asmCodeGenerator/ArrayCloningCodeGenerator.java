@@ -7,9 +7,6 @@ import semanticAnalyzer.types.Array;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 
-import static asmCodeGenerator.runtime.RunTime.*;
-import static asmCodeGenerator.Macros.*;
-import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import static asmCodeGenerator.runtime.Record.*;
 
 public class ArrayCloningCodeGenerator implements SimpleCodeGenerator {

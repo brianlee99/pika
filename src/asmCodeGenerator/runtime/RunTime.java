@@ -1,19 +1,9 @@
 package asmCodeGenerator.runtime;
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
-
-import java.util.List;
-
-import com.sun.org.apache.bcel.internal.classfile.Code;
-
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
-import asmCodeGenerator.codeStorage.ASMOpcode;
-import parseTree.ParseNode;
-import semanticAnalyzer.types.Array;
-import semanticAnalyzer.types.PrimitiveType;
-import semanticAnalyzer.types.Type;
-
 import static asmCodeGenerator.Macros.*;
+
 public class RunTime {
 	public static final String EAT_LOCATION_ZERO      = "$eat-location-zero";		// helps us distinguish null pointers from real ones.
 	public static final String INTEGER_PRINT_FORMAT   = "$print-format-integer";
@@ -170,13 +160,12 @@ public class RunTime {
 
 	// Lowest terms Euclidean GCD algorithm
 	private ASMCodeFragment lowestTerms() {
-		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);  // [.. 6 27 43355(RA)]
+		final String aLabel = "$a";
+		final String bLabel = "$b";
+		
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
 		frag.add(Label, LOWEST_TERMS);
 		storeITo(frag, RETURN_ADDRESS);
-		
-//		// check non-zero denominator
-//		frag.add(Duplicate);
-//		frag.add(JumpFalse, RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
 		
 		//frag.add(DLabel, DENOMINATOR_1);
 		frag.add(DataZ, 4);
@@ -675,7 +664,6 @@ public class RunTime {
 		frag.add(PushD, nullArrayMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
-	
 	public static ASMCodeFragment getEnvironment() {
 		RunTime rt = new RunTime();
 		return rt.environmentASM();
