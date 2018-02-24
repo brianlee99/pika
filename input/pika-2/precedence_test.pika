@@ -1,0 +1,5 @@
+exec { 
+    print  [3 * 3 > 4 | bool] != _false_ == (2/5 <= 0*6 + 2 + [^c^ | int] / 1) == _true_ != ( ^a^ < ^A^) .
+    
+    #should return true
+}

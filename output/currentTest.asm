@@ -448,12 +448,12 @@
         StoreI                                 
         PushD        $numerator-1              
         LoadI                                  
-        PushD        $numerator-2              
+        PushD        $denominator-2            
         LoadI                                  
         Multiply                               
         PushD        $denominator-1            
         LoadI                                  
-        PushD        $denominator-2            
+        PushD        $numerator-2              
         LoadI                                  
         Multiply                               
         PushD        $return-address           
@@ -585,22 +585,24 @@
         Return                                 
         DLabel       $usable-memory-start      
         DLabel       $global-memory-block      
-        DataZ        4                         
+        DataZ        16                        
         Label        $$main                    
         PushD        $global-memory-block      
         PushI        0                         
-        Add                                    %% a
-        PushI        3                         
-        Duplicate                              
-        JumpNeg      $$negative-length-arr     
-        Duplicate                              
+        Add                                    %% t
+        PushI        10                        
+        StoreI                                 
+        PushD        $global-memory-block      
         PushI        4                         
-        Multiply                               
+        Add                                    %% s
+        PushI        6                         
         Duplicate                              
-        PushD        $array-datasize-temp      
+        PushD        $string-len-temp          
         Exchange                               
         StoreI                                 
-        PushI        16                        
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        17                        
         Add                                    
         Call         -mem-manager-allocate     
         PushD        $record-creation-temp     
@@ -610,172 +612,505 @@
         LoadI                                  
         PushI        0                         
         Add                                    
-        PushI        7                         
+        PushI        6                         
         StoreI                                 
         PushD        $record-creation-temp     
         LoadI                                  
         PushI        4                         
         Add                                    
-        PushI        0                         
+        PushI        9                         
         StoreI                                 
         PushD        $record-creation-temp     
         LoadI                                  
-        PushI        16                        
+        PushI        12                        
         Add                                    
-        PushD        $array-datasize-temp      
+        PushD        $string-len-temp          
         LoadI                                  
+        PushI        1                         
+        Add                                    
         Call         $clear-n-bytes            
         PushD        $record-creation-temp     
         LoadI                                  
         PushI        8                         
         Add                                    
-        PushI        4                         
+        Exchange                               
         StoreI                                 
+        PushI        77                        
         PushD        $record-creation-temp     
         LoadI                                  
         PushI        12                        
         Add                                    
-        Exchange                               
-        StoreI                                 
-        PushD        $record-creation-temp     
-        LoadI                                  
-        Duplicate                              
-        PushI        1                         
-        Nop                                    
-        PushI        1                         
-        Exchange                               
-        PushI        16                        
-        Add                                    
         PushI        0                         
         Add                                    
-        PushD        $pop-arr-addr-temp        
         Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
+        StoreC                                 
+        PushI        105                       
+        PushD        $record-creation-temp     
         LoadI                                  
-        PushI        4                         
+        PushI        12                        
         Add                                    
-        Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
-        LoadI                                  
-        Exchange                               
-        StoreI                                 
-        Duplicate                              
-        PushF        2.200000                  
-        ConvertI                               
         PushI        1                         
-        Exchange                               
-        PushI        16                        
         Add                                    
-        PushI        8                         
-        Add                                    
-        PushD        $pop-arr-addr-temp        
         Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
+        StoreC                                 
+        PushI        115                       
+        PushD        $record-creation-temp     
         LoadI                                  
-        PushI        4                         
+        PushI        12                        
+        Add                                    
+        PushI        2                         
         Add                                    
         Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
+        StoreC                                 
+        PushI        116                       
+        PushD        $record-creation-temp     
         LoadI                                  
-        Exchange                               
-        StoreI                                 
-        Duplicate                              
+        PushI        12                        
+        Add                                    
         PushI        3                         
-        Nop                                    
-        PushI        1                         
-        Exchange                               
-        PushI        16                        
         Add                                    
-        PushI        16                        
-        Add                                    
-        PushD        $pop-arr-addr-temp        
         Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
+        StoreC                                 
+        PushI        101                       
+        PushD        $record-creation-temp     
         LoadI                                  
+        PushI        12                        
+        Add                                    
         PushI        4                         
         Add                                    
         Exchange                               
-        StoreI                                 
-        PushD        $pop-arr-addr-temp        
+        StoreC                                 
+        PushI        114                       
+        PushD        $record-creation-temp     
         LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        5                         
+        Add                                    
         Exchange                               
-        StoreI                                 
+        StoreC                                 
+        PushI        0                         
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        6                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
         StoreI                                 
         PushD        $global-memory-block      
-        PushI        0                         
-        Add                                    %% a
-        LoadI                                  
-        DLabel       -print-array-1-base       
-        DataZ        4                         
-        DLabel       -print-array-1-i          
-        DataZ        4                         
-        DLabel       -print-array-1-length     
-        DataZ        4                         
-        PushI        91                        
-        PushD        $print-format-character   
-        Printf                                 
-        PushD        -print-array-1-base       
+        PushI        8                         
+        Add                                    %% s
+        PushI        12                        
+        StoreI                                 
+        PushI        4                         
+        Duplicate                              
+        PushD        $string-len-temp          
         Exchange                               
         StoreI                                 
-        PushD        -print-array-1-base       
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        17                        
+        Add                                    
+        Call         -mem-manager-allocate     
+        PushD        $record-creation-temp     
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        0                         
+        Add                                    
+        PushI        6                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        4                         
+        Add                                    
+        PushI        9                         
+        StoreI                                 
+        PushD        $record-creation-temp     
         LoadI                                  
         PushI        12                        
         Add                                    
+        PushD        $string-len-temp          
         LoadI                                  
-        PushD        -print-array-1-length     
-        Exchange                               
-        StoreI                                 
-        PushI        0                         
-        PushD        -print-array-1-i          
-        Exchange                               
-        StoreI                                 
-        Label        -print-array-1-loop-body  
-        PushD        -print-array-1-i          
-        LoadI                                  
-        PushD        -print-array-1-length     
-        LoadI                                  
-        Subtract                               
-        JumpFalse    -print-array-1-loop-end   
-        PushD        -print-array-1-base       
-        LoadI                                  
-        PushI        16                        
+        PushI        1                         
         Add                                    
-        PushD        -print-array-1-i          
+        Call         $clear-n-bytes            
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        8                         
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        PushI        84                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        0                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        104                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        1                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        101                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        2                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        121                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        3                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        0                         
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        4                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-space       
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% t
+        PushD        $global-memory-block      
+        PushI        8                         
+        Add                                    %% s
+        LoadI                                  
+        StoreI                                 
+        PushD        $global-memory-block      
+        PushI        12                        
+        Add                                    %% s
+        PushI        2                         
+        Duplicate                              
+        PushD        $string-len-temp          
+        Exchange                               
+        StoreI                                 
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        17                        
+        Add                                    
+        Call         -mem-manager-allocate     
+        PushD        $record-creation-temp     
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        0                         
+        Add                                    
+        PushI        6                         
+        StoreI                                 
+        PushD        $record-creation-temp     
         LoadI                                  
         PushI        4                         
-        Multiply                               
         Add                                    
+        PushI        9                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        1                         
+        Add                                    
+        Call         $clear-n-bytes            
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        8                         
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        PushI        109                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        0                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        101                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        1                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        0                         
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        2                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        StoreI                                 
+        PushI        4                         
+        Duplicate                              
+        PushD        $string-len-temp          
+        Exchange                               
+        StoreI                                 
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        17                        
+        Add                                    
+        Call         -mem-manager-allocate     
+        PushD        $record-creation-temp     
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        0                         
+        Add                                    
+        PushI        6                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        4                         
+        Add                                    
+        PushI        9                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        1                         
+        Add                                    
+        Call         $clear-n-bytes            
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        8                         
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        PushI        99                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        0                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        97                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        1                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        108                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        2                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        108                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        3                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        0                         
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        4                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-space       
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        12                        
+        Add                                    %% s
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-space       
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        4                         
+        Add                                    %% s
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-space       
+        Printf                                 
+        PushI        6                         
+        Duplicate                              
+        PushD        $string-len-temp          
+        Exchange                               
+        StoreI                                 
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        17                        
+        Add                                    
+        Call         -mem-manager-allocate     
+        PushD        $record-creation-temp     
+        Exchange                               
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        0                         
+        Add                                    
+        PushI        6                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        4                         
+        Add                                    
+        PushI        9                         
+        StoreI                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $string-len-temp          
+        LoadI                                  
+        PushI        1                         
+        Add                                    
+        Call         $clear-n-bytes            
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        8                         
+        Add                                    
+        Exchange                               
+        StoreI                                 
+        PushI        84                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        0                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        105                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        1                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        98                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        2                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        98                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        3                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        115                       
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        4                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        33                        
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        5                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushI        0                         
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushI        6                         
+        Add                                    
+        Exchange                               
+        StoreC                                 
+        PushD        $record-creation-temp     
+        LoadI                                  
+        PushI        12                        
+        Add                                    
+        PushD        $print-format-string      
+        Printf                                 
+        PushD        $print-format-newline     
+        Printf                                 
+        PushD        $global-memory-block      
+        PushI        0                         
+        Add                                    %% t
         LoadI                                  
         PushD        $print-format-integer     
         Printf                                 
-        PushD        -print-array-1-i          
-        LoadI                                  
-        PushI        1                         
-        Add                                    
-        PushD        -print-array-1-i          
-        Exchange                               
-        StoreI                                 
-        PushD        -print-array-1-i          
-        LoadI                                  
-        PushD        -print-array-1-length     
-        LoadI                                  
-        Subtract                               
-        JumpFalse    -print-array-1-loop-end   
-        PushI        44                        
-        PushD        $print-format-character   
-        Printf                                 
-        PushI        32                        
-        PushD        $print-format-character   
-        Printf                                 
-        Jump         -print-array-1-loop-body  
-        Label        -print-array-1-loop-end   
-        PushI        93                        
-        PushD        $print-format-character   
+        PushD        $print-format-newline     
         Printf                                 
         Halt                                   
         Label        -mem-manager-make-tags    

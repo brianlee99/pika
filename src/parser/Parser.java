@@ -348,14 +348,14 @@ public class Parser {
 			return syntaxErrorNode("or");
 		}
 		ParseNode left = parseConjunctionExpression();
-		// readToken();
-		if (nowReading.isLextant(Punctuator.OR)) {
+		while (nowReading.isLextant(Punctuator.OR)) {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseConjunctionExpression();
-			return OperatorNode.withChildren(compareToken, left, right);
+			left = OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
+		
 	}
 	private boolean startsDisjunctionExpression(Token token) {
 		return startsConjunctionExpression(token);
@@ -367,12 +367,11 @@ public class Parser {
 			return syntaxErrorNode("and");
 		}
 		ParseNode left = parseComparisonExpression();
-		//readToken();
-		if (nowReading.isLextant(Punctuator.AND)) {
+		while (nowReading.isLextant(Punctuator.AND)) {
 			Token compareToken = nowReading;
 			readToken();
 			ParseNode right = parseComparisonExpression();
-			return OperatorNode.withChildren(compareToken, left, right);
+			left = OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
 	}
@@ -387,7 +386,7 @@ public class Parser {
 		}
 		
 		ParseNode left = parseAdditiveExpression();
-		if(nowReading.isLextant(
+		while(nowReading.isLextant(
 				Punctuator.GREATER,
 				Punctuator.LESS,
 				Punctuator.EQUALS,
@@ -398,10 +397,10 @@ public class Parser {
 			readToken();
 			ParseNode right = parseAdditiveExpression();
 			
-			return OperatorNode.withChildren(compareToken, left, right);
+			left = OperatorNode.withChildren(compareToken, left, right);
 		}
 		return left;
-
+		
 	}
 	private boolean startsComparisonExpression(Token token) {
 		return startsAdditiveExpression(token);

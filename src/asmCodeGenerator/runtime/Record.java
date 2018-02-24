@@ -77,48 +77,67 @@ public class Record {
 	
 	// Subroutine that populates an array
 	public static void populateArray(ASMCodeFragment code, int offset, Type type) {
-		code.add(Exchange); 									// [ ... item &arr ]
-		code.add(PushI, ARRAY_HEADER_SIZE); 				// [ ... item &arr 16 ]
-		code.add(Add);											// [ ... item &firstElem ]
-		code.add(PushI, offset); 								// [ ... item &firstElem offset ]
-		code.add(Add);											// [ ... item &ithElem ]
-		
-		storeITo(code, POPULATE_ARRAY_ADDRESS_TEMP);
-		loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);
-		
 		if (type == PrimitiveType.RATIONAL) {
-			code.add(PushI, 4);
-			code.add(Add); 										// [ ... num denom denomAddr ]
-			code.add(Exchange);									// [ ... num denomAddr denom ]
-			code.add(StoreI);									// [ ... num  ]
-			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  		// [ ... num numAddr ]
-			code.add(Exchange);
-			code.add(StoreI);
+																	// [ &arr num den ]
+			storeITo(code, DENOMINATOR_1);							// [ &arr num ]
+			storeITo(code, NUMERATOR_1);							// [ &arr ]
+			storeITo(code, POPULATE_ARRAY_ADDRESS_TEMP);			// [ ]
+			
+			loadIFrom(code, NUMERATOR_1);							// [ num ]
+			loadIFrom(code, DENOMINATOR_1);							// [ num den] 
+			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);			// [ num den &arr ]
+			
+			code.add(PushI, ARRAY_HEADER_SIZE); 					// [ num den &arr 16 ]
+			code.add(Add);											// [ num den &firstElem ]
+			code.add(PushI, offset); 								// [ num den &firstElem offset ]
+			code.add(Add);											// [ num den &ithElem ]
+			storeITo(code, POPULATE_ARRAY_ADDRESS_TEMP);
+			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);
+			
+			code.add(PushI, 4);				
+			code.add(Add); 											// [ num den denomAddr ]
+			code.add(Exchange);										// [ num denomAddr den ]
+			code.add(StoreI);										// [ num ]
+			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  			// [ num numAddr ]
+			code.add(Exchange);										// [ numAddr num ]
+			code.add(StoreI);										// [ ]
 		}
-		if(type == PrimitiveType.INTEGER) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreI);
+		else {		
+			code.add(Exchange); 									// [ ... item &arr ]
+			code.add(PushI, ARRAY_HEADER_SIZE); 					// [ ... item &arr 16 ]
+			code.add(Add);											// [ ... item &firstElem ]
+			code.add(PushI, offset); 								// [ ... item &firstElem offset ]
+			code.add(Add);											// [ ... item &ithElem ]
+			storeITo(code, POPULATE_ARRAY_ADDRESS_TEMP);
+			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);
+			
+			if(type == PrimitiveType.INTEGER) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreI);
+			}
+			if(type == PrimitiveType.FLOATING) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreF);
+			}
+			if(type == PrimitiveType.BOOLEAN) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreC);
+			}
+			if(type == PrimitiveType.CHARACTER) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreC);
+			}
+			if (type == PrimitiveType.STRING) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreI);
+			}
+			if (type instanceof Array) {
+				code.add(Exchange);									// [ ... addr item]
+				code.add(StoreI);
+			}
+			
 		}
-		if(type == PrimitiveType.FLOATING) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreF);
-		}
-		if(type == PrimitiveType.BOOLEAN) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreC);
-		}
-		if(type == PrimitiveType.CHARACTER) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreC);
-		}
-		if (type == PrimitiveType.STRING) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreI);
-		}
-		if (type instanceof Array) {
-			code.add(Exchange);									// [ ... addr item]
-			code.add(StoreI);
-		}
+
 	}
 	
 	// Subroutine (NOT at the ASM level) that creates an empty array record.
@@ -128,7 +147,7 @@ public class Record {
 		String loopEnd = labeller.newLabel("loop-end");
 		String iLabel = labeller.newLabel("i");
 		
-		final int typecode = ARRAY_TYPE_ID;				// [ &arr ]
+		final int typecode = ARRAY_TYPE_ID;						// [ &arr ]
 		code.add(Duplicate);									// [ &arr &arr ]
 		code.add(PushI, ARRAY_LENGTH_OFFSET);  			
 		code.add(Add); 											// [ &arr &length ]
@@ -139,7 +158,7 @@ public class Record {
 		code.add(Multiply);										// [ &arr nElems arraySize]
 		code.add(Duplicate);									// [ &arr nElems arraySize arraySize]
 		storeITo(code, ARRAY_DATASIZE_TEMPORARY);				// [ &arr nElems arraySize]
-		code.add(PushI, ARRAY_HEADER_SIZE);				// [ &arr nElems arraySize 16]
+		code.add(PushI, ARRAY_HEADER_SIZE);						// [ &arr nElems arraySize 16]
 		code.add(Add);											// [ &arr nElems totalArraySize]
 		
 		createRecord(code, typecode, statusFlags);				// [ &arr nElems]
@@ -154,7 +173,6 @@ public class Record {
 		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_SUBTYPE_SIZE_OFFSET, subtypeSize);
 		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.ARRAY_LENGTH_OFFSET); 
 																// [ &oldArr ]
-		
 		declareI(code, iLabel);
 		code.add(PushI, 0);
 		storeITo(code, iLabel);
@@ -181,13 +199,13 @@ public class Record {
 		code.add(Add);											// [ &oldArr &ithElem ]
 		
 		if (subtype == PrimitiveType.RATIONAL) {
-//			code.add(PushI, 4);
-//			code.add(Add); 										// [ ... num denom denomAddr ]
-//			code.add(Exchange);									// [ ... num denomAddr denom ]
-//			code.add(StoreI);									// [ ... num  ]
-//			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  		// [ ... num numAddr ]
-//			code.add(Exchange);
-//			code.add(StoreI);
+			code.add(Duplicate); 								// [ &oldArr &ithElem &ithElem ]
+			code.add(PushI, 4); 								// [ &oldArr &ithElem &ithElem 4 ]
+			code.add(Add);										// [ &oldArr &num &den ]
+			code.add(LoadI); 									// [ &oldArr &num den ]
+			storeITo(code, DENOMINATOR_1);						// [ &oldArr &num ]
+			code.add(LoadI); 									// [ &oldArr num ]
+			storeITo(code, NUMERATOR_1); 						// [ &oldArr ]
 		}
 		if(subtype == PrimitiveType.INTEGER) {
 			code.add(LoadI);
@@ -217,14 +235,14 @@ public class Record {
 		code.add(Multiply);										// [ &oldArr ithElem &newFirstElem offset ]
 		code.add(Add);											// [ &oldArr ithElem &ithElem ]
 		
-		if (subtype == PrimitiveType.RATIONAL) {
-//			code.add(PushI, 4);
-//			code.add(Add); 										// [ ... num denom denomAddr ]
-//			code.add(Exchange);									// [ ... num denomAddr denom ]
-//			code.add(StoreI);									// [ ... num  ]
-//			loadIFrom(code, POPULATE_ARRAY_ADDRESS_TEMP);  		// [ ... num numAddr ]
-//			code.add(Exchange);
-//			code.add(StoreI);
+		if (subtype == PrimitiveType.RATIONAL) {				// [ &oldArr &num ]
+			code.add(Duplicate);								// [ &oldArr &num &num ]
+			code.add(PushI, 4);									// [ &oldArr &num &num 4 ]
+			code.add(Add);										// [ &oldArr &num &den ]
+			loadIFrom(code, DENOMINATOR_1); 					// [ &oldArr &num &den den ] 
+			code.add(StoreI);									// [ &oldArr &num ] 
+			loadIFrom(code, NUMERATOR_1);						// [ &oldArr &num num ] 
+			code.add(StoreI); 									// [ &oldArr ] 
 		}
 		if (subtype == PrimitiveType.INTEGER) {
 			code.add(Exchange);

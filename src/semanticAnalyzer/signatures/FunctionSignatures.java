@@ -13,11 +13,13 @@ import static semanticAnalyzer.types.PrimitiveType.*;
 import asmCodeGenerator.ArrayCloningCodeGenerator;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.ArrayLengthCodeGenerator;
+import asmCodeGenerator.CharacterToBooleanCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
 import asmCodeGenerator.FloatingRationalizeCodeGenerator;
 import asmCodeGenerator.FloatingToRationalCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
+import asmCodeGenerator.IntegerToBooleanCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.IntegerToRationalCodeGenerator;
 import asmCodeGenerator.NewArrayCodeGenerator;
@@ -173,13 +175,13 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			// Integer -> target type
 			new FunctionSignature(ASMOpcode.ConvertF, INTEGER, FLOATING, FLOATING),
 			new FunctionSignature(new IntegerToCharacterCodeGenerator(), INTEGER, CHARACTER, CHARACTER),
-			new FunctionSignature(ASMOpcode.Nop, INTEGER, BOOLEAN, BOOLEAN),
+			new FunctionSignature(new IntegerToBooleanCodeGenerator(), INTEGER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, INTEGER, INTEGER, INTEGER),
 			new FunctionSignature(new IntegerToRationalCodeGenerator(), INTEGER, RATIONAL, RATIONAL),
 			
 			// Character -> target type
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, INTEGER, INTEGER),
-			new FunctionSignature(ASMOpcode.Nop, CHARACTER, BOOLEAN, BOOLEAN),
+			new FunctionSignature(new CharacterToBooleanCodeGenerator(), CHARACTER, BOOLEAN, BOOLEAN),
 			new FunctionSignature(ASMOpcode.Nop, CHARACTER, CHARACTER, CHARACTER),
 			new FunctionSignature(new IntegerToRationalCodeGenerator(), CHARACTER, RATIONAL, RATIONAL),
 			

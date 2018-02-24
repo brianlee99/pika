@@ -1,0 +1,12 @@
+exec { 
+    const f := _false_.
+    const t := _true_.
+    
+    print  0 == 1 == t && f || t && f && f || f || f && (f || t) && t , _n_.
+    print  3.0 * 1.0 + 0.0 > [2|float] != f || t.
+    
+    #should return:
+    #false
+    #true
+    
+}

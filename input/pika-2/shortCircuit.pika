@@ -1,0 +1,8 @@
+exec { 
+        const f := _false_.
+        const t := _true_ .
+        
+         print  t   ||  [ 1 / 0 | bool], _n_.
+         print  f   &&  [ 1 / 0 | bool].
+    
+}

@@ -1,0 +1,68 @@
+exec {
+    const t := _true_.
+    const f := _false_.
+    
+    var x := t.
+    
+    #################
+    while (x != x) {
+        print "While statement 0 should be not be printed",_n_.
+        x := f.
+    }
+    #################
+    
+    while (x) {
+        print "While statement 1 should be printed once",_n_.
+        x := f.
+    }
+    print _n_.
+    #################
+    
+    var iters1 := 1.
+    while (iters1 != 0) {
+        print "While statement 2 should be printed once",_n_.
+        iters1 := 0.
+    }
+    print _n_.
+    #################
+    
+    iters1 := -4.
+    while ([iters1 | bool]) {
+        print "While statement 3 should be printed 4 times",_n_.
+        iters1 := iters1 + 1.
+    }
+    print _n_.
+    #################
+    
+    var iters5 := 5.
+    
+    while ([iters5 | bool] ) {
+        print "while statement 5 should be printed 5 times",_n_.
+        iters5 := iters5 - 1.
+    }
+    
+    print _n_.
+    #################
+    
+    var iters2 := 2.
+    
+    if ( [iters2 | bool] ) {
+        while ( [iters2 | bool] ) {
+            while ( [iters2 | bool] ) {
+                while ( [iters2 | bool] ) {
+                    if (iters2 != iters2) {
+                        print "This should not be printed".
+                    }
+                    else { iters2 := iters2 + 1. }
+                    print "while statement 6 should be printed 2 times",_n_.
+                    iters2 := iters2 - 2.
+                    
+                }
+            }
+        }
+    }
+    
+    print _n_.
+    #################
+    print "I am always printed".
+}

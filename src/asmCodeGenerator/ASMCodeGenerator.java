@@ -453,8 +453,6 @@ public class ASMCodeGenerator {
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.BOOLEAN)
 				code.add(Subtract);
-			else if (leftNodeType == PrimitiveType.BOOLEAN)
-				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.STRING)
 				code.add(Subtract);
 			else if (leftNodeType instanceof Array)
@@ -691,8 +689,7 @@ public class ASMCodeGenerator {
 			int subtypeSize = node.child(0).getType().getSize();
 			Type type = node.child(0).getType();
 			code.add(PushI, length);												// [ ... length ]
-			
-			
+
 			SimpleCodeGenerator generator = new NewArrayCodeGenerator();
 			ASMCodeFragment fragment = generator.generate(node);
 			code.append(fragment);													// [ ... &arr ]
@@ -704,9 +701,9 @@ public class ASMCodeGenerator {
 				int offset = i * subtypeSize;
 				Record.populateArray(code, offset, type);							// [ ... &arr ]
 			}
-			if (fragment.isAddress()) {
-				code.markAsAddress();
-			}
+//			if (fragment.isAddress()) {
+//				code.markAsAddress();
+//			}
 
 		}
 		public void visitNewArrayNode(OperatorNode node) {

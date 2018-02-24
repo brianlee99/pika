@@ -1,0 +1,15 @@
+exec {
+    const a := 11 // 13.
+    const b := 15 // 30.
+    const c := 1 // 7.
+    const d := 99 // 33.
+    const e := 25 // 91.
+    var   f := a * c + d / b - a.
+
+    print f.
+    print _n_.
+    print 0 // 1 - e + f .
+}
+#   output 
+#   5_25/91
+#   5

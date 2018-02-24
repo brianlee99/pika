@@ -423,51 +423,31 @@ public class RunTime {
 	private ASMCodeFragment rationalDivide() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID); 
 		frag.add(Label, RATIONAL_DIVIDE);
-		frag.add(PushD, RETURN_ADDRESS);
-		frag.add(Exchange);
-		frag.add(StoreI);
+		storeITo(frag, RETURN_ADDRESS);		// [ num1 den1 num2 den2 ]
 		
 		// [ ... num1 den1 num2 den2]
-		
-		frag.add(PushD, DENOMINATOR_2);
-		frag.add(Exchange);
-		frag.add(StoreI);
-		
+		storeITo(frag, DENOMINATOR_2);		// [ num1 den1 num2 ]
+
 		// check that num2 is not zero
 		frag.add(Duplicate);
 		frag.add(JumpFalse, RATIONAL_DIVIDE_BY_ZERO_RUNTIME_ERROR);
 		
-		frag.add(PushD, NUMERATOR_2);
-		frag.add(Exchange);
-		frag.add(StoreI);
+		storeITo(frag, NUMERATOR_2);		// [ num1 den1 ]
+		storeITo(frag, DENOMINATOR_1);		// [ num1 ]
+		storeITo(frag, NUMERATOR_1);		// [ ]
 		
-		frag.add(PushD, DENOMINATOR_1);
-		frag.add(Exchange);
-		frag.add(StoreI);
+		// compute num1*den2
+		loadIFrom(frag, NUMERATOR_1);		// [ num1 ]
+		loadIFrom(frag, DENOMINATOR_2);		// [ den2 ]
+		frag.add(Multiply);					// [ newNum ]
 		
-		frag.add(PushD, NUMERATOR_1);
-		frag.add(Exchange);
-		frag.add(StoreI);	
+		// compute den1*num2
+		loadIFrom(frag, DENOMINATOR_1);		// [ newNum den1 ]
+		loadIFrom(frag, NUMERATOR_2);		// [ newNum num2 ]
+		frag.add(Multiply);					// [ newNum newDen ]
 		
-		// compute num1*num2
-		frag.add(PushD, NUMERATOR_1);
-		frag.add(LoadI);
-		frag.add(PushD, NUMERATOR_2);
-		frag.add(LoadI);
-		frag.add(Multiply);
-		
-		// compute denom1*denom2
-		frag.add(PushD, DENOMINATOR_1);
-		frag.add(LoadI);
-		frag.add(PushD, DENOMINATOR_2);
-		frag.add(LoadI);
-		frag.add(Multiply);
-		
-		// load return address
-		frag.add(PushD, RETURN_ADDRESS);
-		frag.add(LoadI);
+		loadIFrom(frag, RETURN_ADDRESS);
 		frag.add(Return);
-
 		return frag;
 	}
 	

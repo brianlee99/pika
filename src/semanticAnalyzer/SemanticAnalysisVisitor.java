@@ -55,8 +55,10 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		leaveScope(node);
 	}
 	public void visitEnter(BlockNode node) {
+		enterSubscope(node);
 	}
 	public void visitLeave(BlockNode node) {
+		leaveScope(node);
 	}
 	
 	
@@ -66,7 +68,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		Scope scope = Scope.createProgramScope();
 		node.setScope(scope);
 	}	
-	@SuppressWarnings("unused")
 	private void enterSubscope(ParseNode node) {
 		Scope baseScope = node.getLocalScope();
 		Scope scope = baseScope.createSubscope();
@@ -86,11 +87,11 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		IdentifierNode identifier = (IdentifierNode) node.child(0);
 		ParseNode initializer = node.child(1);
 		
+		
 		Type declarationType = initializer.getType();
 		node.setType(declarationType);
 		identifier.setType(declarationType);
 		
-		// add 'mutable' boolean to binding
 		boolean isMutable = node.getToken().isLextant(Keyword.VAR) ? true : false;
 		addBinding(identifier, declarationType, isMutable);
 	}
@@ -103,23 +104,92 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		Type expressionType = expression.getType();
 		Type targetType = target.getType();
 		
-		// check that the target node is actually targetable
-		
-		// target could be an IdentifierNode, OperatorNode (array Indexing)
 		if (target instanceof IdentifierNode) {
 			IdentifierNode identifier = (IdentifierNode) node.child(0);
 			
 			if (!identifier.isMutable()) {
 				logError("the identifier was declared as const at " + node.getToken().getLocation());
 			}
-
-			if (expressionType != targetType) {
+			
+			promoteTargetType(expressionType, targetType, expression, node);
+			
+			expressionType = node.child(0).getType();
+			targetType = node.child(1).getType();
+			
+			if (!expressionType.equivalent(targetType)) {
 				logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
 			}
 		}
-		else if (target instanceof OperatorNode) {
-			// check that it's an array indexing node
+	}
+	
+	public void promoteTargetType(Type expressionType, Type targetType, ParseNode child, ParseNode node) {
+		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
+		if (targetType == PrimitiveType.INTEGER) {
+			if (expressionType == PrimitiveType.CHARACTER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+				node.replaceChild(child, castingNode);
+				visitLeave(intNode);
+				visitLeave(castingNode);
+			}
 		}
+		else if (targetType == PrimitiveType.FLOATING) {
+			if (expressionType == PrimitiveType.CHARACTER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
+				OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+				
+				node.replaceChild(child, floatCastingNode);
+				visitLeave(intNode);
+				visitLeave(floatNode);
+				visitLeave(intCastingNode);
+				visitLeave(floatCastingNode);
+			}
+			else if (expressionType == PrimitiveType.INTEGER) {
+				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+				TypeNode floatNode = new TypeNode(floatToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, floatNode);
+				node.replaceChild(child, castingNode);
+				visitLeave(floatNode);
+				visitLeave(castingNode);
+			}
+		}
+		else if (targetType == PrimitiveType.RATIONAL) {
+			if (expressionType == PrimitiveType.CHARACTER) {
+				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+				TypeNode intNode = new TypeNode(intToken);
+				
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+				
+				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
+				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
+				
+				node.replaceChild(child, ratCastingNode);
+				visitLeave(intNode);
+				visitLeave(ratNode);
+				visitLeave(intCastingNode);
+				visitLeave(ratCastingNode);
+			}
+			else if (expressionType == PrimitiveType.INTEGER) {
+				Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+				TypeNode ratNode = new TypeNode(ratToken);
+
+				OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, ratNode);
+				node.replaceChild(child, castingNode);
+				visitLeave(ratNode);
+				visitLeave(castingNode);
+			}
+		}
+		
 	}
 	
 	public void visitLeave(ReleaseStatementNode node) {
@@ -136,14 +206,23 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	public void visitLeave(ArrayPopulationNode node) {
 		// int numChildren = node.nChildren();
 		List<Type> childTypes = new ArrayList<>();
+		List<ParseNode> children = node.getChildren();
 		for (ParseNode child : node.getChildren()) {
 			childTypes.add(child.getType());
 		}
 		
-		promoteArray(childTypes, node.getChildren(), node);
+		promoteArray(childTypes, children, node);
 		
-		Array arrayType = new Array(childTypes.get(0));
-		node.setType(arrayType);
+		if (typeCheckArray(children)) {
+			Array arrayType = new Array(children.get(0).getType());
+			node.setType(arrayType);
+		}
+		else {
+	        typeCheckError(node, childTypes);
+	        node.setType(PrimitiveType.ERROR);
+		}
+		
+		
 	}
 	
 	public void promoteArray(List<Type> childTypes, List<ParseNode> children, ParseNode node) {
@@ -208,41 +287,54 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 					visitLeave(ratCastingNode);
 				}
 				else if (childType == PrimitiveType.INTEGER) {
-					Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
-					TypeNode intNode = new TypeNode(intToken);
+					Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
+					TypeNode ratNode = new TypeNode(ratToken);
 
-					OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
-					node.replaceChild(child, castingNode);
-					visitLeave(intNode);
-					visitLeave(castingNode);
+					OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, child, ratNode);
+					node.replaceChild(child, ratCastingNode);
+					visitLeave(ratNode);
+					visitLeave(ratCastingNode);
 				}
 
 			}
 			else if (highestType == PrimitiveType.FLOATING) {
 				if (childType == PrimitiveType.CHARACTER) {
-				
+					Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
+					TypeNode intNode = new TypeNode(intToken);
+					
+					Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+					TypeNode floatNode = new TypeNode(floatToken);
+					
+					OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
+					OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
+					
+					node.replaceChild(child, floatCastingNode);
+					visitLeave(intNode);
+					visitLeave(floatNode);
+					visitLeave(intCastingNode);
+					visitLeave(floatCastingNode);
 				}
 				else if (childType == PrimitiveType.INTEGER) {
-					
+					Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+					TypeNode floatNode = new TypeNode(floatToken);
+
+					OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, child, floatNode);
+					node.replaceChild(child, floatCastingNode);
+					visitLeave(floatNode);
+					visitLeave(floatCastingNode);
 				}
-				Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
-				TypeNode intNode = new TypeNode(intToken);
-				
-				Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
-				TypeNode floatNode = new TypeNode(floatToken);
-				
-				OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
-				OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
-				
-				node.replaceChild(child, ratCastingNode);
-				visitLeave(intNode);
-				visitLeave(floatNode);
-				visitLeave(intCastingNode);
-				visitLeave(ratCastingNode);
 			}
 		}
 	}
 	
+	public boolean typeCheckArray(List<ParseNode> children) {
+		Type type = children.get(0).getType();
+		for (ParseNode child : children) {
+			if (!child.getType().equivalent(type))
+				return false;
+		}
+		return true;
+	}
 	@Override
 	public void visitLeave(OperatorNode node) {
         List<ParseNode> children = node.getChildren();
@@ -494,7 +586,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
         
         typeCheckError(node, childTypes);
         node.setType(PrimitiveType.ERROR);
-    	return;
 
 	}
 	

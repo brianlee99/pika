@@ -1,0 +1,22 @@
+exec {
+    # 1 level promotions
+    print "1 level promotions ",_n_.
+    var charIntArr := [^a^, ^b^, ^c^, 5].
+    var intFloatArr := [1, 2.2, 3.2, 3.14].
+    var intRatArr := [1, 2 , 3, 3//2].
+    
+    print charIntArr;_n_.
+    print intFloatArr;_n_.
+    print intRatArr;_n_.
+    
+    # 2 level promotions
+    print _n_,"2 level promotions ",_n_.
+    var charIntFloatArr := [^a^, 1, 4.269E-1].
+    var charIntRatArr   := [^v^, -1, +2.114E+2].
+    
+    print charIntFloatArr;_n_.
+    print charIntRatArr;_n_.
+    
+    # error cases
+    # var error := [^d^, 3, 1//2, 3.2].
+}

@@ -1,0 +1,103 @@
+exec {
+	var len := 5.
+	var listArr := [1 , 2 , 3 , 4 , 5].
+	var charListArray := [^a^, ^b^, ^c^, ^d^, ^e^, ^f^, ^g^].
+	var boolListArray := [_true_, _false_, _true_, _false_,!_false_,!!!_true_].
+	var anything := 5.
+	var floatListArray := [3.0, 3.1, 3.14, 3.14156, -4.20, 6.9E-2].
+	var ratListArray := [3//2, 2//2, 1//2, 0//2, -1//2, 6//9].
+	var stringListArray := ["I","love","you","and","chocolate","cake"].
+	var arrayListArray := [[[5,1,1] , [2,2,2,2] , [3,3]],[[9,1,1] , [4,2,0] , [6,9]]].
+	
+	print "list array: ";listArr;_n_.
+	print "list array: ";[3,2,1];_n_.
+	print "list char array: "; charListArray;_n_.
+	print "list bool array: "; boolListArray;_n_.
+	print "list float array: "; floatListArray;_n_.
+	print "list rat array: "; ratListArray;_n_.
+	print "list string array:"; stringListArray;_n_.
+	print "list array array:"; arrayListArray;_n_;_n_.
+	
+	var newArr1 := new [int](len).
+	var newArr2 := new [int]([5.5 | int]).
+	var newCharArr := new [char](len).
+	var newBoolArr := new [bool](10).
+	var newFloatArr := new [float](len).
+	var newRatArr := new [rat](len).
+	var newStringArr := new[string](len).
+	var newArrayArr := new[[[int]]](len).
+	
+	print "new array: ";newArr1;_n_.
+	print "new array: ";newArr2;_n_.
+	print "new char array: ";newCharArr;_n_.
+	print "new bool array: ";newBoolArr;_n_.
+	print "new float array: ";newFloatArr;_n_.
+	print "new rat array: ";newRatArr;_n_.
+	print "new string array: ";newStringArr;_n_;_n_.
+	#print "new array array:";newArrayArr;_n_., this gives null array runtime error!
+	
+	print _n_;"cloning new arrays: ";_n_;_n_.
+	
+	var cloneArr1 := clone newArr1.
+	print "original new array: ";newArr1,_n_.
+	print "cloned array: ";cloneArr1,_n_.
+	
+	var cloneArr2 := clone newArr2.
+	print "original new array: ";newArr2,_n_.
+	print "cloned array: ";cloneArr1,_n_.
+	
+	var cloneCharArr := clone newCharArr.
+	print "original new array: ";newCharArr,_n_.
+	print "cloned array: ";cloneCharArr,_n_.
+	
+	var cloneBoolArr := clone newBoolArr.
+	print "original new array: ";newBoolArr,_n_.
+	print "cloned array: ";cloneBoolArr,_n_.
+	
+	var cloneFloatArr := clone newFloatArr.
+	print "original new array: ";newFloatArr,_n_.
+	print "cloned array: ";cloneFloatArr,_n_.
+	
+	var cloneRatArr := clone newRatArr.
+	print "original new array: ";newRatArr,_n_.
+	print "cloned array: ";cloneRatArr,_n_.
+	
+	var cloneStringArr := clone newStringArr.
+	print "original new array: ";newStringArr,_n_.
+	print "cloned array: ";cloneStringArr,_n_.
+	
+	var cloneArrayArr := clone newArrayArr.
+	#print "original new array: ";newArrayArr,_n_. both give runtime error
+	#print "cloned array: ";cloneArrayArr,_n_.     both give runtime error
+	
+	print _n_;"cloning initialized arrays: ";_n_;_n_.
+	
+	cloneArr1 := clone listArr.
+	print "original array: ";listArr,_n_.
+	print "cloned array: ";cloneArr1,_n_.
+	
+	cloneCharArr := clone charListArray.
+	print "original array: ";charListArray,_n_.
+	print "cloned array: ";cloneCharArr,_n_.
+	
+	cloneBoolArr := clone boolListArray.
+	print "original array: ";boolListArray,_n_.
+	print "cloned array: ";cloneBoolArr,_n_.
+	
+	cloneFloatArr := clone floatListArray.
+	print "original array: ";floatListArray,_n_.
+	print "cloned array: ";cloneFloatArr,_n_.
+
+	cloneRatArr := clone ratListArray.
+	print "original array: ";ratListArray,_n_.
+	print "cloned array: ";cloneRatArr,_n_.
+	
+	cloneStringArr := clone stringListArray.
+	print "original array: ";stringListArray,_n_.
+	print "cloned array: ";cloneStringArr,_n_.
+
+	cloneArrayArr := clone arrayListArray.
+	print "original array: ";arrayListArray,_n_.
+	print "cloned array: ";cloneArrayArr,_n_.
+
+}
