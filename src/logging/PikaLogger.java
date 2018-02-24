@@ -17,6 +17,11 @@ public class PikaLogger {
 	private static Map<String, PikaLogger> loggers = new HashMap<String, PikaLogger>();
 	private static int numMessages = 0;
 	private static int maxMessagesBeforeQuit = Integer.MAX_VALUE;
+
+	public static void resetLogger() {
+		numMessages = 0;
+		loggers.clear();
+	}
 	
 	////////////////////////////////////////////////////////////////
 	// static interface

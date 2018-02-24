@@ -45,7 +45,8 @@ public class PikaCompiler extends PikaApplication {
 		
 		if(thereAreErrors()) {
 			stopProcessing(outfile);
-			System.exit(1);
+			System.out.println("Error with producing output file.");
+			// System.exit(1);
 		} 
 		else {
 			generateOptimizeAndPrintCode(outfile, decoratedTree);
