@@ -9,7 +9,9 @@ import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CharacterConstantNode;
+import parseTree.nodeTypes.ContinueNode;
 import parseTree.nodeTypes.ControlFlowStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
@@ -125,6 +127,20 @@ public class Parser {
 		if(startsReleaseStatement(nowReading)) {
 			return parseReleaseStatement();
 		}
+		/*
+		 * if(startsReturnStatement(nowReading)) {
+		 * 		return parseReturnStatement();
+		 * }
+		 * if(startsCallStatement(nowReading)) {
+		 * 		return parseCallStatement();
+		 * }
+		 */
+		 if(startsBreakStatement(nowReading)) {
+			 return parseBreakStatement();
+		 }
+		 if(startsContinueStatement(nowReading)) {
+			 return parseContinueStatement();
+		 }
 		return syntaxErrorNode("statement");
 	}
 	private boolean startsStatement(Token token) {
@@ -133,7 +149,9 @@ public class Parser {
 				startsAssignment(token) 			||
 				startsBlock(token) 					||
 				startsControlFlowStatement(token) 	||
-				startsReleaseStatement(token);
+				startsReleaseStatement(token)       ||
+				startsBreakStatement(token)			||
+				startsContinueStatement(token);
 	}
 	
 	// printStmt -> PRINT printExpressionList .
@@ -256,7 +274,6 @@ public class Parser {
 	}
 	
 	private ParseNode parseTargetExpression() {
-		
 		if (startsArrayIndexingExpression(nowReading)) {
 			return parseArrayIndexingExpression();
 		}
@@ -266,7 +283,6 @@ public class Parser {
 		if (startsParenthesesExpression(nowReading)) {
 			return parseParenthesesExpression();
 		}
-		
 		return null;
 	}
 	private boolean startsTargetExpression(Token token) {
@@ -298,11 +314,9 @@ public class Parser {
         }
         return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement);
 	}
-	
 	private boolean startsControlFlowStatement(Token token) {
 		return token.isLextant(Keyword.IF, Keyword.WHILE);
 	}
-	
 	private boolean startsElseStatement(Token token) {
 		return token.isLextant(Keyword.ELSE);
 	}
@@ -320,6 +334,32 @@ public class Parser {
 	}
 	private boolean startsReleaseStatement(Token token) {
 		return token.isLextant(Keyword.RELEASE);
+	}
+	
+	private ParseNode parseBreakStatement() {
+		if(!startsBreakStatement(nowReading)) {
+			return syntaxErrorNode("break");
+		}
+		Token token = nowReading;
+		readToken();
+		expect(Punctuator.TERMINATOR);
+		return new BreakNode(token);
+	}
+	private boolean startsBreakStatement(Token token) {
+		return token.isLextant(Keyword.BREAK);
+	}
+	
+	private ParseNode parseContinueStatement() {
+		if(!startsContinueStatement(nowReading)) {
+			return syntaxErrorNode("continue");
+		}
+		Token token = nowReading;
+		readToken();
+		expect(Punctuator.TERMINATOR);
+		return new ContinueNode(token);
+	}
+	private boolean startsContinueStatement(Token token) {
+		return token.isLextant(Keyword.CONTINUE);
 	}
 	///////////////////////////////////////////////////////////
 	// expressions

@@ -44,17 +44,11 @@ public class OperatorNode extends ParseNode {
 	// convenience factory
 	
 	// Two children
-	public static OperatorNode withChildren(Token token, ParseNode left, ParseNode right) {
+	public static OperatorNode withChildren(Token token, ParseNode... children) {
 		OperatorNode node = new OperatorNode(token);
-		node.appendChild(left);
-		node.appendChild(right);
-		return node;
-	}
-	
-	// One child
-	public static OperatorNode withChildren(Token token, ParseNode child) {
-		OperatorNode node = new OperatorNode(token);
-		node.appendChild(child);
+		for (ParseNode child : children) {
+			node.appendChild(child);
+		}
 		return node;
 	}
 	
