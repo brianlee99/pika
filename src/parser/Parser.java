@@ -23,6 +23,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.ReleaseStatementNode;
+import parseTree.nodeTypes.ReturnNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
@@ -127,14 +128,12 @@ public class Parser {
 		if(startsReleaseStatement(nowReading)) {
 			return parseReleaseStatement();
 		}
-		/*
-		 * if(startsReturnStatement(nowReading)) {
-		 * 		return parseReturnStatement();
-		 * }
-		 * if(startsCallStatement(nowReading)) {
-		 * 		return parseCallStatement();
-		 * }
-		 */
+		if(startsReturnStatement(nowReading)) {
+			return parseReturnStatement();
+		}
+		if(startsCallStatement(nowReading)) {
+		 	return parseCallStatement();
+		}
 		 if(startsBreakStatement(nowReading)) {
 			 return parseBreakStatement();
 		 }
@@ -150,6 +149,8 @@ public class Parser {
 				startsBlock(token) 					||
 				startsControlFlowStatement(token) 	||
 				startsReleaseStatement(token)       ||
+				startsReturnStatement(token)		||
+				startsCallStatement(token)			||
 				startsBreakStatement(token)			||
 				startsContinueStatement(token);
 	}
@@ -809,11 +810,72 @@ public class Parser {
 		return token.isLextant(Keyword.TRUE, Keyword.FALSE);
 	}
 
+	// Function Calls
+	
+	private ParseNode parseReturnStatement() {
+		if(!startsReturnStatement(nowReading)) {
+			return syntaxErrorNode("return");
+		}
+		Token token = nowReading;
+		readToken();
+		// could have an expression, or not
+		if (startsExpression(nowReading)) {
+			ParseNode child = parseExpression();
+			expect(Punctuator.TERMINATOR);
+			return ReturnNode.withChildren(token,  child);
+		}
+		else {
+			expect(Punctuator.TERMINATOR);
+			return new ReturnNode(token);
+		}
+	}
+	private boolean startsReturnStatement(Token token) {
+		return token.isLextant(Keyword.RETURN);
+	}
+	
+	private ParseNode parseCallStatement() {
+		if(!startsCallStatement(nowReading)) {
+			return syntaxErrorNode("call");
+		}
+		Token token = nowReading;
+		readToken();
+
+		ParseNode child = parseFunctionInvocation();
+		return ReturnNode.withChildren(token,  child);
+
+	}
+	private boolean startsCallStatement(Token token) {
+		return token.isLextant(Keyword.CALL);
+	}
+	
+	
+	private ParseNode parseFunctionInvocation() {
+		if(!startsFunctionInvocation(nowReading)) {
+			return syntaxErrorNode("function invocation");
+		}
+		// parse the expression
+		
+		
+		// parse an expression list
+		
+		return null;
+	}
+	private boolean startsFunctionInvocation(Token token) {
+		return startsExpression(token);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	private void readToken() {
 		previouslyRead = nowReading;
 		nowReading = scanner.next();
-	}	
-	
+	}
 	// if the current token is one of the given lextants, read the next token.
 	// otherwise, give a syntax error and read next token (to avoid endless looping).
 	private void expect(Lextant ...lextants ) {
