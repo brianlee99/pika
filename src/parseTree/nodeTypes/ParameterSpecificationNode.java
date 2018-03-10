@@ -1,20 +1,20 @@
 package parseTree.nodeTypes;
 
+import java.util.List;
+
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
-import lexicalAnalyzer.Keyword;
-import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
 import tokens.Token;
 
-public class TypeNode extends ParseNode {
+public class ParameterSpecificationNode extends ParseNode {
 
 	
-	public TypeNode(Token token) {
+	public ParameterSpecificationNode(Token token) {
 		super(token);
-		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE, Keyword.VOID));
+		// assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE));
 	}
-	public TypeNode(ParseNode node) {
+	public ParameterSpecificationNode(ParseNode node) {
 		super(node);
 	}
 
@@ -28,8 +28,8 @@ public class TypeNode extends ParseNode {
 ////////////////////////////////////////////////////////////
 // factory method
 	
-	public static TypeNode withChildren(Token token, ParseNode... children) {
-		TypeNode node = new TypeNode(token);
+	public static ParameterSpecificationNode withChildren(Token token, ParseNode ... children) {
+		ParameterSpecificationNode node = new ParameterSpecificationNode(token);
 		for (ParseNode child : children) {
 			node.appendChild(child);
 		}

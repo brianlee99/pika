@@ -3,22 +3,19 @@ package parseTree.nodeTypes;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import semanticAnalyzer.signatures.FunctionSignature;
-
-import java.util.List;
-
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import tokens.LextantToken;
 import tokens.Token;
 
-public class FunctionInvocationNode extends ParseNode {
+public class FunctionDefinitionNode extends ParseNode {
 
-	public FunctionInvocationNode(Token token) {
+	public FunctionDefinitionNode(Token token) {
 		super(token);
 		// assert(token );
 	}
 
-	public FunctionInvocationNode(ParseNode node) {
+	public FunctionDefinitionNode(ParseNode node) {
 		super(node);
 	}
 	////////////////////////////////////////////////////////////
@@ -48,9 +45,8 @@ public class FunctionInvocationNode extends ParseNode {
 	// convenience factory
 	
 	// Two children
-	public static FunctionInvocationNode withChildren(Token token, ParseNode left, List<ParseNode> children) {
-		FunctionInvocationNode node = new FunctionInvocationNode(token);
-		node.appendChild(left);
+	public static FunctionDefinitionNode withChildren(Token token, ParseNode... children) {
+		FunctionDefinitionNode node = new FunctionDefinitionNode(token);
 		for (ParseNode child : children) {
 			node.appendChild(child);
 		}

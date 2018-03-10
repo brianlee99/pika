@@ -7,14 +7,14 @@ import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
 import tokens.Token;
 
-public class TypeNode extends ParseNode {
+public class LambdaParamTypeNode extends ParseNode {
 
 	
-	public TypeNode(Token token) {
+	public LambdaParamTypeNode(Token token) {
 		super(token);
 		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE, Keyword.VOID));
 	}
-	public TypeNode(ParseNode node) {
+	public LambdaParamTypeNode(ParseNode node) {
 		super(node);
 	}
 
@@ -28,8 +28,8 @@ public class TypeNode extends ParseNode {
 ////////////////////////////////////////////////////////////
 // factory method
 	
-	public static TypeNode withChildren(Token token, ParseNode... children) {
-		TypeNode node = new TypeNode(token);
+	public static LambdaParamTypeNode withChildren(Token token, ParseNode... children) {
+		LambdaParamTypeNode node = new LambdaParamTypeNode(token);
 		for (ParseNode child : children) {
 			node.appendChild(child);
 		}
