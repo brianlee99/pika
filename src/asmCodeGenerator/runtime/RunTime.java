@@ -18,6 +18,7 @@ public class RunTime {
 	public static final String BOOLEAN_TRUE_STRING    = "$boolean-true-string";
 	public static final String BOOLEAN_FALSE_STRING   = "$boolean-false-string";
 	public static final String GLOBAL_MEMORY_BLOCK    = "$global-memory-block";
+	public static final String FRAME_POINTER 		  = "$frame-ptr";
 	public static final String USABLE_MEMORY_START    = "$usable-memory-start";
 	public static final String MAIN_PROGRAM_LABEL     = "$$main";
 	
@@ -72,7 +73,6 @@ public class RunTime {
 	public static final String POPULATE_ARRAY_ADDRESS_TEMP 	= "$pop-arr-addr-temp";
 	
 	// public static final String RELEASE_RECORD				= "$release-record";
-	
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);

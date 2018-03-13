@@ -19,6 +19,7 @@ import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
+import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.NewlineNode;
@@ -212,7 +213,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		
 		promoteArray(childTypes, children, node);
-		
 		if (typeCheckArray(children)) {
 			Array arrayType = new Array(children.get(0).getType());
 			node.setType(arrayType);
@@ -221,8 +221,6 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	        typeCheckError(node, childTypes);
 	        node.setType(PrimitiveType.ERROR);
 		}
-		
-		
 	}
 	
 	public void promoteArray(List<Type> childTypes, List<ParseNode> children, ParseNode node) {
@@ -504,6 +502,13 @@ class SemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	private Lextant operatorFor(OperatorNode node) {
 		LextantToken token = (LextantToken) node.getToken();
 		return token.getLextant();
+	}
+	
+	///////////////////////////////////////////////////////////////////////////
+	// anything to do with function calls
+	@Override
+	public void visitLeave(FunctionInvocationNode node) {
+		
 	}
 	
 	

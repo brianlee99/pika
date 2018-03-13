@@ -21,10 +21,30 @@ public class Scope {
 		return new Scope(allocator, this);
 	}
 	
+	public Scope createParameterScope() {
+		return new Scope(parameterScopeAllocator(), this);
+	}
+	public Scope createProcedureScope() {
+		return new Scope(procedureScopeAllocator(), this);
+	}
+	
 	private static MemoryAllocator programScopeAllocator() {
 		return new PositiveMemoryAllocator(
 				MemoryAccessMethod.DIRECT_ACCESS_BASE, 
 				MemoryLocation.GLOBAL_VARIABLE_BLOCK);
+	}
+	
+	private static MemoryAllocator parameterScopeAllocator() {
+		return new ParameterMemoryAllocator(
+				MemoryAccessMethod.DIRECT_ACCESS_BASE,
+				MemoryLocation.FRAME_POINTER
+		);
+	}
+	private static MemoryAllocator procedureScopeAllocator() {
+		return new NegativeMemoryAllocator(
+				MemoryAccessMethod.DIRECT_ACCESS_BASE,
+				MemoryLocation.FRAME_POINTER
+		);
 	}
 	
 //////////////////////////////////////////////////////////////////////
@@ -35,6 +55,9 @@ public class Scope {
 		this.symbolTable = new SymbolTable();
 		
 		this.allocator = allocator;
+		// enter();
+	}
+	public void enter() {
 		allocator.saveState();
 	}
 	

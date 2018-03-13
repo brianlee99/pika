@@ -12,7 +12,7 @@ public class LambdaParamTypeNode extends ParseNode {
 	
 	public LambdaParamTypeNode(Token token) {
 		super(token);
-		assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE, Keyword.VOID));
+		// assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE, Keyword.VOID));
 	}
 	public LambdaParamTypeNode(ParseNode node) {
 		super(node);

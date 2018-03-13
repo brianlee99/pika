@@ -74,6 +74,8 @@ public class ASMCodeGenerator {
 		code.add(DataZ, globalBlockSize);
 		return code;
 	}
+	/* Todo: Make similar block ASM for procedure and parameter */
+	
 	private ASMCodeFragment programASM() {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
 		
