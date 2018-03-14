@@ -8,25 +8,29 @@ import tokens.LextantToken;
 import tokens.Token;
 
 public class LambdaNode extends ParseNode {
-
-	
 	public LambdaNode(Token token) {
 		super(token);
-		// assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE, Keyword.VOID));
 	}
 	public LambdaNode(ParseNode node) {
 		super(node);
 	}
 
-////////////////////////////////////////////////////////////
-// attributes
-	
+	////////////////////////////////////////////////////////////
+	// attributes
+		
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
+		
+	////////////////////////////////////////////////////////////
+	// setting function signature
+	public void setFunctionSignature() {
+		LambdaParamTypeNode lambdaParamChild = (LambdaParamTypeNode) this.child(0);
+		lambdaParamChild.setFunctionSignature();
+	}
 	
-////////////////////////////////////////////////////////////
-// factory method
+	////////////////////////////////////////////////////////////
+	// factory method
 	
 	public static LambdaNode withChildren(Token token, ParseNode... children) {
 		LambdaNode node = new LambdaNode(token);
@@ -36,8 +40,8 @@ public class LambdaNode extends ParseNode {
 		return node;
 	}
 
-///////////////////////////////////////////////////////////
-// accept a visitor
+	///////////////////////////////////////////////////////////
+	// accept a visitor
 	
 	public void accept(ParseNodeVisitor visitor) {
 		visitor.visitEnter(this);

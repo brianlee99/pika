@@ -12,7 +12,7 @@ public class FunctionDefinitionNode extends ParseNode {
 
 	public FunctionDefinitionNode(Token token) {
 		super(token);
-		// assert(token );
+		assert(token.isLextant(Keyword.FUNC));
 	}
 
 	public FunctionDefinitionNode(ParseNode node) {
@@ -40,11 +40,15 @@ public class FunctionDefinitionNode extends ParseNode {
 		return (LextantToken)token;
 	}	
 	
+	////////////////////////////////////////////////////////////
+	// setting function signature
+	public void setFunctionSignature() {
+		LambdaNode lambdaChild = (LambdaNode) this.child(1);
+		lambdaChild.setFunctionSignature();
+	}
 	
 	////////////////////////////////////////////////////////////
 	// convenience factory
-	
-	// Two children
 	public static FunctionDefinitionNode withChildren(Token token, ParseNode... children) {
 		FunctionDefinitionNode node = new FunctionDefinitionNode(token);
 		for (ParseNode child : children) {

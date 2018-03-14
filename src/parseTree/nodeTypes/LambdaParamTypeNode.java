@@ -18,15 +18,22 @@ public class LambdaParamTypeNode extends ParseNode {
 		super(node);
 	}
 
-////////////////////////////////////////////////////////////
-// attributes
+	////////////////////////////////////////////////////////////
+	// attributes
 	
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
 	
-////////////////////////////////////////////////////////////
-// factory method
+	////////////////////////////////////////////////////////////
+	// setting function signature
+	public void setFunctionSignature() {
+		ParameterListNode paramListChild = (ParameterListNode) this.child(0);
+		paramListChild.setFunctionSignature();
+	}
+	
+	////////////////////////////////////////////////////////////
+	// factory method
 	
 	public static LambdaParamTypeNode withChildren(Token token, ParseNode... children) {
 		LambdaParamTypeNode node = new LambdaParamTypeNode(token);
@@ -36,8 +43,8 @@ public class LambdaParamTypeNode extends ParseNode {
 		return node;
 	}
 
-///////////////////////////////////////////////////////////
-// accept a visitor
+	///////////////////////////////////////////////////////////
+	// accept a visitor
 	
 	public void accept(ParseNodeVisitor visitor) {
 		visitor.visitEnter(this);
