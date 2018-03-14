@@ -2,6 +2,11 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.types.LambdaType;
+import semanticAnalyzer.types.Type;
+
+import java.util.List;
+
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
@@ -29,7 +34,16 @@ public class LambdaParamTypeNode extends ParseNode {
 	// setting function signature
 	public void setFunctionSignature() {
 		ParameterListNode paramListChild = (ParameterListNode) this.child(0);
-		paramListChild.setFunctionSignature();
+		TypeNode typeChild = (TypeNode) this.child(1);
+		
+		paramListChild.setParameterListType();
+		typeChild.setTypeByToken();
+		LambdaType paramListType = (LambdaType) paramListChild.getType();
+		List<Type> paramListTypes = paramListType.getInputTypes();
+		Type type = typeChild.getType();
+		
+		LambdaType lambdaType = new LambdaType(paramListTypes, type);
+		setType(lambdaType);
 	}
 	
 	////////////////////////////////////////////////////////////

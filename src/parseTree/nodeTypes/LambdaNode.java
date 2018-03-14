@@ -2,6 +2,7 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.types.Type;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
@@ -27,6 +28,8 @@ public class LambdaNode extends ParseNode {
 	public void setFunctionSignature() {
 		LambdaParamTypeNode lambdaParamChild = (LambdaParamTypeNode) this.child(0);
 		lambdaParamChild.setFunctionSignature();
+		Type lambdaType = lambdaParamChild.getType();
+		setType(lambdaType);
 	}
 	
 	////////////////////////////////////////////////////////////

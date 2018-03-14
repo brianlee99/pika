@@ -1,9 +1,12 @@
 package parseTree.nodeTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.types.LambdaType;
+import semanticAnalyzer.types.Type;
 import tokens.LextantToken;
 import tokens.Token;
 
@@ -12,21 +15,29 @@ public class ParameterSpecificationNode extends ParseNode {
 	
 	public ParameterSpecificationNode(Token token) {
 		super(token);
-		// assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE));
 	}
 	public ParameterSpecificationNode(ParseNode node) {
 		super(node);
 	}
 
-////////////////////////////////////////////////////////////
-// attributes
+	////////////////////////////////////////////////////////////
+	// attributes
 	
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
 	
-////////////////////////////////////////////////////////////
-// factory method
+	////////////////////////////////////////////////////////////
+	// setting function signature
+	public void setParameterType() {
+		TypeNode child = (TypeNode) child(0);
+		child.setTypeByToken();
+		Type type = child.getType();
+		setType(type);
+	}
+	
+	////////////////////////////////////////////////////////////
+	// factory method
 	
 	public static ParameterSpecificationNode withChildren(Token token, ParseNode ... children) {
 		ParameterSpecificationNode node = new ParameterSpecificationNode(token);
@@ -36,8 +47,8 @@ public class ParameterSpecificationNode extends ParseNode {
 		return node;
 	}
 
-///////////////////////////////////////////////////////////
-// accept a visitor
+	///////////////////////////////////////////////////////////
+	// accept a visitor
 	
 	public void accept(ParseNodeVisitor visitor) {
 		visitor.visitEnter(this);

@@ -3,6 +3,7 @@ package parseTree.nodeTypes;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import semanticAnalyzer.signatures.FunctionSignature;
+import semanticAnalyzer.types.Type;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import tokens.LextantToken;
@@ -45,6 +46,8 @@ public class FunctionDefinitionNode extends ParseNode {
 	public void setFunctionSignature() {
 		LambdaNode lambdaChild = (LambdaNode) this.child(1);
 		lambdaChild.setFunctionSignature();
+		Type lambdaType = lambdaChild.getType();
+		setType(lambdaType);
 	}
 	
 	////////////////////////////////////////////////////////////

@@ -2,6 +2,8 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.PrimitiveType;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
@@ -18,15 +20,44 @@ public class TypeNode extends ParseNode {
 		super(node);
 	}
 
-////////////////////////////////////////////////////////////
-// attributes
+	////////////////////////////////////////////////////////////
+	// attributes
 	
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
 	
-////////////////////////////////////////////////////////////
-// factory method
+	public void setTypeByToken() {
+		Token token = getToken();
+		if (token.isLextant(Keyword.BOOL)) {
+			setType(PrimitiveType.BOOLEAN);
+		}
+		else if (token.isLextant(Keyword.CHAR)) {
+			setType(PrimitiveType.CHARACTER);
+		}
+		else if (token.isLextant(Keyword.INT)) {
+			setType(PrimitiveType.INTEGER);
+		}
+		else if (token.isLextant(Keyword.FLOAT)) {
+			setType(PrimitiveType.FLOATING);
+		}
+		else if (token.isLextant(Keyword.STRING)) {
+			setType(PrimitiveType.STRING);
+		}
+		else if (token.isLextant(Keyword.RAT)) {
+			setType(PrimitiveType.RATIONAL);
+		}
+		else if (token.isLextant(Punctuator.ARRAY_TYPE)) {
+			TypeNode subtypeNode = (TypeNode) child(0);
+			setType(new Array(subtypeNode.getType()));
+		}
+		else if (token.isLextant(Keyword.VOID)) {
+			setType(PrimitiveType.VOID);
+		}
+	}
+	
+	////////////////////////////////////////////////////////////
+	// factory method
 	
 	public static TypeNode withChildren(Token token, ParseNode... children) {
 		TypeNode node = new TypeNode(token);
@@ -36,8 +67,8 @@ public class TypeNode extends ParseNode {
 		return node;
 	}
 
-///////////////////////////////////////////////////////////
-// accept a visitor
+	///////////////////////////////////////////////////////////
+	// accept a visitor
 	
 	public void accept(ParseNodeVisitor visitor) {
 		visitor.visitEnter(this);

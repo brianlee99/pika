@@ -21,23 +21,48 @@ public class LambdaType implements Type {
 	public String infoString() {
 		return infoString;
 	}
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<");
+		for (Type inputType : inputTypes) {
+			sb.append(inputType.toString());
+			sb.append(", ");
+		}
+		sb.append(">");
+		if (outputType != null) {
+			sb.append("->");
+			sb.append(outputType.toString());
+		}
+		return sb.toString();
+	}
+	
+	public List<Type> getInputTypes() {
+		return inputTypes;
+	}
+	public Type getOutputType() {
+		return outputType;
+	}
 	
 	@Override
 	public boolean equivalent(Type type) {
-//		if (otherType instanceof Array) {
-//		Array otherArray = (Array) otherType;
-//		return subtype.equivalent(otherArray.getSubtype());
-//	}
-//	return false;
-		// really we need to check 
-		return false;
+		if (!(type instanceof LambdaType)) return false;
+		LambdaType otherType = (LambdaType) type;
+		List<Type> otherInputTypes = otherType.getInputTypes();
+		
+		if (inputTypes.size() != otherInputTypes.size()) return false;
+		
+		for (int i = 0; i < inputTypes.size(); i++) {
+			if (!inputTypes.get(i).equivalent(otherInputTypes.get(i))) return false;
+		}
+		
+		if (!outputType.equivalent(otherType.getOutputType())) return false;
+		return true;
 	}
 	
 	@Override
 	public Type getConcreteType() {
-		// really we need to do something more sophisticated here
 		//		Type concreteSubtype = subtype.getConcreteType();
-//		return new Array(concreteSubtype);
+		//		return new Array(concreteSubtype);
 		return this;
 	}
 }
