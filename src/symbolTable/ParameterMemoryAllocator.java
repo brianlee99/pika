@@ -60,8 +60,9 @@ public class ParameterMemoryAllocator implements MemoryAllocator {
 		currentOffset = (int) bookmarks.remove(bookmarkIndex);
 		// check if there are no bookmarks after the remove
 		if (bookmarkIndex == 0) {
+			int maxSize = getMaxAllocatedSize();
 			for (MemoryLocation location : memoryLocations) {
-				location.setOffset(0);
+				location.setOffset(maxSize);
 			}
 		}
 	}

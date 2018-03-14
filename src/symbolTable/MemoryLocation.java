@@ -29,7 +29,7 @@ public class MemoryLocation {
 	}
 	// Manipulation: BE CAREFUL.
 	public void setOffset(int offset) {
-		this.offset = offset;
+		this.offset += offset;
 	}
 	
 	public String toString() {

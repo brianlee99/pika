@@ -30,7 +30,7 @@ public class LambdaType implements Type {
 		}
 		sb.append(">");
 		if (outputType != null) {
-			sb.append("->");
+			sb.append(" -> ");
 			sb.append(outputType.toString());
 		}
 		return sb.toString();

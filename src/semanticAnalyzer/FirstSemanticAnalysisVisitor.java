@@ -15,18 +15,14 @@ import symbolTable.Scope;
 public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visitEnter(ProgramNode node) {
-		enterProgramScope(node);
+		createProgramScope(node);
 	}
-	public void visitLeave(ProgramNode node) {
 
-	}
-	
-	private void enterProgramScope(ParseNode node) {
+	private void createProgramScope(ParseNode node) {
 		Scope scope = Scope.createProgramScope();
 		node.setScope(scope);
 	}
 	
-
 	@Override
 	public void visitEnter(FunctionDefinitionNode node) {
 		node.setFunctionSignature();
@@ -35,17 +31,16 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		addBinding(identifierNode, type, false);
 	}
 	
-	public void visitLeave(FunctionDefinitionNode node) {
-
-	}
-	
+	@Override
 	public void visitEnter(LambdaNode node) {
 		// Set scope for the function definition
 		Scope baseScope = node.getLocalScope();
 		Scope scope = baseScope.createParameterScope();
 		node.setScope(scope);
+		//scope.enter();
 	}
 	
+	@Override
 	// Assuming that this is the block of a procedure scope
 	public void visitEnter(BlockNode node) {
 		ParseNode parent = node.getParent();
@@ -53,10 +48,10 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			Scope baseScope = node.getLocalScope();
 			Scope scope = baseScope.createProcedureScope();
 			node.setScope(scope);
+			//scope.enter();
 		}
 	}
 	
-	// Adding bindings for function calls.
 	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
 		Scope scope = identifierNode.getLocalScope();
 		Binding binding = scope.createBinding(identifierNode, type, isMutable);
