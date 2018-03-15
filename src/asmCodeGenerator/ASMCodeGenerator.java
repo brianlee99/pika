@@ -16,6 +16,8 @@ import parseTree.*;
 import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
+import parseTree.nodeTypes.ParameterListNode;
+import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CharacterConstantNode;
@@ -229,11 +231,6 @@ public class ASMCodeGenerator {
 			code.add(opcodeForStore(type));
 		}
 		public void visitEnter(LambdaNode node) {
-			Labeller labeller 	= new Labeller("function");
-			String startLabel 	= labeller.newLabel("start");
-			String endLabel   	= labeller.newLabel("end");
-			node.setStartLabel(startLabel);
-			node.setEndLabel(endLabel);
 		}
 		public void visitLeave(LambdaNode node) {
 			newVoidCode(node);
@@ -244,7 +241,12 @@ public class ASMCodeGenerator {
 		}
 		public void visitLeave(LambdaParamTypeNode node) {
 			newVoidCode(node);
-			ASM
+		}
+		public void visitLeave(ParameterListNode node) {
+			
+		}
+		public void visitLeave(ParameterSpecificationNode node) {
+			
 		}
 		
 		public void visitLeave(FunctionInvocationNode node) {

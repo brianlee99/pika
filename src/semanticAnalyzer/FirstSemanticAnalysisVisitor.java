@@ -1,5 +1,6 @@
 package semanticAnalyzer;
 
+import asmCodeGenerator.Labeller;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.BlockNode;
@@ -28,7 +29,10 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		node.setFunctionSignature();
 		IdentifierNode identifierNode = (IdentifierNode) node.child(0);
 		Type type = node.getType();
-		addBinding(identifierNode, type, false);
+		
+		Labeller labeller 	= new Labeller("function");
+		String startLabel 	= labeller.newLabel("start");
+		addBinding(identifierNode, type, false, startLabel);
 	}
 	
 	@Override
@@ -49,9 +53,9 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 	}
 	
-	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
+	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
 		Scope scope = identifierNode.getLocalScope();
-		Binding binding = scope.createBinding(identifierNode, type, isMutable);
+		Binding binding = scope.createBinding(identifierNode, type, isMutable, label);
 		identifierNode.setBinding(binding);
 	}
 	                                        

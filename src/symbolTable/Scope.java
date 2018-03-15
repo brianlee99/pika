@@ -85,19 +85,21 @@ public class Scope {
 
 ///////////////////////////////////////////////////////////////////////
 //bindings
-	public Binding createBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
+	public Binding createBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
 		Token token = identifierNode.getToken();
 		symbolTable.errorIfAlreadyDefined(token);
 
 		String lexeme = token.getLexeme();
-		Binding binding = allocateNewBinding(type, token.getLocation(), lexeme, isMutable);	
+		Binding binding = allocateNewBinding(type, token.getLocation(), lexeme, isMutable, label);	
 		symbolTable.install(lexeme, binding);
 
 		return binding;
 	}
-	private Binding allocateNewBinding(Type type, TextLocation textLocation, String lexeme, boolean isMutable) {
+	private Binding allocateNewBinding(Type type,
+			TextLocation textLocation, String lexeme,
+			boolean isMutable, String label) {
 		MemoryLocation memoryLocation = allocator.allocate(type.getSize());
-		return new Binding(type, textLocation, memoryLocation, lexeme, isMutable);
+		return new Binding(type, textLocation, memoryLocation, lexeme, isMutable, label);
 	}
 	
 ///////////////////////////////////////////////////////////////////////
@@ -125,9 +127,9 @@ public class Scope {
 			return "scope: the-null-scope";
 		}
 		@Override
-		public Binding createBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
+		public Binding createBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
 			unscopedIdentifierError(identifierNode.getToken());
-			return super.createBinding(identifierNode, type, isMutable);
+			return super.createBinding(identifierNode, type, isMutable, label);
 		}
 		// subscopes of null scope need their own strategy.  Assumes global block is static.
 		public Scope createSubscope() {

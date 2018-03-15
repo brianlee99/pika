@@ -3,6 +3,7 @@ package semanticAnalyzer;
 import java.util.ArrayList;
 import java.util.List;
 
+import asmCodeGenerator.Labeller;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Lextant;
 import lexicalAnalyzer.Punctuator;
@@ -115,7 +116,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		
 		identifier.setType(type);
-		addBinding(identifier, type, false);
+		addBinding(identifier, type, false, "");
 	}
 	///////////////////////////////////////////////////////////////////////////
 	// Return
@@ -238,7 +239,14 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		identifier.setType(declarationType);
 		
 		boolean isMutable = node.getToken().isLextant(Keyword.VAR) ? true : false;
-		addBinding(identifier, declarationType, isMutable);
+		// create a function label if necessary
+		if (initializer instanceof LambdaNode) {
+			Labeller labeller 	= new Labeller("function");
+			String startLabel 	= labeller.newLabel("start");
+			addBinding(identifier, declarationType, isMutable, startLabel);
+		} else {
+			addBinding(identifier, declarationType, isMutable, "");
+		}
 	}
 	
 	@Override
@@ -691,9 +699,9 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		return  ((parent instanceof DeclarationNode) && (node == parent.child(0))) ||
 				((parent instanceof ParameterSpecificationNode) && (node == parent.child(1)));
 	}
-	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
+	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
 		Scope scope = identifierNode.getLocalScope();
-		Binding binding = scope.createBinding(identifierNode, type, isMutable);
+		Binding binding = scope.createBinding(identifierNode, type, isMutable, label);
 		identifierNode.setBinding(binding);
 	}
 	

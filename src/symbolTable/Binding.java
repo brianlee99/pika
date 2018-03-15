@@ -11,17 +11,18 @@ public class Binding {
 	private MemoryLocation memoryLocation;
 	private String lexeme;
 	private boolean isMutable;
+	private String label;
 	
 	public Binding(Type type, TextLocation location, MemoryLocation memoryLocation, String lexeme,
-			boolean isMutable) {
+			boolean isMutable, String label) {
 		super();
 		this.type = type;
 		this.textLocation = location;
 		this.memoryLocation = memoryLocation;
 		this.lexeme = lexeme;
 		this.isMutable = isMutable;
+		this.label = label;
 	}
-	
 
 	public String toString() {
 		return "[" + lexeme +
@@ -34,6 +35,9 @@ public class Binding {
 	}
 	public boolean getIsMutable() {
 		return isMutable;
+	}
+	public String getLabel() {
+		return label;
 	}
 	public Type getType() {
 		return type;
@@ -62,7 +66,8 @@ public class Binding {
 					TextLocation.nullInstance(),
 					MemoryLocation.nullInstance(),
 					"the-null-binding",
-					false);
+					false,
+					"null-label");
 		}
 		public static NullBinding getInstance() {
 			if(instance==null)
