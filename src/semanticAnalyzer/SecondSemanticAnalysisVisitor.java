@@ -94,12 +94,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	///////////////////////////////////////////////////////////////////////////
 	// function definitions and such
-	@Override
-	public void visitEnter(FunctionDefinitionNode node) {
-	}
-	@Override
-	public void visitLeave(FunctionDefinitionNode node) {
-	}
+
 	@Override
 	public void visitEnter(LambdaNode node) {
 		enterScope(node);
@@ -110,22 +105,18 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 
 	@Override
-	public void visitLeave(LambdaParamTypeNode node) {
-		
-	}
-	@Override
 	public void visitLeave(ParameterSpecificationNode node) {
 		IdentifierNode identifier = (IdentifierNode) node.child(1);
 		Type type = node.child(0).getType();
 		
-		// identifier.setType(type);
+		if (type.equivalent(PrimitiveType.VOID)) {
+			logError("The parameter may not be a void type");
+			return;
+		}
 		
+		identifier.setType(type);
 		addBinding(identifier, type, false);
 	}
-	
-	// Function Definition
-	
-	
 	///////////////////////////////////////////////////////////////////////////
 	// Return
 	@Override
@@ -357,13 +348,11 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	// expressions
 	@Override
 	public void visitLeave(ArrayPopulationNode node) {
-		// int numChildren = node.nChildren();
 		List<Type> childTypes = new ArrayList<>();
 		List<ParseNode> children = node.getChildren();
 		for (ParseNode child : node.getChildren()) {
 			childTypes.add(child.getType());
 		}
-		
 		promoteArray(childTypes, children, node);
 		if (typeCheckArray(children)) {
 			Array arrayType = new Array(children.get(0).getType());
@@ -485,12 +474,22 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		return true;
 	}
+	
 	@Override
 	public void visitLeave(OperatorNode node) {
         List<ParseNode> children = node.getChildren();
         List<Type> childTypes = new ArrayList<>();
         for (ParseNode child : children) {
             childTypes.add(child.getType());
+        }
+        
+        // Check that a new array operator is not set to a 'void' array
+        if (node.getToken().isLextant(Keyword.NEW)) {
+        	Type type = node.child(0).getType();
+        	if (type.equivalent(PrimitiveType.VOID)) {
+        		logError("Cannot initialize a void-array");
+        		return;
+        	}
         }
 
         Lextant operator = operatorFor(node);
@@ -685,7 +684,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			node.setType(binding.getType());
 			node.setBinding(binding);
 		}
-		// else parent DeclarationNode does the processing.
+		// else parent DeclarationNode (or ParameterSpecificationNode) does the processing.
 	}
 	private boolean isBeingDeclared(IdentifierNode node) {
 		ParseNode parent = node.getParent();

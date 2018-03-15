@@ -24,9 +24,11 @@ import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.FloatingConstantNode;
+import parseTree.nodeTypes.FunctionDefinitionNode;
 import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
+import parseTree.nodeTypes.LambdaNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
@@ -214,10 +216,22 @@ public class ASMCodeGenerator {
 		
 		///////////////////////////////////////////////////////////////////////////
 		// functions
+		public void visitLeave(FunctionDefinitionNode node) {
+			
+		}
+		public void visitLeave(LambdaNode node) {
+			
+		}
 		public void visitLeave(FunctionInvocationNode node) {
+			
+			// Binding binding = node.getBinding();
 			// stuff
 		}
-		
+//		public void visit(IdentifierNode node) {
+//			newAddressCode(node);
+//			Binding binding = node.getBinding();
+//			binding.generateAddress(code);
+//		}
 
 		///////////////////////////////////////////////////////////////////////////
 		// statements and declarations
@@ -268,23 +282,17 @@ public class ASMCodeGenerator {
 			fragment.add(Duplicate);
 			// bring back num
 			Macros.loadIFrom(fragment, RunTime.NUMERATOR_1);
-
 			// swap					[addr num addr]
 			fragment.add(Exchange);
-			
 			// bring back denom     [addr num addr denom]
 			Macros.loadIFrom(fragment, RunTime.DENOMINATOR_1);
-			
 			// swap                 [addr num denom addr]
 			fragment.add(Exchange);
-			
 			// add 4                [addr num denom addr+4]
 			fragment.add(PushI, 4);
 			fragment.add(Add);
-			
 			// swap                 [addr num addr+4 denom]
 			fragment.add(Exchange);
-
 			fragment.add(StoreI);
 			fragment.add(StoreI);
 			
@@ -327,8 +335,6 @@ public class ASMCodeGenerator {
 			assert false: "Type " + type + " unimplemented in opcodeForStore()";
 			return null;
 		}
-
-
 
 		///////////////////////////////////////////////////////////////////////////
 		// expressions
@@ -406,7 +412,7 @@ public class ASMCodeGenerator {
 		}
 		
 		///////////////////////////////////////////////////////////////////////////
-		// expressions
+		// release
 		public void visitLeave(ReleaseStatementNode node) {
 			if (!node.getToken().isLextant(Keyword.RELEASE)) {
 				assert false;
@@ -417,7 +423,9 @@ public class ASMCodeGenerator {
 			Type type = node.getType();
 			code.append(Record.releaseRecord(type));
 		}
-		                                                   
+		
+		///////////////////////////////////////////////////////////////////////////
+		// expressions                                         
 		public void visitLeave(OperatorNode node) {
 			Lextant operator = node.getOperator();
 			if(operator == Punctuator.GREATER 				||

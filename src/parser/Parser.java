@@ -628,30 +628,22 @@ public class Parser {
 	private boolean startsArrayIndexingExpression(Token token) {
 		return startsAtomicExpression(token);
 	}
-	
+	////////////////////////////////////////////////////////////
 	// Function invocation a(1, 2, 44.2) ... 
 	private ParseNode parseFunctionInvocation() {
 		if(!startsFunctionInvocation(nowReading)) {
 			return syntaxErrorNode("function invocation");
 		}
-		// parse the expression	
-		ArrayList<ParseNode> parameterNodes = new ArrayList<>();
 		Token realToken = nowReading;
 		Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);
+		ParseNode base = parseAtomicExpression();
 		
-		ParseNode functionNode = parseExpression();
 		expect(Punctuator.OPEN_PARENTHESES);
-		if (startsAtomicExpression(nowReading)) {
-			ParseNode node = parseExpression();
-			parameterNodes.add(node);
-			while (nowReading.isLextant(Punctuator.SEPARATOR)) {
-				expect(Punctuator.SEPARATOR);
-				node = parseExpression();
-				parameterNodes.add(node);
-			}
-		}
+		FunctionInvocationNode node = new FunctionInvocationNode(funcToken);
+		node.appendChild(base);
+		node = parseExpressionList(node);
 		expect(Punctuator.CLOSE_PARENTHESES);
-		return FunctionInvocationNode.withChildren(funcToken, functionNode, parameterNodes);
+		return node;
 	}
 	private boolean startsFunctionInvocation(Token token) {
 		return startsAtomicExpression(token);
