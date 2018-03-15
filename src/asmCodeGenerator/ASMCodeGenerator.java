@@ -36,6 +36,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
 import parseTree.nodeTypes.ReleaseStatementNode;
+import parseTree.nodeTypes.ReturnNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
@@ -234,10 +235,13 @@ public class ASMCodeGenerator {
 		}
 		public void visitLeave(LambdaNode node) {
 			newVoidCode(node);
-			ASMCodeFragment lvalue = removeValueCode(node.child(0));	// 
-			ASMCodeFragment rvalue = removeVoidCode(node.child(1));		// blockCode is void
-			code.append(lvalue);
-			code.append(rvalue);
+			// ASMCodeFragment lvalue = removeValueCode(node.child(0));	// 
+			ASMCodeFragment body = removeVoidCode(node.child(1));		// blockCode is void
+			//code.append(lvalue);
+			
+			String label = "temporary-label";
+			code.add(Label, label);
+			code.append(body);
 		}
 		public void visitLeave(LambdaParamTypeNode node) {
 			newVoidCode(node);
@@ -250,15 +254,42 @@ public class ASMCodeGenerator {
 		}
 		
 		public void visitLeave(FunctionInvocationNode node) {
+			newVoidCode(node);
+			ParseNode left = node.child(0);
+			ASMCodeFragment lvalue = removeAddressCode(left);
+			code.append(lvalue);
 			
+			int nChildren = node.nChildren();
+			for (int i = 1; i < nChildren; i++) {
+				Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ stack ]
+				Type type = node.child(i).getType();
+				code.add(PushI, type.getSize());
+				code.add(Subtract);
+				ASMCodeFragment frag = removeValueCode(node.child(i));
+				code.append(frag);
+				Macros.storeITo(code, RunTime.STACK_POINTER);
+			}
+			
+			if (left instanceof IdentifierNode) {
+				
+				// do some stuff
+				code.add(Call, "functionLabel");
+			} else if (left instanceof LambdaNode) {
+				// do something else
+				String label = "something";
+				code.add(Call, label);
+			}
 			// Binding binding = node.getBinding();
 			// stuff
 		}
-//		public void visit(IdentifierNode node) {
-//			newAddressCode(node);
-//			Binding binding = node.getBinding();
-//			binding.generateAddress(code);
-//		}
+		
+		public void visitLeave(ReturnNode node) {
+			// depnds on the child
+//			if (node.nChildren() == 1) {
+//				code.append(removeValueCode(node.child(0)));
+//			}
+			code.add(Return);
+		}
 
 		///////////////////////////////////////////////////////////////////////////
 		// statements and declarations
