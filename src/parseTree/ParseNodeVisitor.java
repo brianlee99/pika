@@ -6,9 +6,11 @@ import parseTree.nodeTypes.OperatorNode;
 import parseTree.nodeTypes.ParameterListNode;
 import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
+import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CallNode;
 import parseTree.nodeTypes.CharacterConstantNode;
-import parseTree.nodeTypes.ControlFlowStatementNode;
+import parseTree.nodeTypes.ContinueNode;
+import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
@@ -28,6 +30,7 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import parseTree.nodeTypes.TypeNode;
+import parseTree.nodeTypes.WhileStatementNode;
 
 // Visitor pattern with pre- and post-order visits
 public interface ParseNodeVisitor {
@@ -78,9 +81,12 @@ public interface ParseNodeVisitor {
 	void visitEnter(FunctionInvocationNode node);
 	void visitLeave(FunctionInvocationNode node);
 	
-	void visitEnter(ControlFlowStatementNode node);
-	void visitLeave(ControlFlowStatementNode node);
-
+	void visitEnter(IfStatementNode node);
+	void visitLeave(IfStatementNode node);
+	
+	void visitEnter(WhileStatementNode node);
+	void visitLeave(WhileStatementNode node);
+	
 	void visitEnter(ArrayPopulationNode node);
 	void visitLeave(ArrayPopulationNode node);
 	
@@ -101,6 +107,8 @@ public interface ParseNodeVisitor {
 	void visit(NewlineNode node);
 	void visit(SpaceNode node);
 	void visit(TabNode node);
+	void visit(ContinueNode node);
+	void visit(BreakNode node);
 	
 	public static class Default implements ParseNodeVisitor
 	{
@@ -207,12 +215,19 @@ public interface ParseNodeVisitor {
 			defaultVisitLeave(node);
 		}
 		
-		public void visitEnter(ControlFlowStatementNode node) {
+		public void visitEnter(IfStatementNode node) {
 			defaultVisitEnter(node);
 		}
-		public void visitLeave(ControlFlowStatementNode node) {
+		public void visitLeave(IfStatementNode node) {
 			defaultVisitLeave(node);
 		}
+		public void visitEnter(WhileStatementNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(WhileStatementNode node) {
+			defaultVisitLeave(node);
+		}
+		
 		public void visitEnter(ArrayPopulationNode node) {
 			defaultVisitEnter(node);
 		}
@@ -260,6 +275,12 @@ public interface ParseNodeVisitor {
 			defaultVisitForLeaf(node);
 		}	
 		public void visit(SpaceNode node) {
+			defaultVisitForLeaf(node);
+		}
+		public void visit(ContinueNode node) {
+			defaultVisitForLeaf(node);
+		}
+		public void visit(BreakNode node) {
 			defaultVisitForLeaf(node);
 		}
 	}

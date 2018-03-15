@@ -33,11 +33,9 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	@Override
 	public void visitEnter(LambdaNode node) {
-		// Set scope for the function definition
 		Scope baseScope = node.getLocalScope();
 		Scope scope = baseScope.createParameterScope();
 		node.setScope(scope);
-		//scope.enter();
 	}
 	
 	@Override
@@ -48,7 +46,6 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			Scope baseScope = node.getLocalScope();
 			Scope scope = baseScope.createProcedureScope();
 			node.setScope(scope);
-			//scope.enter();
 		}
 	}
 	

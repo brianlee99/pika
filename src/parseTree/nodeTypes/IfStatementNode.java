@@ -7,13 +7,13 @@ import lexicalAnalyzer.Lextant;
 import tokens.LextantToken;
 import tokens.Token;
 
-public class BreakNode extends ParseNode {
-	public BreakNode(Token token) {
+public class IfStatementNode extends ParseNode {
+	public IfStatementNode(Token token) {
 		super(token);
-		assert(token.isLextant(Keyword.BREAK));
+		assert(token.isLextant(Keyword.IF));
 	}
 
-	public BreakNode(ParseNode node) {
+	public IfStatementNode(ParseNode node) {
 		super(node);
 	}
 
@@ -27,11 +27,21 @@ public class BreakNode extends ParseNode {
 		return (LextantToken) token;
 	}	
 	
+	public static IfStatementNode withChildren(Token token, ParseNode ... children) {
+		IfStatementNode node = new IfStatementNode(token);
+		for (ParseNode child : children) {
+			node.appendChild(child);
+		}
+		return node;
+	}
+	
 	///////////////////////////////////////////////////////////
 	// boilerplate for visitors
 		
 	public void accept(ParseNodeVisitor visitor) {
-		visitor.visit(this);
+		visitor.visitEnter(this);
+		visitChildren(visitor);
+		visitor.visitLeave(this);
 	}
 
 }

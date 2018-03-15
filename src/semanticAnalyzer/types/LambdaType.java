@@ -7,11 +7,11 @@ public class LambdaType implements Type {
 	
 	private String infoString;
 	private List<Type> inputTypes;
-	private Type outputType;
+	private Type returnType;
 	
 	public LambdaType(List<Type> inputTypes, Type outputType) {
 		this.inputTypes = new ArrayList<>(inputTypes);
-		this.outputType = outputType;
+		this.returnType = outputType;
 		this.infoString = toString();
 	}
 
@@ -29,9 +29,9 @@ public class LambdaType implements Type {
 			sb.append(", ");
 		}
 		sb.append(">");
-		if (outputType != null) {
+		if (returnType != null) {
 			sb.append(" -> ");
-			sb.append(outputType.toString());
+			sb.append(returnType.toString());
 		}
 		return sb.toString();
 	}
@@ -39,8 +39,8 @@ public class LambdaType implements Type {
 	public List<Type> getInputTypes() {
 		return inputTypes;
 	}
-	public Type getOutputType() {
-		return outputType;
+	public Type getReturnType() {
+		return returnType;
 	}
 	
 	@Override
@@ -55,7 +55,7 @@ public class LambdaType implements Type {
 			if (!inputTypes.get(i).equivalent(otherInputTypes.get(i))) return false;
 		}
 		
-		if (!outputType.equivalent(otherType.getOutputType())) return false;
+		if (!returnType.equivalent(otherType.getReturnType())) return false;
 		return true;
 	}
 	

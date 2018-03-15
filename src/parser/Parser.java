@@ -16,7 +16,7 @@ import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CallNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ContinueNode;
-import parseTree.nodeTypes.ControlFlowStatementNode;
+import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
@@ -37,6 +37,7 @@ import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import parseTree.nodeTypes.TypeListNode;
 import parseTree.nodeTypes.TypeNode;
+import parseTree.nodeTypes.WhileStatementNode;
 import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.Type;
 import tokens.*;
@@ -150,8 +151,11 @@ public class Parser {
 		if(startsBlock(nowReading)) {
 			return parseBlock();
 		}
-		if(startsControlFlowStatement(nowReading)) {
-			return parseControlFlowStatement();
+		if(startsIfStatement(nowReading)) {
+			return parseIfStatement();
+		}
+		if(startsWhileStatement(nowReading)) {
+			return parseWhileStatement();
 		}
 		if(startsReleaseStatement(nowReading)) {
 			return parseReleaseStatement();
@@ -175,7 +179,8 @@ public class Parser {
 				startsDeclaration(token) 			||
 				startsAssignment(token) 			||
 				startsBlock(token) 					||
-				startsControlFlowStatement(token) 	||
+				startsIfStatement(token) 			||
+				startsWhileStatement(token) 		||
 				startsReleaseStatement(token)       ||
 				startsReturnStatement(token)		||
 				startsCallStatement(token)			||
@@ -322,11 +327,10 @@ public class Parser {
 	
 	// e.g. if (condition) { block statement }
 	// or while (condition { block statement}
-	private ParseNode parseControlFlowStatement() {
-		if (!startsControlFlowStatement(nowReading)) {
-			return syntaxErrorNode("control flow");
+	private ParseNode parseIfStatement() {
+		if (!startsIfStatement(nowReading)) {
+			return syntaxErrorNode("if");
 		}
-		
         Token controlFlowToken = nowReading;
         readToken();
         expect(Punctuator.OPEN_PARENTHESES);
@@ -334,17 +338,33 @@ public class Parser {
         expect(Punctuator.CLOSE_PARENTHESES);
         ParseNode thenStatement = parseBlock();
         
-        if (controlFlowToken.isLextant(Keyword.IF) && startsElseStatement(nowReading)) {
+        if (startsElseStatement(nowReading)) {
             // expect(Keyword.ELSE);
             readToken();
             ParseNode elseStatement = parseBlock();
-            return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement, elseStatement);
-            
+            return IfStatementNode.withChildren(controlFlowToken, expression, thenStatement, elseStatement);
         }
-        return ControlFlowStatementNode.withChildren(controlFlowToken, expression, thenStatement);
+        
+        return IfStatementNode.withChildren(controlFlowToken, expression, thenStatement);
 	}
-	private boolean startsControlFlowStatement(Token token) {
-		return token.isLextant(Keyword.IF, Keyword.WHILE);
+	private ParseNode parseWhileStatement() {
+		if (!startsWhileStatement(nowReading)) {
+			return syntaxErrorNode("while");
+		}
+        Token controlFlowToken = nowReading;
+        readToken();
+        expect(Punctuator.OPEN_PARENTHESES);
+        ParseNode expression = parseExpression();
+        expect(Punctuator.CLOSE_PARENTHESES);
+        ParseNode thenStatement = parseBlock();
+        
+        return WhileStatementNode.withChildren(controlFlowToken, expression, thenStatement);
+	}
+	private boolean startsIfStatement(Token token) {
+		return token.isLextant(Keyword.IF);
+	}
+	private boolean startsWhileStatement(Token token) {
+		return token.isLextant(Keyword.WHILE);
 	}
 	private boolean startsElseStatement(Token token) {
 		return token.isLextant(Keyword.ELSE);

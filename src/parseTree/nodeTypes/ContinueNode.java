@@ -31,9 +31,7 @@ public class ContinueNode extends ParseNode {
 	// boilerplate for visitors
 		
 	public void accept(ParseNodeVisitor visitor) {
-		visitor.visitEnter(this);
-		visitChildren(visitor);
-		visitor.visitLeave(this);
+		visitor.visit(this);
 	}
 
 }
