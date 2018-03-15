@@ -37,7 +37,8 @@ import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
 import parseTree.nodeTypes.WhileStatementNode;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
+import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
@@ -182,7 +183,7 @@ public class ASMCodeGenerator {
 			else if (nodeType == PrimitiveType.STRING) {
 				code.add(LoadI);
 			}
-			else if (nodeType instanceof Array) {
+			else if (nodeType instanceof ArrayType) {
 				code.add(LoadI);
 			}
 			else {
@@ -217,7 +218,15 @@ public class ASMCodeGenerator {
 		///////////////////////////////////////////////////////////////////////////
 		// functions
 		public void visitLeave(FunctionDefinitionNode node) {
-			
+//			newVoidCode(node);
+//			ASMCodeFragment lvalue = removeAddressCode(node.child(0));	
+//			ASMCodeFragment rvalue = removeValueCode(node.child(1));
+//			
+//			code.append(lvalue);
+//			code.append(rvalue);
+//			
+//			Type type = node.getType();
+//			code.add(opcodeForStore(type));
 		}
 		public void visitLeave(LambdaNode node) {
 			
@@ -266,36 +275,25 @@ public class ASMCodeGenerator {
 			Type type = node.getType();
 			if (type == PrimitiveType.RATIONAL) {
 				code.append(rationalFragmentForStore());
-			}
-			else {
+			} else {
 				code.add(opcodeForStore(type));
 			}
 		}
 		
 		private ASMCodeFragment rationalFragmentForStore() {
-			ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VOID);
-			// [addr num denom] -> [addr num denom addr]
-			// save num and denom in temp variables
+			ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VOID);	
 			Macros.storeITo(fragment, RunTime.DENOMINATOR_1);
-			Macros.storeITo(fragment, RunTime.NUMERATOR_1);
-			// make a copy of addr
-			fragment.add(Duplicate);
-			// bring back num
-			Macros.loadIFrom(fragment, RunTime.NUMERATOR_1);
-			// swap					[addr num addr]
-			fragment.add(Exchange);
-			// bring back denom     [addr num addr denom]
-			Macros.loadIFrom(fragment, RunTime.DENOMINATOR_1);
-			// swap                 [addr num denom addr]
-			fragment.add(Exchange);
-			// add 4                [addr num denom addr+4]
-			fragment.add(PushI, 4);
-			fragment.add(Add);
-			// swap                 [addr num addr+4 denom]
-			fragment.add(Exchange);
+			Macros.storeITo(fragment, RunTime.NUMERATOR_1);		// [ addr ]
+			fragment.add(Duplicate);							// [ addr addr ]
+			Macros.loadIFrom(fragment, RunTime.NUMERATOR_1);	// [ addr addr num ]
+			fragment.add(Exchange);								// [ addr num addr ]
+			Macros.loadIFrom(fragment, RunTime.DENOMINATOR_1);	// [ addr num addr denom ]
+			fragment.add(Exchange);								// [ addr num denom addr ]
+			fragment.add(PushI, 4);						
+			fragment.add(Add);									// [ addr num denom addr+4 ]
+			fragment.add(Exchange);								// [ addr num addr+4 denom ]
 			fragment.add(StoreI);
-			fragment.add(StoreI);
-			
+			fragment.add(StoreI);								// [ ]
 			return fragment;
 		}
 		
@@ -329,7 +327,10 @@ public class ASMCodeGenerator {
 			if (type == PrimitiveType.STRING) {
 				return StoreI;
 			}
-			if (type instanceof Array) {
+			if (type instanceof ArrayType) {
+				return StoreI;
+			}
+			if (type instanceof LambdaType) {
 				return StoreI;
 			}
 			assert false: "Type " + type + " unimplemented in opcodeForStore()";
@@ -337,12 +338,11 @@ public class ASMCodeGenerator {
 		}
 
 		///////////////////////////////////////////////////////////////////////////
-		// expressions
+		// if / while
 		public void visitLeave(IfStatementNode node) {
 			if (!node.getToken().isLextant(Keyword.IF)) {
 				assert false;
 			}
-
 			ASMCodeFragment conditionCode = removeValueCode(node.child(0));
 			ASMCodeFragment thenCode = removeVoidCode(node.child(1));
 			
@@ -369,7 +369,6 @@ public class ASMCodeGenerator {
 			node.setLoopLabel(loopLabel);
 			node.setEndLabel(endLabel);
 		}
-		
 		public void visitLeave(WhileStatementNode node) {
 			if (!node.getToken().isLextant(Keyword.WHILE)) {
 				assert false;
@@ -388,6 +387,7 @@ public class ASMCodeGenerator {
 			code.add(Jump, loopLabel);
 			code.add(Label, endLabel);
 		}
+		
 		///////////////////////////////////////////////////////////////////////////
 		// break and continue
 		public void visit(BreakNode node) {
@@ -462,7 +462,6 @@ public class ASMCodeGenerator {
 			ASMCodeFragment arg2 = removeValueCode(node.child(1));				
 			
 			Labeller labeller = new Labeller("compare");
-			
 			String startLabel = labeller.newLabel("arg1");
 			String arg2Label  = labeller.newLabel("arg2");
 			String subLabel   = labeller.newLabel("sub");
@@ -490,7 +489,7 @@ public class ASMCodeGenerator {
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.STRING)
 				code.add(Subtract);
-			else if (leftNodeType instanceof Array)
+			else if (leftNodeType instanceof ArrayType)
 				code.add(Subtract);
 			else if (leftNodeType == PrimitiveType.FLOATING)
 				code.add(FSubtract);
@@ -539,7 +538,7 @@ public class ASMCodeGenerator {
 					code.add(JumpFZero, trueLabel);
 				else if (leftNodeType == PrimitiveType.STRING)
 					code.add(JumpFalse, trueLabel);
-				else if (leftNodeType instanceof Array){
+				else if (leftNodeType instanceof ArrayType){
 					code.add(JumpFalse, trueLabel);
 				}
 				else
@@ -572,7 +571,7 @@ public class ASMCodeGenerator {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
-				else if (leftNodeType instanceof Array) {
+				else if (leftNodeType instanceof ArrayType) {
 					code.add(JumpTrue, trueLabel);
 					code.add(Jump, falseLabel);
 				}
@@ -622,11 +621,9 @@ public class ASMCodeGenerator {
 		}
 		
 		private void visitNotOperatorNode(OperatorNode node) {
-			// Type leftNodeType = node.child(0).getType();
 			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			
 			Labeller labeller = new Labeller("compare");
-			
 			String startLabel = labeller.newLabel("arg1");
 			String trueLabel  = labeller.newLabel("true");
 			String falseLabel = labeller.newLabel("false");
@@ -637,12 +634,9 @@ public class ASMCodeGenerator {
 			code.add(Label, startLabel);
 			code.append(arg1);
 			code.add(Label, opLabel);
-			
 			code.add(BNegate);
-			
 			code.add(JumpTrue, trueLabel);
 			code.add(Jump, falseLabel);
-			
 			code.add(Label, trueLabel);
 			code.add(PushI, 1);
 			code.add(Jump, joinLabel);
@@ -652,45 +646,37 @@ public class ASMCodeGenerator {
 			code.add(Label, joinLabel);
 		}
 		                                                      
-		private void visitUnaryOperatorNode(OperatorNode node,
-				Lextant operator) {
+		private void visitUnaryOperatorNode(OperatorNode node, Lextant operator) {
+			newValueCode(node);
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
 			
-			// NOT
-			if (operator == Punctuator.NOT) {
-				visitNotOperatorNode(node);
+			Object variant = node.getSignature().getVariant();
+			if(variant instanceof ASMOpcode) {
+				code.append(arg1);
+				ASMOpcode opcode = (ASMOpcode) variant;
+				code.add(opcode);
+			}
+			else if (variant instanceof SimpleCodeGenerator) {
+				code.append(arg1);
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+			}
+			else if (variant instanceof FullCodeGenerator) {
+				FullCodeGenerator generator = (FullCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
 			}
 			else {
-				newValueCode(node);
-				ASMCodeFragment arg1 = removeValueCode(node.child(0));
-				
-				Object variant = node.getSignature().getVariant();
-				if(variant instanceof ASMOpcode) {
-					code.append(arg1);
-					ASMOpcode opcode = (ASMOpcode) variant;
-					code.add(opcode);
-				}
-				else if (variant instanceof SimpleCodeGenerator) {
-					code.append(arg1);
-					SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
-					ASMCodeFragment fragment = generator.generate(node);
-					code.append(fragment);
-					
-					if (fragment.isAddress()) {
-						code.markAsAddress();
-					}
-				}
-				else if (variant instanceof FullCodeGenerator) {
-					FullCodeGenerator generator = (FullCodeGenerator) variant;
-					ASMCodeFragment fragment = generator.generate(node);
-					code.append(fragment);
-					
-					if (fragment.isAddress()) {
-						code.markAsAddress();
-					}
-				}
-				else {
-					assert false : "unknown variant in UnaryOperatorNode";
-				}
+				assert false : "unknown variant in UnaryOperatorNode";
 			}
 		}
 		
@@ -736,10 +722,6 @@ public class ASMCodeGenerator {
 				int offset = i * subtypeSize;
 				Record.populateArray(code, offset, type);							// [ ... &arr ]
 			}
-//			if (fragment.isAddress()) {
-//				code.markAsAddress();
-//			}
-
 		}
 		public void visitNewArrayNode(OperatorNode node) {
 			newValueCode(node);

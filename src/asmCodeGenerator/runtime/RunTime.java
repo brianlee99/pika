@@ -18,9 +18,10 @@ public class RunTime {
 	public static final String BOOLEAN_TRUE_STRING    = "$boolean-true-string";
 	public static final String BOOLEAN_FALSE_STRING   = "$boolean-false-string";
 	public static final String GLOBAL_MEMORY_BLOCK    = "$global-memory-block";
-	public static final String FRAME_POINTER 		  = "$frame-ptr";
 	public static final String USABLE_MEMORY_START    = "$usable-memory-start";
 	public static final String MAIN_PROGRAM_LABEL     = "$$main";
+	public static final String FRAME_POINTER 		  = "$frame-ptr";
+	public static final String STACK_POINTER		  = "$stack-ptr";
 	
 	// Runtime errors
 	public static final String GENERAL_RUNTIME_ERROR                 = "$$general-runtime-error";
@@ -80,6 +81,7 @@ public class RunTime {
 		result.append(stringsForPrintf());
 		result.append(runtimeErrors());
 		result.append(variableStorage());
+		result.append(initPointers());
 		
 		// Function calls
 		result.append(lowestTerms());
@@ -124,6 +126,18 @@ public class RunTime {
 		declareI(frag, PRINTF_ARR_I);
 		declareI(frag, POPULATE_ARRAY_ADDRESS_TEMP);
 		
+		declareI(frag, FRAME_POINTER);
+		declareI(frag, STACK_POINTER);
+		
+		return frag;
+	}
+	
+	private ASMCodeFragment initPointers() {
+		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
+		frag.add(Memtop);
+		storeITo(frag, FRAME_POINTER);
+		frag.add(Memtop);
+		storeITo(frag, STACK_POINTER);
 		return frag;
 	}
 
@@ -141,9 +155,6 @@ public class RunTime {
 		frag.add(DataS, "%c");
 		frag.add(DLabel, STRING_PRINT_FORMAT);
 		frag.add(DataS, "%s");
-		
-		// Note: Rationals are dealt with separately
-		
 		frag.add(DLabel, NEWLINE_PRINT_FORMAT);
 		frag.add(DataS, "\n");
 		frag.add(DLabel, TAB_PRINT_FORMAT);
@@ -154,6 +165,8 @@ public class RunTime {
 		frag.add(DataS, "true");
 		frag.add(DLabel, BOOLEAN_FALSE_STRING);
 		frag.add(DataS, "false");
+
+		// Note: Rationals are dealt with separately.
 		
 		return frag;
 	}
@@ -578,7 +591,6 @@ public class RunTime {
 		integerDivideByZeroError(frag);
 		floatingDivideByZeroError(frag);
 		rationalDivideByZeroError(frag);
-		// denominatorZeroError(frag);
 		negativeLengthArrayError(frag);
 		indexOutOfBoundsError(frag);
 		nullArrayError(frag);
@@ -626,16 +638,6 @@ public class RunTime {
 		frag.add(PushD, rationalDivideByZeroMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
-//	private void denominatorZeroError(ASMCodeFragment frag) {
-//		String denominatorZeroMessage = "$errors-denominator-zero";
-//		
-//		frag.add(DLabel, denominatorZeroMessage);
-//		frag.add(DataS, "denominator zero");
-//		
-//		frag.add(Label, DENOMINATOR_ZERO_RUNTIME_ERROR);
-//		frag.add(PushD, denominatorZeroMessage);
-//		frag.add(Jump, GENERAL_RUNTIME_ERROR);
-//	}
 	private void negativeLengthArrayError(ASMCodeFragment frag) {
 		String negativeLengthArrayMessage = "$errors-negative-length-arr";
 		

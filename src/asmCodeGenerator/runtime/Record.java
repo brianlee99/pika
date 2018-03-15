@@ -8,7 +8,7 @@ import asmCodeGenerator.Labeller;
 import asmCodeGenerator.Macros;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 
@@ -131,7 +131,7 @@ public class Record {
 				code.add(Exchange);									// [ ... addr item]
 				code.add(StoreI);
 			}
-			if (type instanceof Array) {
+			if (type instanceof ArrayType) {
 				code.add(Exchange);									// [ ... addr item]
 				code.add(StoreI);
 			}
@@ -222,7 +222,7 @@ public class Record {
 		if (subtype == PrimitiveType.STRING) {
 			code.add(LoadI);
 		}
-		if (subtype instanceof Array) {
+		if (subtype instanceof ArrayType) {
 			code.add(LoadI);
 		}
 																// [ &oldArr ithElem ]
@@ -264,7 +264,7 @@ public class Record {
 			code.add(Exchange);
 			code.add(StoreI);
 		}
-		if (subtype instanceof Array) {
+		if (subtype instanceof ArrayType) {
 			code.add(Exchange);
 			code.add(StoreI);
 		}
@@ -388,8 +388,8 @@ public class Record {
 		code.add(Add); 											// [ ptr &ithEl ]
 		code.add(LoadI); 										// [ ptr ithEl ]
 		
-		if (type instanceof Array) {							// [ ptr ]
-			code.append(releaseRecord(((Array) type).getSubtype()));
+		if (type instanceof ArrayType) {							// [ ptr ]
+			code.append(releaseRecord(((ArrayType) type).getSubtype()));
 		} else {
 			code.add(Pop);
 		}

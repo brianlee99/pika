@@ -2,7 +2,7 @@ package parseTree.nodeTypes;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.PrimitiveType;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
@@ -49,7 +49,7 @@ public class TypeNode extends ParseNode {
 		}
 		else if (token.isLextant(Punctuator.ARRAY_TYPE)) {
 			TypeNode subtypeNode = (TypeNode) child(0);
-			setType(new Array(subtypeNode.getType()));
+			setType(new ArrayType(subtypeNode.getType()));
 		}
 		else if (token.isLextant(Keyword.VOID)) {
 			setType(PrimitiveType.VOID);

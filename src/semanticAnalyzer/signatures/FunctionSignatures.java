@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 
 import static semanticAnalyzer.types.PrimitiveType.*;
 
@@ -160,7 +160,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			FunctionSignature bSignature = new FunctionSignature(1, BOOLEAN, BOOLEAN, BOOLEAN);
 			FunctionSignature sSignature = new FunctionSignature(1, STRING, STRING, BOOLEAN);
 			FunctionSignature rSignature = new FunctionSignature(1, RATIONAL, RATIONAL, BOOLEAN);
-			FunctionSignature aSignature = new FunctionSignature(1, setS, new Array(S), new Array(S), BOOLEAN);
+			FunctionSignature aSignature = new FunctionSignature(1, setS, new ArrayType(S), new ArrayType(S), BOOLEAN);
 			
 			if (comparison == Punctuator.EQUALS || comparison == Punctuator.NOT_EQUALS) {
 				new FunctionSignatures(comparison, iSignature, cSignature, fSignature, bSignature, sSignature, rSignature, aSignature);
@@ -203,7 +203,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(ASMOpcode.Divide, RATIONAL, INTEGER, INTEGER),
 			
 			// Array -> Array
-			new FunctionSignature(ASMOpcode.Nop, setS, new Array(S), new Array(S), new Array(S))
+			new FunctionSignature(ASMOpcode.Nop, setS, new ArrayType(S), new ArrayType(S), new ArrayType(S))
 		);
 		
 		// OR and AND
@@ -218,7 +218,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Punctuator.ARRAY_INDEXING,
 			new FunctionSignature(
 				new ArrayIndexingCodeGenerator(), setS,
-				new Array(S), INTEGER, S
+				new ArrayType(S), INTEGER, S
 			)
 		);
 		
@@ -235,7 +235,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Keyword.CLONE,
 			new FunctionSignature(
 				new ArrayCloningCodeGenerator(), setS,
-				new Array(S), new Array(S)
+				new ArrayType(S), new ArrayType(S)
 			)
 		);
 						
@@ -243,7 +243,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Keyword.NEW,
 			new FunctionSignature(
 				new NewArrayCodeGenerator(), setS,
-				S, INTEGER, new Array(S)
+				S, INTEGER, new ArrayType(S)
 			)
 		);
 
@@ -251,7 +251,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Keyword.LENGTH,
 			new FunctionSignature(
 				new ArrayLengthCodeGenerator(), setS,
-				new Array(S), INTEGER
+				new ArrayType(S), INTEGER
 			)
 		);
 

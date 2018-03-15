@@ -4,7 +4,7 @@ import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import static asmCodeGenerator.runtime.RunTime.*;
 import asmCodeGenerator.Labeller;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import static asmCodeGenerator.Macros.*;
@@ -106,9 +106,9 @@ public class ArrayHelper {
 			code.add(LoadI);
 			code.add(Call, RunTime.PRINTF_RATIONAL);
 		}
-		else if (subtype instanceof Array) {
+		else if (subtype instanceof ArrayType) {
 			code.add(LoadI);								// [ arrayAddr ]
-			Type subSubtype = ((Array) subtype).getSubtype();
+			Type subSubtype = ((ArrayType) subtype).getSubtype();
 			printfArray(code, subSubtype);
 		}
 		

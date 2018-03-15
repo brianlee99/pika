@@ -3,7 +3,7 @@ package asmCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import parseTree.ParseNode;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.Type;
 
 import static asmCodeGenerator.runtime.RunTime.*;
@@ -48,7 +48,7 @@ public class ArrayIndexingCodeGenerator implements SimpleCodeGenerator {
 		fragment.add(Add);
 		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
 		
-		Array arrayType = (Array) (node.child(0).getType());
+		ArrayType arrayType = (ArrayType) (node.child(0).getType());
 		Type subtype = arrayType.getSubtype();
 		fragment.add(PushI, subtype.getSize());
 		fragment.add(Multiply);

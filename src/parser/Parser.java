@@ -2,7 +2,6 @@ package parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import logging.PikaLogger;
 import parseTree.*;
@@ -325,8 +324,8 @@ public class Parser {
 			   startsParenthesesExpression(token);
 	}
 	
-	// e.g. if (condition) { block statement }
-	// or while (condition { block statement}
+	///////////////////////////////////////////////////////////
+	// control flow (if and while)
 	private ParseNode parseIfStatement() {
 		if (!startsIfStatement(nowReading)) {
 			return syntaxErrorNode("if");
@@ -347,6 +346,9 @@ public class Parser {
         
         return IfStatementNode.withChildren(controlFlowToken, expression, thenStatement);
 	}
+	private boolean startsIfStatement(Token token) {
+		return token.isLextant(Keyword.IF);
+	}
 	private ParseNode parseWhileStatement() {
 		if (!startsWhileStatement(nowReading)) {
 			return syntaxErrorNode("while");
@@ -360,9 +362,6 @@ public class Parser {
         
         return WhileStatementNode.withChildren(controlFlowToken, expression, thenStatement);
 	}
-	private boolean startsIfStatement(Token token) {
-		return token.isLextant(Keyword.IF);
-	}
 	private boolean startsWhileStatement(Token token) {
 		return token.isLextant(Keyword.WHILE);
 	}
@@ -370,6 +369,7 @@ public class Parser {
 		return token.isLextant(Keyword.ELSE);
 	}
 	
+	///////////////////////////////////////////////////////////
 	// Release
 	private ParseNode parseReleaseStatement() {
 		if (!startsReleaseStatement(nowReading)) {
@@ -556,9 +556,9 @@ public class Parser {
 		return OperatorNode.withChildren(token, child);
 	}
 	private boolean startsUnaryPrefixExpression(Token token) {
-		return startsArrayIndexingOrFunctionInvocation(token) ||
-				token.isLextant(Punctuator.NOT) ||
-				token.isLextant(Keyword.LENGTH) ||
+		return startsArrayIndexingOrFunctionInvocation(token) 	||
+				token.isLextant(Punctuator.NOT) 				||
+				token.isLextant(Keyword.LENGTH) 				||
 				token.isLextant(Keyword.CLONE);
 	}
 	
@@ -606,6 +606,7 @@ public class Parser {
 		}
 		return parent;
 	}
+	
 	////////////////////////////////////////////////////////////
 	// Array indexing a[i][j] ...
 	private ParseNode parseArrayIndexingExpression() {
@@ -628,6 +629,7 @@ public class Parser {
 	private boolean startsArrayIndexingExpression(Token token) {
 		return startsAtomicExpression(token);
 	}
+	
 	////////////////////////////////////////////////////////////
 	// Function invocation a(1, 2, 44.2) ... 
 	private ParseNode parseFunctionInvocation() {
@@ -649,7 +651,7 @@ public class Parser {
 		return startsAtomicExpression(token);
 	}
 	
-	
+	////////////////////////////////////////////////////////////
 	// atomicExpression -> literal
 	private ParseNode parseAtomicExpression() {
 		if(!startsAtomicExpression(nowReading)) {
@@ -818,6 +820,7 @@ public class Parser {
 	private boolean startsLambdaType(Token token) {
 		return token.isLextant(Punctuator.LESS);
 	}
+	
 	/////////////////////////////////////////////////////////////////
 	// TypeList
 	private ParseNode parseTypeList() {

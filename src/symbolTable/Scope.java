@@ -25,9 +25,9 @@ public class Scope {
 		return new Scope(parameterScopeAllocator(), this);
 	}
 	public Scope createProcedureScope() {
-		MemoryAllocator procAllocator = procedureScopeAllocator();
-		procAllocator.allocate(8);
-		return new Scope(procAllocator, this);
+		MemoryAllocator allocator = procedureScopeAllocator();
+		allocator.allocate(8);
+		return new Scope(allocator, this);
 	}
 	
 	private static MemoryAllocator programScopeAllocator() {

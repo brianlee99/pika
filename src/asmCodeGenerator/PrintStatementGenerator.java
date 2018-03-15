@@ -7,7 +7,7 @@ import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.TabNode;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import asmCodeGenerator.ASMCodeGenerator.CodeVisitor;
@@ -57,8 +57,8 @@ public class PrintStatementGenerator {
 			code.add(PushD, format);
 			code.add(Printf);
 		}
-		else if (type instanceof Array) {
-			Type subtype = ((Array) type).getSubtype();	
+		else if (type instanceof ArrayType) {
+			Type subtype = ((ArrayType) type).getSubtype();	
 			code.append(visitor.removeValueCode(node));					// [ ... base]		
 			ArrayHelper.printfArray(code, subtype);						// [ ... ]
 		}

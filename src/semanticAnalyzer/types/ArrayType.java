@@ -1,10 +1,10 @@
 package semanticAnalyzer.types;
 
-public class Array implements Type {
+public class ArrayType implements Type {
 	private Type subtype;
 	private String infoString;
 	
-	public Array(Type subtype) {
+	public ArrayType(Type subtype) {
 		this.subtype = subtype;
 		this.infoString = "arr[" + this.subtype.infoString() + "]";
 	}
@@ -25,8 +25,8 @@ public class Array implements Type {
 	
 	@Override
 	public boolean equivalent(Type otherType) {
-		if (otherType instanceof Array) {
-			Array otherArray = (Array) otherType;
+		if (otherType instanceof ArrayType) {
+			ArrayType otherArray = (ArrayType) otherType;
 			return subtype.equivalent(otherArray.getSubtype());
 		}
 		return false;
@@ -34,6 +34,6 @@ public class Array implements Type {
 	@Override
 	public Type getConcreteType() {
 		Type concreteSubtype = subtype.getConcreteType();
-		return new Array(concreteSubtype);
+		return new ArrayType(concreteSubtype);
 	}
 }

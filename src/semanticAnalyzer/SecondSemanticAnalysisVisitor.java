@@ -40,7 +40,7 @@ import parseTree.nodeTypes.WhileStatementNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
 import semanticAnalyzer.signatures.PromotionHelper;
-import semanticAnalyzer.types.Array;
+import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
@@ -172,7 +172,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		
 		LambdaType lambdaType = (LambdaType) type;
-		List<Type> paramTypes = lambdaType.getInputTypes();
+		List<Type> paramTypes = lambdaType.getParameterTypes();
 		
 		if (!parametersMatch(paramTypes, expressionTypes)) {
 			logError("The parameter types do not match");
@@ -339,7 +339,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	public void visitLeave(ReleaseStatementNode node) {
 		ParseNode child = node.child(0);
 		Type childType = child.getType();
-		if (!(childType instanceof Array) && childType != PrimitiveType.STRING) {
+		if (!(childType instanceof ArrayType) && childType != PrimitiveType.STRING) {
 			logError("the expression must be a reference type at " + node.getToken().getLocation());
 		}
 	}
@@ -355,7 +355,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		promoteArray(childTypes, children, node);
 		if (typeCheckArray(children)) {
-			Array arrayType = new Array(children.get(0).getType());
+			ArrayType arrayType = new ArrayType(children.get(0).getType());
 			node.setType(arrayType);
 		}
 		else {
