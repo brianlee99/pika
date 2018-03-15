@@ -9,11 +9,28 @@ import tokens.LextantToken;
 import tokens.Token;
 
 public class LambdaNode extends ParseNode {
+	private String startLabel, endLabel;
+	
 	public LambdaNode(Token token) {
 		super(token);
 	}
 	public LambdaNode(ParseNode node) {
 		super(node);
+	}	
+	
+	////////////////////////////////////////////////////////////
+	// setting labels
+	public void setStartLabel(String label) {
+		this.startLabel = label;
+	}
+	public void setEndLabel(String label) {
+		this.endLabel = label;
+	}
+	public String getStartLabel() {
+		return startLabel;
+	}
+	public String getEndLabel() {
+		return endLabel;
 	}
 
 	////////////////////////////////////////////////////////////

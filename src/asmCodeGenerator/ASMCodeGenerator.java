@@ -29,6 +29,7 @@ import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.LambdaNode;
+import parseTree.nodeTypes.LambdaParamTypeNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
@@ -81,7 +82,6 @@ public class ASMCodeGenerator {
 		code.add(DataZ, globalBlockSize);
 		return code;
 	}
-	/* Todo: Make similar block ASM for procedure and parameter */
 	
 	private ASMCodeFragment programASM() {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
@@ -218,19 +218,35 @@ public class ASMCodeGenerator {
 		///////////////////////////////////////////////////////////////////////////
 		// functions
 		public void visitLeave(FunctionDefinitionNode node) {
-//			newVoidCode(node);
-//			ASMCodeFragment lvalue = removeAddressCode(node.child(0));	
-//			ASMCodeFragment rvalue = removeValueCode(node.child(1));
-//			
-//			code.append(lvalue);
-//			code.append(rvalue);
-//			
-//			Type type = node.getType();
-//			code.add(opcodeForStore(type));
+			newVoidCode(node);
+			ASMCodeFragment lvalue = removeAddressCode(node.child(0));	
+			ASMCodeFragment rvalue = removeValueCode(node.child(1));
+			
+			code.append(lvalue);
+			code.append(rvalue);
+			
+			Type type = node.getType();
+			code.add(opcodeForStore(type));
+		}
+		public void visitEnter(LambdaNode node) {
+			Labeller labeller 	= new Labeller("function");
+			String startLabel 	= labeller.newLabel("start");
+			String endLabel   	= labeller.newLabel("end");
+			node.setStartLabel(startLabel);
+			node.setEndLabel(endLabel);
 		}
 		public void visitLeave(LambdaNode node) {
-			
+			newVoidCode(node);
+			ASMCodeFragment lvalue = removeValueCode(node.child(0));	// 
+			ASMCodeFragment rvalue = removeVoidCode(node.child(1));		// blockCode is void
+			code.append(lvalue);
+			code.append(rvalue);
 		}
+		public void visitLeave(LambdaParamTypeNode node) {
+			newVoidCode(node);
+			ASM
+		}
+		
 		public void visitLeave(FunctionInvocationNode node) {
 			
 			// Binding binding = node.getBinding();
