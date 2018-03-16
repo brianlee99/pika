@@ -132,6 +132,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			return;
 		}
 		LambdaNode lambda = findLambdaNode(node);
+		
 		Type lambdaReturnType = ((LambdaType) lambda.getType()).getReturnType();
 		Type returnedType = (node.nChildren() == 1) ? node.child(0).getType() : PrimitiveType.VOID;
 		node.setType(returnedType);

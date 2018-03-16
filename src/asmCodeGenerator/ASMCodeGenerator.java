@@ -16,8 +16,6 @@ import parseTree.*;
 import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
-import parseTree.nodeTypes.ParameterListNode;
-import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CallNode;
@@ -32,7 +30,6 @@ import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.LambdaNode;
-import parseTree.nodeTypes.LambdaParamTypeNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
@@ -86,18 +83,31 @@ public class ASMCodeGenerator {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
 		code.add(DLabel, RunTime.GLOBAL_MEMORY_BLOCK);
 		code.add(DataZ, globalBlockSize);
+		
 		return code;
 	}
 	
 	private ASMCodeFragment programASM() {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
+
 		
 		code.add(    Label, RunTime.MAIN_PROGRAM_LABEL);
+		
+		code.append(initFrameStackPointers());
 		code.append( programCode());
 		code.add(    Halt );
 	
 		return code;
 	}
+	private ASMCodeFragment initFrameStackPointers() {
+		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
+		code.add(Memtop);
+		storeITo(code, FRAME_POINTER);
+		code.add(Memtop);
+		storeITo(code, STACK_POINTER);
+		return code;
+	}
+	
 	private ASMCodeFragment programCode() {
 		CodeVisitor visitor = new CodeVisitor();
 		root.accept(visitor);
@@ -248,7 +258,7 @@ public class ASMCodeGenerator {
 		}
 		public void visitLeave(LambdaNode node) {
 			newValueCode(node); 
-			ASMCodeFragment body = removeVoidCode(node.child(1));		// blockCode is void
+			ASMCodeFragment body = removeVoidCode(node.child(1));
 			
 			String startLabel = node.getStartLabel();
 			String exitLabel = node.getExitLabel();
@@ -259,9 +269,9 @@ public class ASMCodeGenerator {
 			Type returnType = ((LambdaType) node.getType()).getReturnType();
 			int returnSize = returnType.getSize();
 			
-			// Skip executing the function unless called
 			code.add(Jump, endLabel);
 			
+			// Function start
 			code.add(Label, startLabel);
 			Macros.loadIFrom(code, RunTime.FRAME_POINTER);				// [ RA frame_ptr ]
 			Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ RA frame_ptr stack_ptr ]
@@ -288,12 +298,16 @@ public class ASMCodeGenerator {
 			
 			// Function body
 			code.append(body);
-			//======================================================================
+			
 			// Exit Handshake
 			code.add(Label, exitLabel);
 			
 			// RA at FP - 8
 			readIPtrOffset(code, FRAME_POINTER, -8);				// [ returnValue returnAddr ]					[ returnAddr ] 
+			if (returnType == PrimitiveType.RATIONAL) {
+				// do a double exchange
+				doubleExchange(code);
+			}
 			if (returnType != PrimitiveType.VOID) {
 				code.add(Exchange);									// [ returnAddr returnValue ]					[ returnAddr ] 
 			}
@@ -339,7 +353,6 @@ public class ASMCodeGenerator {
 			}
 			
 			ParseNode left = node.child(0);
-			// code.append(removeAddressCode(left));
 			
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {

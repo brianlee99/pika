@@ -62,7 +62,6 @@ public class Macros {
 		frag.add(StoreI);			// []
 	}
 	
-	
 	public static void writeIPBaseOffset(ASMCodeFragment frag, String baseAddress, int offset, int value) {
 		frag.add(PushD, baseAddress);	// [base]
 		frag.add(LoadI); 				// [actual_base]
@@ -87,6 +86,11 @@ public class Macros {
 		frag.add(PushI, offset);
 		frag.add(Add);
 		frag.add(LoadI);
+	}
+	
+	// [ num den value ] -> [ value num den ]
+	public static void doubleExchange(ASMCodeFragment frag) {
+		
 	}
 	
 	
