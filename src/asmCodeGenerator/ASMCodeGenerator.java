@@ -16,8 +16,6 @@ import parseTree.*;
 import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
-import parseTree.nodeTypes.ParameterListNode;
-import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
 import parseTree.nodeTypes.CallNode;
@@ -32,7 +30,6 @@ import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.LambdaNode;
-import parseTree.nodeTypes.LambdaParamTypeNode;
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
@@ -86,18 +83,31 @@ public class ASMCodeGenerator {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
 		code.add(DLabel, RunTime.GLOBAL_MEMORY_BLOCK);
 		code.add(DataZ, globalBlockSize);
+		
 		return code;
 	}
 	
 	private ASMCodeFragment programASM() {
 		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
+
 		
 		code.add(    Label, RunTime.MAIN_PROGRAM_LABEL);
+		
+		code.append(initFrameStackPointers());
 		code.append( programCode());
 		code.add(    Halt );
 	
 		return code;
 	}
+	private ASMCodeFragment initFrameStackPointers() {
+		ASMCodeFragment code = new ASMCodeFragment(GENERATES_VOID);
+		code.add(Memtop);
+		storeITo(code, FRAME_POINTER);
+		code.add(Memtop);
+		storeITo(code, STACK_POINTER);
+		return code;
+	}
+	
 	private ASMCodeFragment programCode() {
 		CodeVisitor visitor = new CodeVisitor();
 		root.accept(visitor);
@@ -339,7 +349,6 @@ public class ASMCodeGenerator {
 			}
 			
 			ParseNode left = node.child(0);
-			// code.append(removeAddressCode(left));
 			
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {
@@ -356,18 +365,8 @@ public class ASMCodeGenerator {
 				
 				code.add(opcodeForStore(type));
 			}
-			
-			if (left instanceof IdentifierNode) {
-				code.append(removeValueCode(left));
-				code.add(CallV);
-				
-//				Binding binding = ((IdentifierNode) left).getBinding();
-//				String label = binding.getLabel();
-//				code.add(Call, label);
-			} else if (left instanceof LambdaNode) {
-				code.append(removeValueCode(left));
-				code.add(CallV);
-			}			
+			code.append(removeValueCode(left));
+			code.add(CallV);
 			
 			if (returnType != PrimitiveType.VOID) {
 				loadIFrom(code, STACK_POINTER);
@@ -404,12 +403,14 @@ public class ASMCodeGenerator {
 		public void visitLeave(CallNode node) {
 			newVoidCode(node);
 			ParseNode child = node.child(0);
-			code.append(removeVoidCode(child));
-//			if (node.nChildren() == 1) {
-//				code.append(removeValueCode(node.child(0)));
-//			}
-//			String label = findLambdaNode(node).getEndLabel();
-//			code.add(Jump, label);
+			Type returnType = child.getType();
+			if (returnType == PrimitiveType.VOID) {
+				code.append(removeVoidCode(child));
+			}
+			else {
+				code.append(removeValueCode(child));
+				code.add(Pop);
+			}
 		}
 
 		///////////////////////////////////////////////////////////////////////////

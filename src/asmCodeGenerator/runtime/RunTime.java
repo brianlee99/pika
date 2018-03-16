@@ -73,7 +73,6 @@ public class RunTime {
 	public static final String CLEAR_N_BYTES_OFFSET_TEMP 	= "$clear-n-bytes-offset-temp";
 	public static final String POPULATE_ARRAY_ADDRESS_TEMP 	= "$pop-arr-addr-temp";
 	
-	// public static final String RELEASE_RECORD				= "$release-record";
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -81,7 +80,6 @@ public class RunTime {
 		result.append(stringsForPrintf());
 		result.append(runtimeErrors());
 		result.append(variableStorage());
-		result.append(initPointers());
 		
 		// Function calls
 		result.append(lowestTerms());
@@ -132,14 +130,7 @@ public class RunTime {
 		return frag;
 	}
 	
-	private ASMCodeFragment initPointers() {
-		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);
-		frag.add(Memtop);
-		storeITo(frag, FRAME_POINTER);
-		frag.add(Memtop);
-		storeITo(frag, STACK_POINTER);
-		return frag;
-	}
+
 
 	private ASMCodeFragment stringsForPrintf() {
 		ASMCodeFragment frag = new ASMCodeFragment(GENERATES_VOID);

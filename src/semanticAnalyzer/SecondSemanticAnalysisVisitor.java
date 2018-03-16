@@ -98,6 +98,10 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
 	@Override
 	public void visitEnter(LambdaNode node) {
+		if (!(node.getParent() instanceof FunctionDefinitionNode)) {
+			node.setFunctionSignature();
+		}
+		
 		enterScope(node);
 	}
 	@Override
@@ -128,6 +132,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			return;
 		}
 		LambdaNode lambda = findLambdaNode(node);
+		
 		Type lambdaReturnType = ((LambdaType) lambda.getType()).getReturnType();
 		Type returnedType = (node.nChildren() == 1) ? node.child(0).getType() : PrimitiveType.VOID;
 		node.setType(returnedType);
