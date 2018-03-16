@@ -258,7 +258,7 @@ public class ASMCodeGenerator {
 		}
 		public void visitLeave(LambdaNode node) {
 			newValueCode(node); 
-			ASMCodeFragment body = removeVoidCode(node.child(1));		// blockCode is void
+			ASMCodeFragment body = removeVoidCode(node.child(1));
 			
 			String startLabel = node.getStartLabel();
 			String exitLabel = node.getExitLabel();
@@ -269,9 +269,9 @@ public class ASMCodeGenerator {
 			Type returnType = ((LambdaType) node.getType()).getReturnType();
 			int returnSize = returnType.getSize();
 			
-			// Skip executing the function unless called
 			code.add(Jump, endLabel);
 			
+			// Function start
 			code.add(Label, startLabel);
 			Macros.loadIFrom(code, RunTime.FRAME_POINTER);				// [ RA frame_ptr ]
 			Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ RA frame_ptr stack_ptr ]
@@ -298,12 +298,16 @@ public class ASMCodeGenerator {
 			
 			// Function body
 			code.append(body);
-			//======================================================================
+			
 			// Exit Handshake
 			code.add(Label, exitLabel);
 			
 			// RA at FP - 8
 			readIPtrOffset(code, FRAME_POINTER, -8);				// [ returnValue returnAddr ]					[ returnAddr ] 
+			if (returnType == PrimitiveType.RATIONAL) {
+				// do a double exchange
+				doubleExchange(code);
+			}
 			if (returnType != PrimitiveType.VOID) {
 				code.add(Exchange);									// [ returnAddr returnValue ]					[ returnAddr ] 
 			}
