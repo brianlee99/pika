@@ -9,7 +9,7 @@ import tokens.LextantToken;
 import tokens.Token;
 
 public class LambdaNode extends ParseNode {
-	private String startLabel, endLabel;
+	private String startLabel, endLabel, exitLabel;
 	
 	public LambdaNode(Token token) {
 		super(token);
@@ -26,13 +26,18 @@ public class LambdaNode extends ParseNode {
 	public void setEndLabel(String label) {
 		this.endLabel = label;
 	}
+	public void setExitLabel(String label) {
+		this.exitLabel = label;
+	}
 	public String getStartLabel() {
 		return startLabel;
 	}
 	public String getEndLabel() {
 		return endLabel;
 	}
-
+	public String getExitLabel() {
+		return exitLabel;
+	}
 	////////////////////////////////////////////////////////////
 	// attributes
 		

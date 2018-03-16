@@ -20,6 +20,7 @@ import parseTree.nodeTypes.ParameterListNode;
 import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
+import parseTree.nodeTypes.CallNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ContinueNode;
 import parseTree.nodeTypes.IfStatementNode;
@@ -237,15 +238,22 @@ public class ASMCodeGenerator {
 			code.add(opcodeForStore(type));
 		}
 		public void visitEnter(LambdaNode node) {
+			Labeller labeller = new Labeller("func");
+			String startLabel = labeller.newLabel("start");
+			String exitLabel = labeller.newLabel("exit");
+			String endLabel = labeller.newLabel("end");
+			node.setStartLabel(startLabel);
+			node.setExitLabel(exitLabel);
+			node.setEndLabel(endLabel);
 		}
 		public void visitLeave(LambdaNode node) {
 			newValueCode(node); 
 			ASMCodeFragment body = removeVoidCode(node.child(1));		// blockCode is void
 			
-			String startLabel = "$func-1-start";
-			String exitLabel = "$func-1-exit";
-			String endLabel = "$func-1-end";
-
+			String startLabel = node.getStartLabel();
+			String exitLabel = node.getExitLabel();
+			String endLabel = node.getEndLabel();
+			
 			int procScopeSize = node.child(1).getScope().getAllocatedSize();
 			int paramScopeSize = node.getScope().getAllocatedSize();
 			Type returnType = ((LambdaType) node.getType()).getReturnType();
@@ -269,7 +277,7 @@ public class ASMCodeGenerator {
 			code.add(StoreI);
 			
 			// Set FP <- SP
-			loadIFrom(code, STACK_POINTER);				// [ SP ]
+			loadIFrom(code, STACK_POINTER);								// [ SP ]
 			storeITo(code, FRAME_POINTER);
 			
 			// Subtract stack pointer by the procedure scope size
@@ -285,14 +293,16 @@ public class ASMCodeGenerator {
 			code.add(Label, exitLabel);
 			
 			// RA at FP - 8
-			readIPtrOffset(code, FRAME_POINTER, -8);
-			code.add(Exchange);
+			readIPtrOffset(code, FRAME_POINTER, -8);				// [ returnValue returnAddr ]					[ returnAddr ] 
+			if (returnType != PrimitiveType.VOID) {
+				code.add(Exchange);									// [ returnAddr returnValue ]					[ returnAddr ] 
+			}
 			
 			// Dynamic Link at FP - 4
-			readIPtrOffset(code, FRAME_POINTER, -4);
-			storeITo(code, FRAME_POINTER);
+			readIPtrOffset(code, FRAME_POINTER, -4);				// [ returnAddr returnValue dynamicLink ]		[ returnAddr dynamicLink ] 
+			storeITo(code, FRAME_POINTER);							// [ returnAddr returnValue ]					[ returnAddr ] 
 			
-			// Increase StackPointer by allocatedSize + paramScopeSize
+			// Increase SP by allocatedSize + paramScopeSize
 			loadIFrom(code, STACK_POINTER);
 			code.add(PushI, procScopeSize + paramScopeSize);
 			code.add(Add);
@@ -307,41 +317,20 @@ public class ASMCodeGenerator {
 			// store return value onto this address
 			// TODO: need to consider rationals/voids, etc.
 			if (returnType != PrimitiveType.VOID) {
+				loadIFrom(code, STACK_POINTER);
+				code.add(Exchange);
 				code.add(opcodeForStore(returnType));
 			}
 			
 			// return from the function
 			code.add(Return);
-			
-			// load return value 
-			if (returnType != PrimitiveType.VOID) {
-				loadIFrom(code, STACK_POINTER);
-				code.add(opcodeForLoad(returnType));
-			}
-			
-			// finally, move up the stack pointer
-			loadIFrom(code, STACK_POINTER);
-			code.add(PushI, returnSize);
-			code.add(Add);
-			storeITo(code, STACK_POINTER);
-			
 			code.add(Label, endLabel);
 			
 			// Need to return a value (address of the function start)
 			code.add(PushD, startLabel);
 		}
-//		public void visitLeave(LambdaParamTypeNode node) {
-//			// newVoidCode(node);
-//		}
-//		public void visitLeave(ParameterListNode node) {
-//			
-//		}
-//		public void visitLeave(ParameterSpecificationNode node) {
-//			
-//		}
 		
 		public void visitLeave(FunctionInvocationNode node) {
-			
 			Type returnType = node.getType();
 			if (returnType == PrimitiveType.VOID) {
 				newVoidCode(node);
@@ -350,28 +339,47 @@ public class ASMCodeGenerator {
 			}
 			
 			ParseNode left = node.child(0);
-			ASMCodeFragment lvalue = removeAddressCode(left);
-			code.append(lvalue);
+			// code.append(removeAddressCode(left));
 			
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {
-				loadIFrom(code, RunTime.STACK_POINTER);				// [ stack ]
+				loadIFrom(code, STACK_POINTER);				// [ stack ]
+				
 				Type type = node.child(i).getType();
 				code.add(PushI, type.getSize());
 				code.add(Subtract);
+				storeITo(code, STACK_POINTER);
+				
+				loadIFrom(code, STACK_POINTER);
 				ASMCodeFragment frag = removeValueCode(node.child(i));
 				code.append(frag);
-				storeITo(code, RunTime.STACK_POINTER);
+				
+				code.add(opcodeForStore(type));
 			}
 			
 			if (left instanceof IdentifierNode) {
-				Binding binding = ((IdentifierNode) left).getBinding();
-				String label = binding.getLabel();
-				code.add(Call, label);
-			} else if (left instanceof LambdaNode) {
-//				String label = "something";
+				code.append(removeValueCode(left));
+				code.add(CallV);
+				
+//				Binding binding = ((IdentifierNode) left).getBinding();
+//				String label = binding.getLabel();
 //				code.add(Call, label);
+			} else if (left instanceof LambdaNode) {
+				code.append(removeValueCode(left));
+				code.add(CallV);
 			}			
+			
+			if (returnType != PrimitiveType.VOID) {
+				loadIFrom(code, STACK_POINTER);
+				code.add(opcodeForLoad(returnType));
+			}
+			
+			int returnSize = returnType.getSize();
+			// move up the stack pointer
+			loadIFrom(code, STACK_POINTER);
+			code.add(PushI, returnSize);
+			code.add(Add);
+			storeITo(code, STACK_POINTER);
 		}
 		
 		public void visitLeave(ReturnNode node) {
@@ -379,7 +387,29 @@ public class ASMCodeGenerator {
 			if (node.nChildren() == 1) {
 				code.append(removeValueCode(node.child(0)));
 			}
-			// code.add(Return);		// or maybe the exit handshake.
+			LambdaNode lambdaNode = findLambdaNode(node);
+			String label = lambdaNode.getExitLabel();
+			code.add(Jump, label);
+		}
+		// Copy of the function from SecondSemanticAnalyzer
+		private LambdaNode findLambdaNode(ParseNode node) {
+			for (ParseNode parent : node.pathToRoot()) {
+				if (parent instanceof LambdaNode) {
+					return (LambdaNode) parent;
+				}
+			}
+			return null; 
+		}
+		
+		public void visitLeave(CallNode node) {
+			newVoidCode(node);
+			ParseNode child = node.child(0);
+			code.append(removeVoidCode(child));
+//			if (node.nChildren() == 1) {
+//				code.append(removeValueCode(node.child(0)));
+//			}
+//			String label = findLambdaNode(node).getEndLabel();
+//			code.add(Jump, label);
 		}
 
 		///////////////////////////////////////////////////////////////////////////
@@ -412,6 +442,7 @@ public class ASMCodeGenerator {
 			
 			code.append(lvalue);
 			code.append(rvalue);
+			
 			Type type = node.getType();
 			if (type == PrimitiveType.RATIONAL) {
 				code.append(rationalFragmentForStore());
