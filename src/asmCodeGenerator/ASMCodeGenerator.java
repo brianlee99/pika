@@ -47,9 +47,11 @@ import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
 import symbolTable.Scope;
+
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
-import static asmCodeGenerator.runtime.RunTime.RATIONAL_SUBTRACT;
+import static asmCodeGenerator.runtime.RunTime.*;
+import static asmCodeGenerator.Macros.*;
 
 // do not call the code generator if any errors have occurred during analysis.
 public class ASMCodeGenerator {
@@ -189,6 +191,9 @@ public class ASMCodeGenerator {
 			else if (nodeType instanceof ArrayType) {
 				code.add(LoadI);
 			}
+			else if (nodeType instanceof LambdaType) {
+				code.add(LoadI);
+			}
 			else {
 				assert false : "node " + node;
 			}
@@ -234,61 +239,147 @@ public class ASMCodeGenerator {
 		public void visitEnter(LambdaNode node) {
 		}
 		public void visitLeave(LambdaNode node) {
-			newVoidCode(node);
-			// ASMCodeFragment lvalue = removeValueCode(node.child(0));	// 
+			newValueCode(node); 
 			ASMCodeFragment body = removeVoidCode(node.child(1));		// blockCode is void
-			//code.append(lvalue);
 			
-			String label = "temporary-label";
-			code.add(Label, label);
+			String startLabel = "$func-1-start";
+			String exitLabel = "$func-1-exit";
+			String endLabel = "$func-1-end";
+
+			int procScopeSize = node.child(1).getScope().getAllocatedSize();
+			int paramScopeSize = node.getScope().getAllocatedSize();
+			Type returnType = ((LambdaType) node.getType()).getReturnType();
+			int returnSize = returnType.getSize();
+			
+			// Skip executing the function unless called
+			code.add(Jump, endLabel);
+			
+			code.add(Label, startLabel);
+			Macros.loadIFrom(code, RunTime.FRAME_POINTER);				// [ RA frame_ptr ]
+			Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ RA frame_ptr stack_ptr ]
+			code.add(PushI, 4);
+			code.add(Subtract);											// [ RA frame_ptr dyn_link_addr ]
+			code.add(Exchange); 										// [ RA dyn_link_addr frame_ptr ]
+			code.add(StoreI);
+			
+			Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ RA stack_ptr ]
+			code.add(PushI, 8);
+			code.add(Subtract);											// [ RA return_addr ]
+			code.add(Exchange);
+			code.add(StoreI);
+			
+			// Set FP <- SP
+			loadIFrom(code, STACK_POINTER);				// [ SP ]
+			storeITo(code, FRAME_POINTER);
+			
+			// Subtract stack pointer by the procedure scope size
+			loadIFrom(code, STACK_POINTER);
+			code.add(PushI, procScopeSize);
+			code.add(Subtract);
+			storeITo(code, STACK_POINTER);
+			
+			// Function body
 			code.append(body);
-		}
-		public void visitLeave(LambdaParamTypeNode node) {
-			newVoidCode(node);
-		}
-		public void visitLeave(ParameterListNode node) {
+			//======================================================================
+			// Exit Handshake
+			code.add(Label, exitLabel);
 			
-		}
-		public void visitLeave(ParameterSpecificationNode node) {
+			// RA at FP - 8
+			readIPtrOffset(code, FRAME_POINTER, -8);
+			code.add(Exchange);
 			
+			// Dynamic Link at FP - 4
+			readIPtrOffset(code, FRAME_POINTER, -4);
+			storeITo(code, FRAME_POINTER);
+			
+			// Increase StackPointer by allocatedSize + paramScopeSize
+			loadIFrom(code, STACK_POINTER);
+			code.add(PushI, procScopeSize + paramScopeSize);
+			code.add(Add);
+			storeITo(code, STACK_POINTER);
+			
+			// Decrease SP by return value size
+			loadIFrom(code, STACK_POINTER);
+			code.add(PushI, returnSize);
+			code.add(Subtract);
+			storeITo(code, STACK_POINTER);
+			
+			// store return value onto this address
+			// TODO: need to consider rationals/voids, etc.
+			if (returnType != PrimitiveType.VOID) {
+				code.add(opcodeForStore(returnType));
+			}
+			
+			// return from the function
+			code.add(Return);
+			
+			// load return value 
+			if (returnType != PrimitiveType.VOID) {
+				loadIFrom(code, STACK_POINTER);
+				code.add(opcodeForLoad(returnType));
+			}
+			
+			// finally, move up the stack pointer
+			loadIFrom(code, STACK_POINTER);
+			code.add(PushI, returnSize);
+			code.add(Add);
+			storeITo(code, STACK_POINTER);
+			
+			code.add(Label, endLabel);
+			
+			// Need to return a value (address of the function start)
+			code.add(PushD, startLabel);
 		}
+//		public void visitLeave(LambdaParamTypeNode node) {
+//			// newVoidCode(node);
+//		}
+//		public void visitLeave(ParameterListNode node) {
+//			
+//		}
+//		public void visitLeave(ParameterSpecificationNode node) {
+//			
+//		}
 		
 		public void visitLeave(FunctionInvocationNode node) {
-			newVoidCode(node);
+			
+			Type returnType = node.getType();
+			if (returnType == PrimitiveType.VOID) {
+				newVoidCode(node);
+			} else {
+				newValueCode(node);
+			}
+			
 			ParseNode left = node.child(0);
 			ASMCodeFragment lvalue = removeAddressCode(left);
 			code.append(lvalue);
 			
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {
-				Macros.loadIFrom(code, RunTime.STACK_POINTER);				// [ stack ]
+				loadIFrom(code, RunTime.STACK_POINTER);				// [ stack ]
 				Type type = node.child(i).getType();
 				code.add(PushI, type.getSize());
 				code.add(Subtract);
 				ASMCodeFragment frag = removeValueCode(node.child(i));
 				code.append(frag);
-				Macros.storeITo(code, RunTime.STACK_POINTER);
+				storeITo(code, RunTime.STACK_POINTER);
 			}
 			
 			if (left instanceof IdentifierNode) {
-				
-				// do some stuff
-				code.add(Call, "functionLabel");
-			} else if (left instanceof LambdaNode) {
-				// do something else
-				String label = "something";
+				Binding binding = ((IdentifierNode) left).getBinding();
+				String label = binding.getLabel();
 				code.add(Call, label);
-			}
-			// Binding binding = node.getBinding();
-			// stuff
+			} else if (left instanceof LambdaNode) {
+//				String label = "something";
+//				code.add(Call, label);
+			}			
 		}
 		
 		public void visitLeave(ReturnNode node) {
-			// depnds on the child
-//			if (node.nChildren() == 1) {
-//				code.append(removeValueCode(node.child(0)));
-//			}
-			code.add(Return);
+			newVoidCode(node);
+			if (node.nChildren() == 1) {
+				code.append(removeValueCode(node.child(0)));
+			}
+			// code.add(Return);		// or maybe the exit handshake.
 		}
 
 		///////////////////////////////////////////////////////////////////////////
@@ -361,16 +452,16 @@ public class ASMCodeGenerator {
 		}
 	
 		private ASMOpcode opcodeForStore(Type type) {
-			if(type == PrimitiveType.INTEGER) {
+			if (type == PrimitiveType.INTEGER) {
 				return StoreI;
 			}
-			if(type == PrimitiveType.FLOATING) {
+			if (type == PrimitiveType.FLOATING) {
 				return StoreF;
 			}
-			if(type == PrimitiveType.BOOLEAN) {
+			if (type == PrimitiveType.BOOLEAN) {
 				return StoreC;
 			}
-			if(type == PrimitiveType.CHARACTER) {
+			if (type == PrimitiveType.CHARACTER) {
 				return StoreC;
 			}
 			if (type == PrimitiveType.STRING) {
@@ -383,6 +474,31 @@ public class ASMCodeGenerator {
 				return StoreI;
 			}
 			assert false: "Type " + type + " unimplemented in opcodeForStore()";
+			return null;
+		}
+		private ASMOpcode opcodeForLoad(Type type) {
+			if(type == PrimitiveType.INTEGER) {
+				return LoadI;
+			}
+			if(type == PrimitiveType.FLOATING) {
+				return LoadF;
+			}
+			if(type == PrimitiveType.BOOLEAN) {
+				return LoadC;
+			}
+			if(type == PrimitiveType.CHARACTER) {
+				return LoadC;
+			}
+			if (type == PrimitiveType.STRING) {
+				return LoadI;
+			}
+			if (type instanceof ArrayType) {
+				return LoadI;
+			}
+			if (type instanceof LambdaType) {
+				return LoadI;
+			}
+			assert false: "Type " + type + " unimplemented in opcodeForLoad()";
 			return null;
 		}
 

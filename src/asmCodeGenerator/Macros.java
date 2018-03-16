@@ -81,6 +81,14 @@ public class Macros {
 		frag.add(StoreI);				// []
 	}
 	
+	public static void readIPtrOffset(ASMCodeFragment frag, String baseAddress, int offset) {
+		frag.add(PushD, baseAddress);
+		frag.add(LoadI);				// [ base ] 
+		frag.add(PushI, offset);
+		frag.add(Add);
+		frag.add(LoadI);
+	}
+	
 	
 	
 	/** [... charToWrite baseLocation] -> [...]
