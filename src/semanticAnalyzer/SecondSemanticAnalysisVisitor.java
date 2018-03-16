@@ -98,6 +98,10 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
 	@Override
 	public void visitEnter(LambdaNode node) {
+		if (!(node.getParent() instanceof FunctionDefinitionNode)) {
+			node.setFunctionSignature();
+		}
+		
 		enterScope(node);
 	}
 	@Override

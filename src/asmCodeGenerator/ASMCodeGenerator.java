@@ -356,26 +356,15 @@ public class ASMCodeGenerator {
 				
 				code.add(opcodeForStore(type));
 			}
-			
-			if (left instanceof IdentifierNode) {
-				code.append(removeValueCode(left));
-				code.add(CallV);
-				
-//				Binding binding = ((IdentifierNode) left).getBinding();
-//				String label = binding.getLabel();
-//				code.add(Call, label);
-			} else if (left instanceof LambdaNode) {
-				code.append(removeValueCode(left));
-				code.add(CallV);
-			}			
+			code.append(removeValueCode(left));
+			code.add(CallV);
 			
 			if (returnType != PrimitiveType.VOID) {
 				loadIFrom(code, STACK_POINTER);
 				code.add(opcodeForLoad(returnType));
 			}
-			
 			int returnSize = returnType.getSize();
-			// move up the stack pointer
+			
 			loadIFrom(code, STACK_POINTER);
 			code.add(PushI, returnSize);
 			code.add(Add);
@@ -391,7 +380,6 @@ public class ASMCodeGenerator {
 			String label = lambdaNode.getExitLabel();
 			code.add(Jump, label);
 		}
-		// Copy of the function from SecondSemanticAnalyzer
 		private LambdaNode findLambdaNode(ParseNode node) {
 			for (ParseNode parent : node.pathToRoot()) {
 				if (parent instanceof LambdaNode) {
@@ -404,12 +392,14 @@ public class ASMCodeGenerator {
 		public void visitLeave(CallNode node) {
 			newVoidCode(node);
 			ParseNode child = node.child(0);
-			code.append(removeVoidCode(child));
-//			if (node.nChildren() == 1) {
-//				code.append(removeValueCode(node.child(0)));
-//			}
-//			String label = findLambdaNode(node).getEndLabel();
-//			code.add(Jump, label);
+			Type returnType = child.getType();
+			if (returnType == PrimitiveType.VOID) {
+				code.append(removeVoidCode(child));
+			}
+			else {
+				code.append(removeValueCode(child));
+				code.add(Pop);
+			}
 		}
 
 		///////////////////////////////////////////////////////////////////////////
