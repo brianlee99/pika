@@ -436,12 +436,17 @@ public class ASMCodeGenerator {
 			newVoidCode(node);
 			ParseNode child = node.child(0);
 			Type returnType = child.getType();
-			if (returnType == PrimitiveType.VOID) {
-				code.append(removeVoidCode(child));
-			}
-			else {
+			if (returnType == PrimitiveType.RATIONAL) {
 				code.append(removeValueCode(child));
 				code.add(Pop);
+				code.add(Pop);
+			}
+			else if (returnType != PrimitiveType.VOID) {
+				code.append(removeValueCode(child));
+				code.add(Pop);
+			}
+			else {
+				code.append(removeVoidCode(child));
 			}
 		}
 
