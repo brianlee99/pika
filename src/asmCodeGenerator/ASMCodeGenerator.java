@@ -299,6 +299,10 @@ public class ASMCodeGenerator {
 			// Function body
 			code.append(body);
 			
+			if (returnType != PrimitiveType.VOID) {
+				code.add(Jump, NO_RETURN_RUNTIME_ERROR);
+			}
+			
 			// Exit Handshake
 			code.add(Label, exitLabel);
 			

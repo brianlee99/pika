@@ -122,7 +122,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		
 		identifier.setType(type);
-		addBinding(identifier, type, false, "");
+		addBinding(identifier, type, false);
 	}
 	///////////////////////////////////////////////////////////////////////////
 	// Return
@@ -208,8 +208,6 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	// TypeList and stuff.
 	@Override
 	public void visitLeave(TypeListNode node) {
-		
-		
 		List<Type> paramListTypes = new ArrayList<>();
 		int nChildren = node.nChildren();
 		for (int i = 0; i < nChildren; i++) {
@@ -252,6 +250,13 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	// statements and declarations
 	@Override
 	public void visitLeave(PrintStatementNode node) {
+		// just check that nothing is void
+		for (ParseNode child : node.getChildren()) {
+			Type childType = child.getType();
+			if (childType == PrimitiveType.VOID) {
+				logError("Expression contains a void type");
+			}
+		}
 	}
 	@Override
 	public void visitLeave(DeclarationNode node) {
@@ -259,18 +264,14 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		ParseNode initializer = node.child(1);
 		
 		Type declarationType = initializer.getType();
+		if (declarationType == PrimitiveType.VOID) {
+			logError("Expression contains a void type");
+		}
 		node.setType(declarationType);
 		identifier.setType(declarationType);
 		
 		boolean isMutable = node.getToken().isLextant(Keyword.VAR) ? true : false;
-		// create a function label if necessary
-		if (initializer instanceof LambdaNode) {
-			Labeller labeller 	= new Labeller("function");
-			String startLabel 	= labeller.newLabel("start");
-			addBinding(identifier, declarationType, isMutable, startLabel);
-		} else {
-			addBinding(identifier, declarationType, isMutable, "");
-		}
+		addBinding(identifier, declarationType, isMutable);
 	}
 	
 	@Override
@@ -723,7 +724,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		return  ((parent instanceof DeclarationNode) && (node == parent.child(0))) ||
 				((parent instanceof ParameterSpecificationNode) && (node == parent.child(1)));
 	}
-	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
+	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
 		Scope scope = identifierNode.getLocalScope();
 		Binding binding = scope.createBinding(identifierNode, type, isMutable);
 		identifierNode.setBinding(binding);

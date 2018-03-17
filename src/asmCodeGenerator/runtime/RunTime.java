@@ -31,6 +31,7 @@ public class RunTime {
 	public static final String NEGATIVE_LENGTH_ARRAY_RUNTIME_ERROR   = "$$negative-length-arr";
 	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
 	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";
+	public static final String NO_RETURN_RUNTIME_ERROR 				 = "$$no-return";
 	
 	public static final String LOWEST_TERMS    = "$lowest-terms";
 	public static final String RETURN_ADDRESS  = "$return-address";
@@ -585,6 +586,7 @@ public class RunTime {
 		negativeLengthArrayError(frag);
 		indexOutOfBoundsError(frag);
 		nullArrayError(frag);
+		noReturnError(frag);
 		
 		return frag;
 	}
@@ -655,6 +657,15 @@ public class RunTime {
 		
 		frag.add(Label, NULL_ARRAY_RUNTIME_ERROR);
 		frag.add(PushD, nullArrayMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
+	private void noReturnError(ASMCodeFragment frag) {
+		String noReturnMessage = "$errors-no-return";
+		frag.add(DLabel, noReturnMessage);
+		frag.add(DataS, "no return statement in a non-void function");
+		
+		frag.add(Label, NO_RETURN_RUNTIME_ERROR);
+		frag.add(PushD, noReturnMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
 	public static ASMCodeFragment getEnvironment() {
