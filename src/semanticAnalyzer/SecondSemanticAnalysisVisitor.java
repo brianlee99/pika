@@ -17,6 +17,7 @@ import parseTree.nodeTypes.ParameterListNode;
 import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
+import parseTree.nodeTypes.CallNode;
 import parseTree.nodeTypes.CharacterConstantNode;
 import parseTree.nodeTypes.ContinueNode;
 import parseTree.nodeTypes.IfStatementNode;
@@ -42,7 +43,6 @@ import parseTree.nodeTypes.TypeNode;
 import parseTree.nodeTypes.WhileStatementNode;
 import semanticAnalyzer.signatures.FunctionSignature;
 import semanticAnalyzer.signatures.FunctionSignatures;
-import semanticAnalyzer.signatures.PromotionHelper;
 import semanticAnalyzer.types.ArrayType;
 import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
@@ -162,6 +162,19 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		return null; 
 	}
+	///////////////////////////////////////////////////////////////////////////
+	// Call
+	@Override
+	public void visitLeave(CallNode node) {
+		if (node.nChildren() == 0) {
+			logError("Call requires an argument");
+		}
+		ParseNode child = node.child(0);
+		if (!(child instanceof FunctionInvocationNode)) {
+			logError("Can only call a Function Invocation");
+		}
+	}
+	
 	///////////////////////////////////////////////////////////////////////////
 	// Function Invocation
 	@Override
@@ -297,6 +310,9 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			if (!expressionType.equivalent(targetType)) {
 				logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
 			}
+		}
+		else if (target instanceof FunctionInvocationNode) {
+			logError("Function invocation is not targetable");
 		}
 	}
 	
@@ -572,13 +588,13 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		// If there is only one child, then try promoting just the one.
 		if (childTypes.size() == 1) {
 			// just do the left side
-			List<FunctionSignature> matchingSignatures = PromotionHelper.matchSignatureWithLeftPromotion(signatures, childTypes);
+			List<FunctionSignature> matchingSignatures = matchSignatureWithLeftPromotion(signatures, childTypes);
 			int length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
 	        	ParseNode child = children.get(0);
 				Type targetType = signature.getParamTypes()[0];
-	        	PromotionHelper.tryLeft(node, signature, child, targetType);
+	        	tryLeft(node, signature, child, targetType);
 	        }
 	        else {
 		        typeCheckError(node, childTypes);
@@ -589,14 +605,14 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 
 		// If the left side is a TypeNode, then try promoting just the right side.
 		else if (children.get(0) instanceof TypeNode) {
-			List<FunctionSignature> matchingSignatures = PromotionHelper.matchSignatureWithRightPromotion(signatures, childTypes);
+			List<FunctionSignature> matchingSignatures = matchSignatureWithRightPromotion(signatures, childTypes);
 			// just do the right side
 	        int length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
 	        	ParseNode child = children.get(1);
 				Type targetType = signature.getParamTypes()[1];
-	        	PromotionHelper.tryLeft(node, signature, child, targetType);
+	        	tryLeft(node, signature, child, targetType);
 	        }
 	        else {
 		        typeCheckError(node, childTypes);
@@ -608,14 +624,14 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		
 		// If the right side is a TypeNode, then try promoting just the left side.
 		else if (children.get(1) instanceof TypeNode) {
-			List<FunctionSignature> matchingSignatures = PromotionHelper.matchSignatureWithLeftPromotion(signatures, childTypes);
+			List<FunctionSignature> matchingSignatures = matchSignatureWithLeftPromotion(signatures, childTypes);
 			// just do the right side
 	        int length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
 	        	ParseNode child = children.get(0);
 				Type targetType = signature.getParamTypes()[0];
-	        	PromotionHelper.tryLeft(node, signature, child, targetType);
+	        	tryLeft(node, signature, child, targetType);
 	        }
 	        else {
 		        typeCheckError(node, childTypes);
@@ -625,14 +641,14 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		else {
 	        // Try promoting just the left side.
-	        List<FunctionSignature> matchingSignatures = PromotionHelper.matchSignatureWithLeftPromotion(signatures, childTypes);
+	        List<FunctionSignature> matchingSignatures = matchSignatureWithLeftPromotion(signatures, childTypes);
 	        
 	        int length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
 	        	ParseNode child = children.get(0);
 				Type targetType = signature.getParamTypes()[0];
-	        	PromotionHelper.tryLeft(node, signature, child, targetType);
+	        	tryLeft(node, signature, child, targetType);
 	        	return;
 	        }
 	        else if (length > 1) {
@@ -642,13 +658,13 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	        }
 	        
 	        // Try promoting just the right side.
-	        matchingSignatures = PromotionHelper.matchSignatureWithRightPromotion(signatures, childTypes);
+	        matchingSignatures = matchSignatureWithRightPromotion(signatures, childTypes);
 	        length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
 	        	ParseNode child = children.get(1);
 				Type targetType = signature.getParamTypes()[1];
-	        	PromotionHelper.tryLeft(node, signature, child, targetType);
+	        	tryLeft(node, signature, child, targetType);
 	        	return;
 	        }
 	        else if (length > 1) {
@@ -658,7 +674,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	        }
 	        
 	        // Try promoting both sides.
-	        matchingSignatures = PromotionHelper.matchSignatureWithBothPromotion(signatures, childTypes);
+	        matchingSignatures = matchSignatureWithBothPromotion(signatures, childTypes);
 	        length = matchingSignatures.size();
 	        if (length == 1) {
 	        	signature = matchingSignatures.get(0);
@@ -666,7 +682,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 				ParseNode rightChild = children.get(1);
 				Type leftTarget = signature.getParamTypes()[0];
 				Type rightTarget = signature.getParamTypes()[1];
-				PromotionHelper.tryLeft(node, signature, leftChild, rightChild, leftTarget, rightTarget);
+				tryBoth(node, signature, leftChild, rightChild, leftTarget, rightTarget);
 				return;
 	        }
 	        
@@ -734,7 +750,6 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 
 	private void promoteCharToInt(ParseNode node, ParseNode child) {
-		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
 		Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
 		TypeNode intNode = new TypeNode(intToken);
@@ -743,6 +758,8 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		
 //		intNode.setType(PrimitiveType.INTEGER);
 //		castingNode.setType(PrimitiveType.INTEGER);
+		visitLeave(intNode);
+		visitLeave(castingNode);
 		
 		node.replaceChild(child, castingNode);
 	}
@@ -762,6 +779,10 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 //		ratNode.setType(PrimitiveType.RATIONAL);
 //		intCastingNode.setType(PrimitiveType.INTEGER);
 //		ratCastingNode.setType(PrimitiveType.RATIONAL);
+		visitLeave(intNode);
+		visitLeave(intCastingNode);
+		visitLeave(ratNode);
+		visitLeave(ratCastingNode);
 		
 		node.replaceChild(child, ratCastingNode);
 	}
@@ -775,6 +796,8 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		
 //		ratNode.setType(PrimitiveType.RATIONAL);
 //		castingNode.setType(PrimitiveType.RATIONAL);
+		visitLeave(ratNode);
+		visitLeave(castingNode);
 		
 		node.replaceChild(child, castingNode);
 	}
@@ -794,6 +817,10 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 //		floatNode.setType(PrimitiveType.FLOATING);
 //		intCastingNode.setType(PrimitiveType.INTEGER);
 //		floatCastingNode.setType(PrimitiveType.FLOATING);
+		visitLeave(intNode);
+		visitLeave(intCastingNode);
+		visitLeave(floatNode);
+		visitLeave(floatCastingNode);
 		
 		node.replaceChild(child, floatCastingNode);
 	}
@@ -806,7 +833,10 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, floatNode);
 		
 //		floatNode.setType(PrimitiveType.FLOATING);
-//		castingNode.setType(PrimitiveType.FLOATING);
+//		castingNode.setType(PrimitiveType.FLOATING);		
+		visitLeave(floatNode);
+		visitLeave(castingNode);
+		
 		
 		node.replaceChild(child, castingNode);
 	}
@@ -1104,7 +1134,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		node.setSignature(signature);
 		promote(targetType, node, child);
 	}
-	public void tryLeft(OperatorNode node, FunctionSignature signature,  ParseNode leftChild,
+	public void tryBoth(OperatorNode node, FunctionSignature signature,  ParseNode leftChild,
 			ParseNode rightChild, Type leftTarget, Type rightTarget) {
 		node.setType(signature.resultType());
 		node.setSignature(signature);

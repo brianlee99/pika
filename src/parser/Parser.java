@@ -307,8 +307,8 @@ public class Parser {
 	}
 	
 	private ParseNode parseTargetExpression() {
-		if (startsArrayIndexingExpression(nowReading)) {
-			return parseArrayIndexingExpression();
+		if (startsArrayIndexingOrFunctionInvocation(nowReading)) {
+			return parseArrayIndexingOrFunctionInvocation();
 		}
 		if (startsIdentifier(nowReading)) {
 			return parseIdentifier();
@@ -319,8 +319,8 @@ public class Parser {
 		return null;
 	}
 	private boolean startsTargetExpression(Token token) {
-		return startsArrayIndexingExpression(token) ||
-			   startsIdentifier(token)              ||
+		return startsArrayIndexingOrFunctionInvocation(token) 	||
+			   startsIdentifier(token)              			||
 			   startsParenthesesExpression(token);
 	}
 	
@@ -338,8 +338,7 @@ public class Parser {
         ParseNode thenStatement = parseBlock();
         
         if (startsElseStatement(nowReading)) {
-            // expect(Keyword.ELSE);
-            readToken();
+             expect(Keyword.ELSE);
             ParseNode elseStatement = parseBlock();
             return IfStatementNode.withChildren(controlFlowToken, expression, thenStatement, elseStatement);
         }
@@ -385,6 +384,8 @@ public class Parser {
 		return token.isLextant(Keyword.RELEASE);
 	}
 	
+	///////////////////////////////////////////////////////////
+	// Break / continue
 	private ParseNode parseBreakStatement() {
 		if(!startsBreakStatement(nowReading)) {
 			return syntaxErrorNode("break");
@@ -567,29 +568,30 @@ public class Parser {
 	// expression[ ... ]
 	// expression( a, b, ... )
 	private ParseNode parseArrayIndexingOrFunctionInvocation() {
+		if(!startsArrayIndexingOrFunctionInvocation(nowReading)) {
+			return syntaxErrorNode("array indexing / function invocation");
+		}
 		ParseNode base = parseAtomicExpression();
-		
-		if (nowReading.isLextant(Punctuator.OPEN_BRACKET)) {
-			while(nowReading.isLextant(Punctuator.OPEN_BRACKET)) { 
-				Token realToken = nowReading;
+
+		while(nowReading.isLextant(Punctuator.OPEN_BRACKET, Punctuator.OPEN_PARENTHESES)) {
+			Token realToken = nowReading;
+
+			if (nowReading.isLextant(Punctuator.OPEN_BRACKET)) {
 				Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
-				// readToken();
 				expect(Punctuator.OPEN_BRACKET);
 				ParseNode index = parseExpression();
 				expect(Punctuator.CLOSE_BRACKET);
 				base = OperatorNode.withChildren(indexToken, base, index);
 			}
-		}
-		else if (nowReading.isLextant(Punctuator.OPEN_PARENTHESES)) {
-			Token realToken = nowReading;
-			Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);
-			
-			FunctionInvocationNode node = new FunctionInvocationNode(funcToken);
-			expect(Punctuator.OPEN_PARENTHESES);
-			node.appendChild(base);
-			node = parseExpressionList(node);
-			expect(Punctuator.CLOSE_PARENTHESES);
-			base = node;
+			else {
+				Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);
+				FunctionInvocationNode node = new FunctionInvocationNode(funcToken);
+				expect(Punctuator.OPEN_PARENTHESES);
+				node.appendChild(base);
+				node = parseExpressionList(node);
+				expect(Punctuator.CLOSE_PARENTHESES);
+				base = node;
+			}
 		}
 		return base;
 	}
@@ -609,47 +611,47 @@ public class Parser {
 	
 	////////////////////////////////////////////////////////////
 	// Array indexing a[i][j] ...
-	private ParseNode parseArrayIndexingExpression() {
-		if(!startsArrayIndexingExpression(nowReading)) {
-			return syntaxErrorNode("array indexing");
-		}
-		
-		ParseNode base = parseAtomicExpression();
-		while(nowReading.isLextant(Punctuator.OPEN_BRACKET)) { 
-			Token realToken = nowReading;
-			Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
-			// readToken();
-			expect(Punctuator.OPEN_BRACKET);
-			ParseNode index = parseExpression();
-			expect(Punctuator.CLOSE_BRACKET);
-			base = OperatorNode.withChildren(indexToken, base, index);
-		}
-		return base;
-	}
-	private boolean startsArrayIndexingExpression(Token token) {
-		return startsAtomicExpression(token);
-	}
+//	private ParseNode parseArrayIndexingExpression() {
+//		if(!startsArrayIndexingExpression(nowReading)) {
+//			return syntaxErrorNode("array indexing");
+//		}
+//		
+//		ParseNode base = parseAtomicExpression();
+//		while(nowReading.isLextant(Punctuator.OPEN_BRACKET)) { 
+//			Token realToken = nowReading;
+//			Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
+//			// readToken();
+//			expect(Punctuator.OPEN_BRACKET);
+//			ParseNode index = parseExpression();
+//			expect(Punctuator.CLOSE_BRACKET);
+//			base = OperatorNode.withChildren(indexToken, base, index);
+//		}
+//		return base;
+//	}
+//	private boolean startsArrayIndexingExpression(Token token) {
+//		return startsAtomicExpression(token);
+//	}
 	
 	////////////////////////////////////////////////////////////
 	// Function invocation a(1, 2, 44.2) ... 
-	private ParseNode parseFunctionInvocation() {
-		if(!startsFunctionInvocation(nowReading)) {
-			return syntaxErrorNode("function invocation");
-		}
-		Token realToken = nowReading;
-		Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);
-		ParseNode base = parseAtomicExpression();
-		
-		expect(Punctuator.OPEN_PARENTHESES);
-		FunctionInvocationNode node = new FunctionInvocationNode(funcToken);
-		node.appendChild(base);
-		node = parseExpressionList(node);
-		expect(Punctuator.CLOSE_PARENTHESES);
-		return node;
-	}
-	private boolean startsFunctionInvocation(Token token) {
-		return startsAtomicExpression(token);
-	}
+//	private ParseNode parseFunctionInvocation() {
+//		if(!startsFunctionInvocation(nowReading)) {
+//			return syntaxErrorNode("function invocation");
+//		}
+//		Token realToken = nowReading;
+//		Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);
+//		ParseNode base = parseExpression();
+//		
+//		expect(Punctuator.OPEN_PARENTHESES);
+//		FunctionInvocationNode node = new FunctionInvocationNode(funcToken);
+//		node.appendChild(base);
+//		node = parseExpressionList(node);
+//		expect(Punctuator.CLOSE_PARENTHESES);
+//		return node;
+//	}
+//	private boolean startsFunctionInvocation(Token token) {
+//		return startsAtomicExpression(token);
+//	}
 	
 	////////////////////////////////////////////////////////////
 	// atomicExpression -> literal
@@ -999,7 +1001,8 @@ public class Parser {
 		}
 		Token token = nowReading;
 		readToken();
-		ParseNode child = parseFunctionInvocation();
+		//ParseNode child = parseFunctionInvocation();
+		ParseNode child = parseArrayIndexingOrFunctionInvocation();
 		expect(Punctuator.TERMINATOR);
 		return CallNode.withChildren(token, child);
 

@@ -331,7 +331,6 @@ public class ASMCodeGenerator {
 			storeITo(code, STACK_POINTER);
 			
 			// store return value onto this address
-			// TODO: need to consider rationals/voids, etc.
 			if (returnType == PrimitiveType.RATIONAL) {
 				loadIFrom(code, STACK_POINTER);						// [ num den SP ]
 				code.add(PushI, 4);
