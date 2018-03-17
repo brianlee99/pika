@@ -297,7 +297,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		Type targetType = target.getType();
 		
 		if (target instanceof IdentifierNode) {
-			IdentifierNode identifier = (IdentifierNode) node.child(0);
+			IdentifierNode identifier = (IdentifierNode) target;
 			
 			if (!identifier.isMutable()) {
 				logError("the identifier was declared as const at " + node.getToken().getLocation());
@@ -310,6 +310,17 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			if (!expressionType.equivalent(targetType)) {
 				logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
 			}
+		}
+		else if (target instanceof OperatorNode && target.getToken().isLextant(Punctuator.ARRAY_INDEXING)) {
+
+			promoteTargetType(expressionType, targetType, expression, node);
+			expressionType = node.child(0).getType();
+			targetType = node.child(1).getType();
+			
+			if (!expressionType.equivalent(targetType)) {
+				logError("the identifier and expression types are not equal at " + node.getToken().getLocation());
+			}
+			
 		}
 		else if (target instanceof FunctionInvocationNode) {
 			logError("Function invocation is not targetable");
