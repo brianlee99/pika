@@ -380,7 +380,6 @@ public class ASMCodeGenerator {
 				code.append(frag);
 				
 				if (type == PrimitiveType.RATIONAL ) {
-					//code.add(Exchange); 				 	// [ SP den num ]
 					storeITo(code, DENOMINATOR_1);
 					code.add(StoreI);
 					loadIFrom(code, STACK_POINTER);

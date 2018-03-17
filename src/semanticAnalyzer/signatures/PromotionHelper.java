@@ -14,7 +14,6 @@ import tokens.LextantToken;
 import tokens.Token;
 
 public class PromotionHelper {
-	
 	public static void promote(Type targetType, ParseNode node, ParseNode child) {
 		Type childType = child.getType();
 		if (targetType == PrimitiveType.INTEGER) {
@@ -38,20 +37,21 @@ public class PromotionHelper {
 		}
 	}
 
-	// NOTE: we fully expect this to be a Character -> Integer
-	public static void promoteCharToInt(ParseNode node, ParseNode child) {
+	private static void promoteCharToInt(ParseNode node, ParseNode child) {
 		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
 		Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
 		TypeNode intNode = new TypeNode(intToken);
 
 		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+		
+		intNode.setType(PrimitiveType.INTEGER);
+		castingNode.setType(PrimitiveType.INTEGER);
+		
 		node.replaceChild(child, castingNode);
-		// visitLeave(intNode);
-		// visitLeave(castingNode);
 	}
 	
-	public static void promoteCharToRat(ParseNode node, ParseNode child) {		
+	private static void promoteCharToRat(ParseNode node, ParseNode child) {		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
 		Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
 		TypeNode intNode = new TypeNode(intToken);
@@ -62,25 +62,28 @@ public class PromotionHelper {
 		OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
 		OperatorNode ratCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, ratNode);
 		
+		intNode.setType(PrimitiveType.INTEGER);
+		ratNode.setType(PrimitiveType.RATIONAL);
+		intCastingNode.setType(PrimitiveType.INTEGER);
+		ratCastingNode.setType(PrimitiveType.RATIONAL);
+		
 		node.replaceChild(child, ratCastingNode);
-//		visitLeave(intNode);
-//		visitLeave(ratNode);
-//		visitLeave(intCastingNode);
-//		visitLeave(ratCastingNode);
 	}
 	
-	public static void promoteIntToRat(ParseNode node, ParseNode child) {		
+	private static void promoteIntToRat(ParseNode node, ParseNode child) {		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
 		Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
-		TypeNode intNode = new TypeNode(ratToken);
+		TypeNode ratNode = new TypeNode(ratToken);
 
-		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, ratNode);
+		
+		ratNode.setType(PrimitiveType.RATIONAL);
+		castingNode.setType(PrimitiveType.RATIONAL);
+		
 		node.replaceChild(child, castingNode);
-		// visitLeave(intNode);
-		// visitLeave(castingNode);
 	}
 	
-	public static void promoteCharToFloat(ParseNode node, ParseNode child) {		
+	private static void promoteCharToFloat(ParseNode node, ParseNode child) {		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
 		Token intToken = LextantToken.artificial(node.getToken(), Keyword.INT);
 		TypeNode intNode = new TypeNode(intToken);
@@ -91,22 +94,25 @@ public class PromotionHelper {
 		OperatorNode intCastingNode = OperatorNode.withChildren(castingToken, child, intNode);
 		OperatorNode floatCastingNode = OperatorNode.withChildren(castingToken, intCastingNode, floatNode);
 		
+		intNode.setType(PrimitiveType.INTEGER);
+		floatNode.setType(PrimitiveType.FLOATING);
+		intCastingNode.setType(PrimitiveType.INTEGER);
+		floatCastingNode.setType(PrimitiveType.FLOATING);
+		
 		node.replaceChild(child, floatCastingNode);
-//		visitLeave(intNode);
-//		visitLeave(floatNode);
-//		visitLeave(intCastingNode);
-//		visitLeave(floatCastingNode);
 	}
 	
-	public static void promoteIntToFloat(ParseNode node, ParseNode child) {		
+	private static void promoteIntToFloat(ParseNode node, ParseNode child) {		
 		Token castingToken = LextantToken.artificial(node.getToken(), Punctuator.CASTING);
-		Token ratToken = LextantToken.artificial(node.getToken(), Keyword.RAT);
-		TypeNode intNode = new TypeNode(ratToken);
+		Token floatToken = LextantToken.artificial(node.getToken(), Keyword.FLOAT);
+		TypeNode floatNode = new TypeNode(floatToken);
 
-		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, intNode);
+		OperatorNode castingNode = OperatorNode.withChildren(castingToken, child, floatNode);
+		
+		floatNode.setType(PrimitiveType.FLOATING);
+		castingNode.setType(PrimitiveType.FLOATING);
+		
 		node.replaceChild(child, castingNode);
-		// visitLeave(intNode);
-		// visitLeave(castingNode);
 	}
 	
 	// Returns a list of all matching function signatures
@@ -139,7 +145,7 @@ public class PromotionHelper {
 		return matchingSignatures;
 	}
 	
-	public static List<FunctionSignature> matchSignatureWithRightPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+	public static  List<FunctionSignature> matchSignatureWithRightPromotion(FunctionSignatures signatures, List<Type> childTypes) {
 		List<FunctionSignature> matchingSignatures = new ArrayList<>();
 		List<Type> newChildTypes = new ArrayList<>(childTypes);
 		if (newChildTypes.get(1) == PrimitiveType.CHARACTER) {
@@ -168,7 +174,7 @@ public class PromotionHelper {
 		return matchingSignatures;
 	}
 	
-	public static List<FunctionSignature> matchSignatureWithBothPromotion(FunctionSignatures signatures, List<Type> childTypes) {
+	public static  List<FunctionSignature> matchSignatureWithBothPromotion(FunctionSignatures signatures, List<Type> childTypes) {
 		List<FunctionSignature> matchingSignatures = new ArrayList<>();
 		List<Type> newChildTypes = new ArrayList<>(childTypes);
 		
