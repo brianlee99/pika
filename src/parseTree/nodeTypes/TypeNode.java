@@ -3,7 +3,12 @@ package parseTree.nodeTypes;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import semanticAnalyzer.types.ArrayType;
+import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
+import semanticAnalyzer.types.Type;
+
+import java.util.List;
+
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
 import tokens.LextantToken;
@@ -49,10 +54,25 @@ public class TypeNode extends ParseNode {
 		}
 		else if (token.isLextant(Punctuator.ARRAY_TYPE)) {
 			TypeNode subtypeNode = (TypeNode) child(0);
+			subtypeNode.setTypeByToken();
 			setType(new ArrayType(subtypeNode.getType()));
 		}
 		else if (token.isLextant(Keyword.VOID)) {
 			setType(PrimitiveType.VOID);
+		}
+		else if (token.isLextant(Punctuator.LAMBDA_TYPE)) {
+			TypeListNode parameterNode = (TypeListNode) child(0);
+			TypeNode returnNode = (TypeNode) child(1);
+			
+			parameterNode.setLambdaType();
+			returnNode.setTypeByToken();
+			
+			LambdaType parameterType = (LambdaType) parameterNode.getType();
+			List<Type> paramTypeList = parameterType.getParameterTypes();
+			Type returnType = returnNode.getType();
+			
+			LambdaType lambdaType = new LambdaType(paramTypeList, returnType);
+			setType(lambdaType);
 		}
 	}
 	

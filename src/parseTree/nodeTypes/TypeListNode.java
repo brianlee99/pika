@@ -1,9 +1,12 @@
 package parseTree.nodeTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
+import semanticAnalyzer.types.LambdaType;
+import semanticAnalyzer.types.Type;
 import tokens.LextantToken;
 import tokens.Token;
 
@@ -12,7 +15,6 @@ public class TypeListNode extends ParseNode {
 	
 	public TypeListNode(Token token) {
 		super(token);
-		// assert(token.isLextant(Keyword.BOOL, Keyword.CHAR, Keyword.INT, Keyword.FLOAT, Keyword.STRING, Keyword.RAT, Punctuator.ARRAY_TYPE));
 	}
 	public TypeListNode(ParseNode node) {
 		super(node);
@@ -24,6 +26,22 @@ public class TypeListNode extends ParseNode {
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
+	
+////////////////////////////////////////////////////////////
+// function signature
+	public void setLambdaType() {
+		List<Type> paramListTypes = new ArrayList<>();
+		int nChildren = nChildren();
+		for (int i = 0; i < nChildren; i++) {
+			TypeNode typeChild = (TypeNode) child(i);
+			typeChild.setTypeByToken();
+			Type type = typeChild.getType();
+			paramListTypes.add(type);
+		}
+		LambdaType lambdaType = new LambdaType(paramListTypes, null);
+		setType(lambdaType);
+	}
+	
 	
 ////////////////////////////////////////////////////////////
 // factory method

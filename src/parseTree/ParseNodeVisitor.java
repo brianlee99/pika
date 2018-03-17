@@ -29,6 +29,7 @@ import parseTree.nodeTypes.ReturnNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
 import parseTree.nodeTypes.TabNode;
+import parseTree.nodeTypes.TypeListNode;
 import parseTree.nodeTypes.TypeNode;
 import parseTree.nodeTypes.WhileStatementNode;
 
@@ -95,6 +96,9 @@ public interface ParseNodeVisitor {
 	
 	void visitEnter(TypeNode node);
 	void visitLeave(TypeNode node);
+	
+	void visitEnter(TypeListNode node);
+	void visitLeave(TypeListNode node);
 
 	// leaf nodes: visitLeaf only
 	void visit(BooleanConstantNode node);
@@ -171,7 +175,6 @@ public interface ParseNodeVisitor {
 			defaultVisitLeave(node);
 		}
 		
-
 		public void visitEnter(LambdaNode node) {
 			defaultVisitEnter(node);
 		}
@@ -214,7 +217,6 @@ public interface ParseNodeVisitor {
 		public void visitLeave(FunctionInvocationNode node) {
 			defaultVisitLeave(node);
 		}
-		
 		public void visitEnter(IfStatementNode node) {
 			defaultVisitEnter(node);
 		}
@@ -227,7 +229,6 @@ public interface ParseNodeVisitor {
 		public void visitLeave(WhileStatementNode node) {
 			defaultVisitLeave(node);
 		}
-		
 		public void visitEnter(ArrayPopulationNode node) {
 			defaultVisitEnter(node);
 		}
@@ -244,6 +245,12 @@ public interface ParseNodeVisitor {
 			defaultVisitEnter(node);
 		}
 		public void visitLeave(TypeNode node) {
+			defaultVisitLeave(node);
+		}
+		public void visitEnter(TypeListNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(TypeListNode node) {
 			defaultVisitLeave(node);
 		}
 		

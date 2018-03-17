@@ -6,7 +6,7 @@ public class ArrayType implements Type {
 	
 	public ArrayType(Type subtype) {
 		this.subtype = subtype;
-		this.infoString = "arr[" + this.subtype.infoString() + "]";
+		this.infoString = "[" + this.subtype.infoString() + "]";
 	}
 	
 	@Override

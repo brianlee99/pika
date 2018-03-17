@@ -25,18 +25,15 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 	
 	@Override
-	public void visitEnter(FunctionDefinitionNode node) {
+	public void visitLeave(FunctionDefinitionNode node) {
 		node.setFunctionSignature();
 		IdentifierNode identifierNode = (IdentifierNode) node.child(0);
 		Type type = node.getType();
-		
-		Labeller labeller 	= new Labeller("function");
-		String startLabel 	= labeller.newLabel("start");
-		addBinding(identifierNode, type, false, startLabel);
+		addBinding(identifierNode, type, false);
 	}
 	
 	@Override
-	public void visitEnter(LambdaNode node) {
+	public void visitLeave(LambdaNode node) {
 		Scope baseScope = node.getLocalScope();
 		Scope scope = baseScope.createParameterScope();
 		node.setScope(scope);
@@ -44,7 +41,7 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	
 	@Override
 	// Assuming that this is the block of a procedure scope
-	public void visitEnter(BlockNode node) {
+	public void visitLeave(BlockNode node) {
 		ParseNode parent = node.getParent();
 		if (parent instanceof LambdaNode) {
 			Scope baseScope = node.getLocalScope();
@@ -53,9 +50,9 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 	}
 	
-	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
+	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
 		Scope scope = identifierNode.getLocalScope();
-		Binding binding = scope.createBinding(identifierNode, type, isMutable, label);
+		Binding binding = scope.createBinding(identifierNode, type, isMutable);
 		identifierNode.setBinding(binding);
 	}
 	                                        

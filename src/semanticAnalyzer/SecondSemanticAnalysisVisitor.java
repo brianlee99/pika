@@ -13,6 +13,7 @@ import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
+import parseTree.nodeTypes.ParameterListNode;
 import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
@@ -36,6 +37,7 @@ import parseTree.nodeTypes.ReleaseStatementNode;
 import parseTree.nodeTypes.ReturnNode;
 import parseTree.nodeTypes.SpaceNode;
 import parseTree.nodeTypes.StringConstantNode;
+import parseTree.nodeTypes.TypeListNode;
 import parseTree.nodeTypes.TypeNode;
 import parseTree.nodeTypes.WhileStatementNode;
 import semanticAnalyzer.signatures.FunctionSignature;
@@ -202,6 +204,23 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		}
 		return true;
 	}
+	///////////////////////////////////////////////////////////////////////////
+	// TypeList and stuff.
+	@Override
+	public void visitLeave(TypeListNode node) {
+		
+		
+		List<Type> paramListTypes = new ArrayList<>();
+		int nChildren = node.nChildren();
+		for (int i = 0; i < nChildren; i++) {
+			TypeNode paramSpecChild = (TypeNode) node.child(i);
+			Type type = paramSpecChild.getType();
+			paramListTypes.add(type);
+		}
+		LambdaType lambdaType = new LambdaType(paramListTypes, null);
+		node.setType(lambdaType);
+	}
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 	// Break and continue
@@ -706,7 +725,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable, String label) {
 		Scope scope = identifierNode.getLocalScope();
-		Binding binding = scope.createBinding(identifierNode, type, isMutable, label);
+		Binding binding = scope.createBinding(identifierNode, type, isMutable);
 		identifierNode.setBinding(binding);
 	}
 	

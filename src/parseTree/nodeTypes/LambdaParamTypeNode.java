@@ -38,11 +38,12 @@ public class LambdaParamTypeNode extends ParseNode {
 		
 		paramListChild.setParameterListType();
 		typeChild.setTypeByToken();
-		LambdaType paramListType = (LambdaType) paramListChild.getType();
-		List<Type> paramListTypes = paramListType.getParameterTypes();
-		Type type = typeChild.getType();
+		LambdaType parameterType = (LambdaType) paramListChild.getType();
+		List<Type> paramTypeList = parameterType.getParameterTypes();
 		
-		LambdaType lambdaType = new LambdaType(paramListTypes, type);
+		Type returnType = typeChild.getType();
+		
+		LambdaType lambdaType = new LambdaType(paramTypeList, returnType);
 		setType(lambdaType);
 	}
 	

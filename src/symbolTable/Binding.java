@@ -14,14 +14,13 @@ public class Binding {
 	private String label;
 	
 	public Binding(Type type, TextLocation location, MemoryLocation memoryLocation, String lexeme,
-			boolean isMutable, String label) {
+			boolean isMutable) {
 		super();
 		this.type = type;
 		this.textLocation = location;
 		this.memoryLocation = memoryLocation;
 		this.lexeme = lexeme;
 		this.isMutable = isMutable;
-		this.label = label;
 	}
 
 	public String toString() {
@@ -66,8 +65,7 @@ public class Binding {
 					TextLocation.nullInstance(),
 					MemoryLocation.nullInstance(),
 					"the-null-binding",
-					false,
-					"null-label");
+					false);
 		}
 		public static NullBinding getInstance() {
 			if(instance==null)
