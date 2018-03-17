@@ -2,6 +2,7 @@ package asmCodeGenerator;
 
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
+import asmCodeGenerator.runtime.RunTime;
 
 public class Macros {
 	
@@ -89,8 +90,12 @@ public class Macros {
 	}
 	
 	// [ num den value ] -> [ value num den ]
-	public static void doubleExchange(ASMCodeFragment frag) {
-		
+	public static void exchangeWithRational(ASMCodeFragment frag) {
+		// we will use temporary storage for this.
+		frag.add(Exchange); 					// [ num value den ]
+		storeITo(frag, RunTime.DENOMINATOR_1);  // [ num value ]
+		frag.add(Exchange); 					// [ value num ]
+		loadIFrom(frag, RunTime.DENOMINATOR_1); // [ value num den ]
 	}
 	
 	

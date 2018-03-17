@@ -109,6 +109,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visitLeave(LambdaNode node) {
 		leaveScope(node);
+		
 	}
 
 	@Override

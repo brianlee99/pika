@@ -309,10 +309,8 @@ public class ASMCodeGenerator {
 			// RA at FP - 8
 			readIPtrOffset(code, FRAME_POINTER, -8);				// [ returnValue returnAddr ]					[ returnAddr ] 
 			if (returnType == PrimitiveType.RATIONAL) {
-				// do a double exchange
-				doubleExchange(code);
-			}
-			if (returnType != PrimitiveType.VOID) {
+				exchangeWithRational(code);
+			} else if (returnType != PrimitiveType.VOID) {
 				code.add(Exchange);									// [ returnAddr returnValue ]					[ returnAddr ] 
 			}
 			
@@ -334,7 +332,17 @@ public class ASMCodeGenerator {
 			
 			// store return value onto this address
 			// TODO: need to consider rationals/voids, etc.
-			if (returnType != PrimitiveType.VOID) {
+			if (returnType == PrimitiveType.RATIONAL) {
+				loadIFrom(code, STACK_POINTER);						// [ num den SP ]
+				code.add(PushI, 4);
+				code.add(Add);
+				code.add(Exchange);
+				code.add(StoreI);
+				loadIFrom(code, STACK_POINTER);						// [ num SP ]
+				code.add(Exchange);
+				code.add(StoreI);
+			}
+			else if (returnType != PrimitiveType.VOID) {
 				loadIFrom(code, STACK_POINTER);
 				code.add(Exchange);
 				code.add(opcodeForStore(returnType));
@@ -360,26 +368,46 @@ public class ASMCodeGenerator {
 			
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {
-				loadIFrom(code, STACK_POINTER);				// [ stack ]
+				loadIFrom(code, STACK_POINTER);	
 				
 				Type type = node.child(i).getType();
 				code.add(PushI, type.getSize());
 				code.add(Subtract);
 				storeITo(code, STACK_POINTER);
+				loadIFrom(code, STACK_POINTER);				// [ SP ]
 				
-				loadIFrom(code, STACK_POINTER);
 				ASMCodeFragment frag = removeValueCode(node.child(i));
 				code.append(frag);
 				
-				code.add(opcodeForStore(type));
+				if (type == PrimitiveType.RATIONAL ) {
+					//code.add(Exchange); 				 	// [ SP den num ]
+					storeITo(code, DENOMINATOR_1);
+					code.add(StoreI);
+					loadIFrom(code, STACK_POINTER);
+					code.add(PushI, 4);
+					code.add(Add);
+					loadIFrom(code, DENOMINATOR_1);
+					code.add(StoreI);
+				} else {
+					code.add(opcodeForStore(type));
+				}
 			}
+			
 			code.append(removeValueCode(left));
 			code.add(CallV);
 			
-			if (returnType != PrimitiveType.VOID) {
+			if (returnType == PrimitiveType.RATIONAL) {
+				loadIFrom(code, STACK_POINTER);
+				code.add(LoadI); 					// [ num ]
+				loadIFrom(code, STACK_POINTER);
+				code.add(PushI, 4);
+				code.add(Add);
+				code.add(LoadI); 					// [ num den ]
+			} else if (returnType != PrimitiveType.VOID) {
 				loadIFrom(code, STACK_POINTER);
 				code.add(opcodeForLoad(returnType));
 			}
+			
 			int returnSize = returnType.getSize();
 			
 			loadIFrom(code, STACK_POINTER);
