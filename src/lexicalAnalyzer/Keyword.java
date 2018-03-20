@@ -20,8 +20,9 @@ public enum Keyword implements Lextant {
 	FLOAT("float"),
 	RAT("rat"),
 	IF("if"),
-	WHILE("while"),
 	ELSE("else"),
+	WHILE("while"),
+	FOR("for"),
 	NEW("new"),
 	RELEASE("release"),
 	CLONE("clone"),
@@ -32,6 +33,13 @@ public enum Keyword implements Lextant {
 	RETURN("return"),
 	FUNC("func"),
 	CALL("call"),
+	INDEX("index"),
+	ELEM("elem"),
+	MAP("map"),
+	REDUCE("reduce"),
+	FOLD("fold"),
+	ZIP("zip"),
+	REVERSE("reverse"),
 	NULL_KEYWORD("");
 
 	private String lexeme;
