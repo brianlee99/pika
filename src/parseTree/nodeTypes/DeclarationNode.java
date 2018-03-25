@@ -9,7 +9,7 @@ import tokens.Token;
 
 public class DeclarationNode extends ParseNode {
 	
-	// private boolean mutable;
+	private boolean isStatic;
 	
 	public DeclarationNode(Token token) {
 		super(token);
@@ -30,6 +30,13 @@ public class DeclarationNode extends ParseNode {
 	public LextantToken lextantToken() {
 		return (LextantToken)token;
 	}	
+	
+	////////////////////////////////////////////////////////////
+	// static
+	
+	public void setStatic(boolean isStatic) {
+		this.isStatic = isStatic;
+	}
 	
 	////////////////////////////////////////////////////////////
 	// convenience factory
