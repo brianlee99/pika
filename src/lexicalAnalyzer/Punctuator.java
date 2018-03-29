@@ -35,6 +35,7 @@ public enum Punctuator implements Lextant {
 	ARROW("->"),
 	CASTING(""),
 	ARRAY_INDEXING(""),
+	SUBSTRING(""),
 	ARRAY_POPULATION(""),
 	ARRAY_TYPE(""),
 	LAMBDA(""),

@@ -13,7 +13,6 @@ import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.ArrayPopulationNode;
 import parseTree.nodeTypes.AssignmentNode;
 import parseTree.nodeTypes.OperatorNode;
-import parseTree.nodeTypes.ParameterListNode;
 import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.BooleanConstantNode;
 import parseTree.nodeTypes.BreakNode;
@@ -25,12 +24,13 @@ import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
+import parseTree.nodeTypes.ForStatementNode;
 import parseTree.nodeTypes.FunctionDefinitionNode;
 import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.IntegerConstantNode;
 import parseTree.nodeTypes.LambdaNode;
-import parseTree.nodeTypes.LambdaParamTypeNode;
+
 import parseTree.nodeTypes.NewlineNode;
 import parseTree.nodeTypes.PrintStatementNode;
 import parseTree.nodeTypes.ProgramNode;
@@ -239,15 +239,17 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visit(BreakNode node) {
 		boolean insideWhile = findWhileStatement(node);
-		if (!insideWhile) {
-			logError("Break statement is not inside a while statement");
+		boolean insideFor = findForStatement(node);
+		if (!insideWhile && !insideFor) {
+			logError("Break statement is not inside a while/for statement");
 		}
 	}
 	@Override
 	public void visit(ContinueNode node) {
 		boolean insideWhile = findWhileStatement(node);
-		if (!insideWhile) {
-			logError("Continue statement is not inside a while statement");
+		boolean insideFor = findForStatement(node);
+		if (!insideWhile && !insideFor) {
+			logError("Continue statement is not inside a while/for statement");
 		}
 	}
 	private boolean findWhileStatement(ParseNode node) {
@@ -258,6 +260,15 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 			return false;
 		}
 		return findWhileStatement(node.getParent());
+	}
+	private boolean findForStatement(ParseNode node) {
+		if (node.getToken().isLextant(Keyword.FOR)) {
+			return true;
+		}
+		else if (node instanceof ProgramNode) {
+			return false;
+		}
+		return findForStatement(node.getParent());
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -722,6 +733,27 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		if (conditionType != PrimitiveType.BOOLEAN) {
 			logError("the condition must evaluate to a boolean at " + node.getToken().getLocation());
 		}
+	}
+	
+	// For loop
+	@Override
+	public void visitEnter(ForStatementNode node) {
+		IdentifierNode identifier = (IdentifierNode) node.child(0);
+		
+		//ParseNode initializer = node.child(1);
+		//node.setType(declarationType);
+		//identifier.setType(declarationType);
+		
+		//addBinding(identifier, PrimitiveType.INTEGER, false);
+		
+		Type type = node.child(1).getType();
+		if (type == PrimitiveType.STRING) {
+			addBinding(identifier, PrimitiveType.CHARACTER, false);
+		}
+		else if (type instanceof ArrayType) {
+			addBinding(identifier, ((ArrayType) type).getSubtype(), false);
+		}
+		
 	}
 	
 	@Override

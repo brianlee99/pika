@@ -13,6 +13,7 @@ import static semanticAnalyzer.types.PrimitiveType.*;
 import asmCodeGenerator.ArrayCloningCodeGenerator;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.ArrayLengthCodeGenerator;
+import asmCodeGenerator.CharStringConcatCodeGenerator;
 import asmCodeGenerator.CharacterToBooleanCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
@@ -31,8 +32,14 @@ import asmCodeGenerator.RationalMultiplicationCodeGenerator;
 import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
+import asmCodeGenerator.ReverseStringCodeGenerator;
 import asmCodeGenerator.ShortCircuitAndCodeGenerator;
 import asmCodeGenerator.ShortCircuitOrCodeGenerator;
+import asmCodeGenerator.StringCharConcatCodeGenerator;
+import asmCodeGenerator.StringIndexingCodeGenerator;
+import asmCodeGenerator.StringLengthCodeGenerator;
+import asmCodeGenerator.StringStringConcatCodeGenerator;
+import asmCodeGenerator.SubstringCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
@@ -106,7 +113,10 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		new FunctionSignatures(Punctuator.ADD,
 		    new FunctionSignature(ASMOpcode.Add, INTEGER, INTEGER, INTEGER),
 		    new FunctionSignature(ASMOpcode.FAdd, FLOATING, FLOATING, FLOATING),
-		    new FunctionSignature(new RationalAdditionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL)
+		    new FunctionSignature(new RationalAdditionCodeGenerator(), RATIONAL, RATIONAL, RATIONAL),
+		    new FunctionSignature(new StringStringConcatCodeGenerator(), STRING, STRING, STRING),
+		    new FunctionSignature(new StringCharConcatCodeGenerator(), STRING, CHARACTER, STRING),
+		    new FunctionSignature(new CharStringConcatCodeGenerator(), CHARACTER, STRING, STRING)
 		);
 		
 		new FunctionSignatures(Punctuator.SUBTRACT,
@@ -219,6 +229,16 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			new FunctionSignature(
 				new ArrayIndexingCodeGenerator(), setS,
 				new ArrayType(S), INTEGER, S
+			),
+			new FunctionSignature(
+				new StringIndexingCodeGenerator(), STRING, INTEGER, CHARACTER
+			)
+		);
+		
+		// Substring
+		new FunctionSignatures(Punctuator.SUBSTRING,
+			new FunctionSignature(
+				new SubstringCodeGenerator(), STRING, INTEGER, INTEGER, STRING
 			)
 		);
 		
@@ -247,14 +267,23 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			)
 		);
 
-		// length
+		// Length
 		new FunctionSignatures(Keyword.LENGTH,
 			new FunctionSignature(
 				new ArrayLengthCodeGenerator(), setS,
 				new ArrayType(S), INTEGER
+			),
+			new FunctionSignature(
+				new StringLengthCodeGenerator(), STRING, INTEGER
 			)
 		);
-
+		
+		// Reverse
+		new FunctionSignatures(Keyword.REVERSE,
+			new FunctionSignature(
+				new ReverseStringCodeGenerator(), STRING, STRING
+			)
+		);
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

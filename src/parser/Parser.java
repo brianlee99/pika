@@ -76,9 +76,14 @@ public class Parser {
 		}
 		ParseNode program = new ProgramNode(nowReading);
 		
-		while (startsFunctionDefinition(nowReading)) {
-			ParseNode functionBlock = parseFunctionDefinition();
-			program.appendChild(functionBlock);
+		while (startsFunctionDefinition(nowReading) || startsDeclaration(nowReading)) {
+			if (startsFunctionDefinition(nowReading)) {
+				ParseNode functionBlock = parseFunctionDefinition();
+				program.appendChild(functionBlock);
+			} else {
+				ParseNode definition = parseDeclaration();
+				program.appendChild(definition);
+			}
 		}
 		
 		expect(Keyword.EXEC);
@@ -92,8 +97,11 @@ public class Parser {
 		return program;
 	}
 	private boolean startsProgram(Token token) {
-		return token.isLextant(Keyword.EXEC) || startsFunctionDefinition(token);
+		return token.isLextant(Keyword.EXEC) 	|| 
+				startsFunctionDefinition(token) || 
+				startsDeclaration(token);
 	}
+	
 	
 	private ParseNode parseFunctionDefinition() {
 		if(!startsFunctionDefinition(nowReading)) {

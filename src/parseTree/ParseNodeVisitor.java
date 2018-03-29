@@ -15,6 +15,7 @@ import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.ErrorNode;
 import parseTree.nodeTypes.FloatingConstantNode;
+import parseTree.nodeTypes.ForStatementNode;
 import parseTree.nodeTypes.FunctionDefinitionNode;
 import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
@@ -87,6 +88,9 @@ public interface ParseNodeVisitor {
 	
 	void visitEnter(WhileStatementNode node);
 	void visitLeave(WhileStatementNode node);
+	
+	void visitEnter(ForStatementNode node);
+	void visitLeave(ForStatementNode node);
 	
 	void visitEnter(ArrayPopulationNode node);
 	void visitLeave(ArrayPopulationNode node);
@@ -174,7 +178,6 @@ public interface ParseNodeVisitor {
 		public void visitLeave(FunctionDefinitionNode node) {
 			defaultVisitLeave(node);
 		}
-		
 		public void visitEnter(LambdaNode node) {
 			defaultVisitEnter(node);
 		}
@@ -227,6 +230,12 @@ public interface ParseNodeVisitor {
 			defaultVisitEnter(node);
 		}
 		public void visitLeave(WhileStatementNode node) {
+			defaultVisitLeave(node);
+		}
+		public void visitEnter(ForStatementNode node) {
+			defaultVisitEnter(node);
+		}
+		public void visitLeave(ForStatementNode node) {
 			defaultVisitLeave(node);
 		}
 		public void visitEnter(ArrayPopulationNode node) {
