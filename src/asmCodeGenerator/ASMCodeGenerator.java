@@ -25,6 +25,7 @@ import parseTree.nodeTypes.IfStatementNode;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
 import parseTree.nodeTypes.FloatingConstantNode;
+import parseTree.nodeTypes.ForStatementNode;
 import parseTree.nodeTypes.FunctionDefinitionNode;
 import parseTree.nodeTypes.FunctionInvocationNode;
 import parseTree.nodeTypes.IdentifierNode;
@@ -623,23 +624,87 @@ public class ASMCodeGenerator {
 		}
 		
 		///////////////////////////////////////////////////////////////////////////
+		// for
+		public void visitEnter(ForStatementNode node) {
+			Labeller labeller 	= new Labeller("for");
+			String loopLabel 	= labeller.newLabel("loop");
+			String endLabel   	= labeller.newLabel("end");
+			node.setLoopLabel(loopLabel);
+			node.setEndLabel(endLabel);
+		}
+		public void visitLeave(ForStatementNode node) {
+			if (!node.getToken().isLextant(Keyword.INDEX, Keyword.ELEM)) {
+				assert false;
+			}
+			
+			ASMCodeFragment identifier = removeAddressCode(node.child(0));
+			ASMCodeFragment array = removeValueCode(node.child(1));
+			ASMCodeFragment blockCode = removeVoidCode(node.child(2));
+//			
+			// here is the length
+			code.append(array);
+			
+			code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+			code.add(Add);
+			code.add(LoadI);
+			
+			
+			String loopLabel = node.getLoopLabel();
+			String endLabel  = node.getEndLabel();
+//			
+			newVoidCode(node);
+			code.add(Label, loopLabel);
+			
+			// increment i by 1
+			
+			// if i >= length then jump to end
+			code.add(JumpFalse, endLabel);
+			
+			code.append(blockCode);
+			
+			
+			// compare i to length
+			
+//			code.append(conditionCode);
+//			code.add(JumpFalse, endLabel);
+//			code.append(loopCode);
+			code.add(Jump, loopLabel);
+			code.add(Label, endLabel);
+		}
+		
+		///////////////////////////////////////////////////////////////////////////
 		// break and continue
 		public void visit(BreakNode node) {
-			WhileStatementNode whileNode = getClosestWhile(node);
-			String endLabel = whileNode.getEndLabel();
-			newVoidCode(node);
-			code.add(Jump, endLabel);
+			ParseNode controlNode = getClosestWhileOrFor(node);
+			if (controlNode instanceof WhileStatementNode) {			
+				String endLabel = ((WhileStatementNode) controlNode).getEndLabel();
+				newVoidCode(node);
+				code.add(Jump, endLabel);
+			}
+			else if (controlNode instanceof ForStatementNode) {
+				String endLabel = ((ForStatementNode) controlNode).getEndLabel();
+				newVoidCode(node);
+				code.add(Jump, endLabel);
+			}
+
 		}
 		public void visit(ContinueNode node) {
-			WhileStatementNode whileNode = getClosestWhile(node);
-			String loopLabel = whileNode.getLoopLabel();
-			newVoidCode(node);
-			code.add(Jump, loopLabel);
+			ParseNode controlNode = getClosestWhileOrFor(node);
+			if (controlNode instanceof WhileStatementNode) {
+				String loopLabel = ((WhileStatementNode) controlNode).getLoopLabel();
+				newVoidCode(node);
+				code.add(Jump, loopLabel);
+			}
+			else if (controlNode instanceof ForStatementNode) {
+				String loopLabel = ((ForStatementNode) controlNode).getLoopLabel();
+				newVoidCode(node);
+				code.add(Jump, loopLabel);
+			}
 		}
-		private WhileStatementNode getClosestWhile(ParseNode node) {
+		private ParseNode getClosestWhileOrFor(ParseNode node) {
 			for (ParseNode parent : node.pathToRoot()) {
-				if (parent instanceof WhileStatementNode) {
-					return (WhileStatementNode) parent;
+				if ((parent instanceof WhileStatementNode) || (parent instanceof ForStatementNode)) {
+					return parent;
 				}
 			}
 			return null;

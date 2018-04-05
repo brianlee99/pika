@@ -15,8 +15,8 @@ public class StringIndexingCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
-		// TODO Auto-generated method stub
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_ADDRESS);
+
 		
 		storeITo(fragment, ARRAY_INDEXING_INDEX);
 		storeITo(fragment, ARRAY_INDEXING_ARRAY);
@@ -30,7 +30,7 @@ public class StringIndexingCodeGenerator implements SimpleCodeGenerator {
 		
 		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
 		loadIFrom(fragment, ARRAY_INDEXING_ARRAY);
-		readIOffset(fragment, ARRAY_LENGTH_OFFSET);
+		readIOffset(fragment, STRING_LENGTH_OFFSET);
 		
 		fragment.add(Subtract);
 		
@@ -44,13 +44,11 @@ public class StringIndexingCodeGenerator implements SimpleCodeGenerator {
 		
 		// last box
 		loadIFrom(fragment, ARRAY_INDEXING_ARRAY);
-		fragment.add(PushI, ARRAY_HEADER_SIZE);
+		fragment.add(PushI, STRING_HEADER_SIZE);
 		fragment.add(Add);
 		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
-		
-		ArrayType arrayType = (ArrayType) (node.child(0).getType());
-		Type subtype = arrayType.getSubtype();
-		fragment.add(PushI, subtype.getSize());
+
+		fragment.add(PushI, 1);
 		fragment.add(Multiply);
 		fragment.add(Add);
 		

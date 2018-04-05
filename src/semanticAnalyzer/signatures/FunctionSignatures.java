@@ -235,6 +235,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			)
 		);
 		
+		
 		// Substring
 		new FunctionSignatures(Punctuator.SUBSTRING,
 			new FunctionSignature(

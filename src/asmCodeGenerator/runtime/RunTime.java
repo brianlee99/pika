@@ -74,6 +74,15 @@ public class RunTime {
 	public static final String CLEAR_N_BYTES_OFFSET_TEMP 	= "$clear-n-bytes-offset-temp";
 	public static final String POPULATE_ARRAY_ADDRESS_TEMP 	= "$pop-arr-addr-temp";
 	
+	// String manipulation variables (milestone 4)
+	public static final String STRING_TEMP_1     	= "$string-temp-1";
+	public static final String STRING_TEMP_2		= "$string-temp-2";
+	public static final String STRING_TEMP_1_LENGTH = "$string-temp-1-len";
+	public static final String STRING_TEMP_2_LENGTH	= "$string-temp-2-len";
+	public static final String STRING_RESULT		= "$string-result";
+	public static final String STRING_TEMP_I		= "$string-temp-i";
+	
+	
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -127,6 +136,13 @@ public class RunTime {
 
 		declareI(frag, FRAME_POINTER);
 		declareI(frag, STACK_POINTER);
+		
+		declareI(frag, STRING_TEMP_1);
+		declareI(frag, STRING_TEMP_2);
+		declareI(frag, STRING_TEMP_1_LENGTH);
+		declareI(frag, STRING_TEMP_2_LENGTH);
+		declareI(frag, STRING_RESULT);
+		declareI(frag, STRING_TEMP_I);
 		
 		return frag;
 	}

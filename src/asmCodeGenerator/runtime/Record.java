@@ -286,7 +286,7 @@ public class Record {
 		code.add(Duplicate);									// [ ... length length]
 		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
 		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
-		code.add(PushI, ARRAY_HEADER_SIZE + 1);					// [ ... length length 16+1]
+		code.add(PushI, STRING_HEADER_SIZE + 1);				// [ ... length length 12+1]
 		code.add(Add);											// [ ... length totalStringSize]
 		
 		createRecord(code, typecode, statusFlags);				// [ ... length]
@@ -322,6 +322,33 @@ public class Record {
 		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
 	}
 	
+	// Used for string concatenation and such
+	public static void createEmptyStringRecord(ASMCodeFragment code, int statusFlags)  {
+		final int typecode = Record.STRING_TYPE_ID;
+
+		code.add(Duplicate);									// [ ... length length]
+		storeITo(code, STRING_LENGTH_TEMPORARY);				// [ ... length]
+		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length length]
+		code.add(PushI, STRING_HEADER_SIZE + 1);				// [ ... length length 12+1]
+		code.add(Add);											// [ ... length totalStringSize]
+		
+		createRecord(code, typecode, statusFlags);				// [ ... length]
+		
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... length ptr]
+		code.add(PushI, STRING_HEADER_SIZE);					// [ ... length ptr 12]
+		code.add(Add);											// [ ... length firstCharPtr]
+		loadIFrom(code, STRING_LENGTH_TEMPORARY);				// [ ... length firstCharPtr length]
+		code.add(PushI, 1);										
+		code.add(Add);											// [ ... length firstCharPtr length+1]
+		code.add(Call, CLEAR_N_BYTES);							// [ ... length ]
+		
+		// Write subtype size + array length
+		writeIPtrOffset(code, RECORD_CREATION_TEMP, Record.STRING_LENGTH_OFFSET);
+
+		// The array resides in record_creation_temp 
+		loadIFrom(code, RECORD_CREATION_TEMP);					// [ ... ptr]
+	}
+	
 	public static ASMCodeFragment releaseRecord(Type type) {
 		ASMCodeFragment code = new ASMCodeFragment(CodeType.GENERATES_VOID);
 		final int subtypeSize = 4;
@@ -329,7 +356,6 @@ public class Record {
 		String endLabel = labeller.newLabel("end");
 		String loop = labeller.newLabel("loop");
 		String iLabel = labeller.newLabel("i");
-
 		
 		code.add(Duplicate); 									// [ ptr ptr ]
 		code.add(PushI, RECORD_STATUS_OFFSET);					// [ ptr ptr 4 ]

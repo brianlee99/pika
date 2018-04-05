@@ -69,10 +69,31 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 	public void visitEnter(BlockNode node) {
 		ParseNode parent = node.getParent();
+			
 		if (parent instanceof LambdaNode) {
 			enterScope(node);
 		} else {
 			enterSubscope(node);
+		}
+		
+		if (parent instanceof ForStatementNode) {		
+			IdentifierNode identifier = (IdentifierNode) parent.child(0);
+		
+			//ParseNode initializer = node.child(1);
+			//node.setType(declarationType);
+			//identifier.setType(declarationType);
+			
+			if (parent.getToken().isLextant(Keyword.INDEX)) {
+				addBinding(identifier, PrimitiveType.INTEGER, false);
+			} else {			
+				Type type = parent.child(1).getType();
+				if (type == PrimitiveType.STRING) {
+					addBinding(identifier, PrimitiveType.CHARACTER, false);
+				}
+				else if (type instanceof ArrayType) {
+					addBinding(identifier, ((ArrayType) type).getSubtype(), false);
+				}
+			}
 		}
 	}
 	public void visitLeave(BlockNode node) {
@@ -1232,8 +1253,9 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	}
 	private boolean isBeingDeclared(IdentifierNode node) {
 		ParseNode parent = node.getParent();
-		return  ((parent instanceof DeclarationNode) && (node == parent.child(0))) ||
-				((parent instanceof ParameterSpecificationNode) && (node == parent.child(1)));
+		return  ((parent instanceof DeclarationNode) && (node == parent.child(0))) 				||
+				((parent instanceof ParameterSpecificationNode) && (node == parent.child(1)))	||
+				((parent instanceof ForStatementNode) && (node == parent.child(0)));
 	}
 	private void addBinding(IdentifierNode identifierNode, Type type, boolean isMutable) {
 		Scope scope = identifierNode.getLocalScope();

@@ -15,7 +15,6 @@ public class ArrayIndexingCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
-		// TODO Auto-generated method stub
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_ADDRESS);
 		
 		storeITo(fragment, ARRAY_INDEXING_INDEX);
