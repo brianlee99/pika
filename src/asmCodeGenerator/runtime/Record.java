@@ -9,6 +9,7 @@ import asmCodeGenerator.Macros;
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
 import asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType;
 import semanticAnalyzer.types.ArrayType;
+import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 
@@ -44,7 +45,7 @@ public class Record {
 		writeIPBaseOffset(code, RECORD_CREATION_TEMP, Record.RECORD_STATUS_OFFSET, statusFlags);	
 	}
 	
-	// Subroutine (NOT at the ASM level) that creates an empty array record.
+	// Subroutine that creates an empty array record.
 	public static void createEmptyArrayRecord(ASMCodeFragment code, int statusFlags, int subtypeSize) {
 		final int typecode = Record.ARRAY_TYPE_ID;
 		
@@ -207,22 +208,25 @@ public class Record {
 			code.add(LoadI); 									// [ &oldArr num ]
 			storeITo(code, NUMERATOR_1); 						// [ &oldArr ]
 		}
-		if(subtype == PrimitiveType.INTEGER) {
+		if (subtype == PrimitiveType.INTEGER) {
 			code.add(LoadI);
 		}
-		if(subtype == PrimitiveType.FLOATING) {
+		if (subtype == PrimitiveType.FLOATING) {
 			code.add(LoadF);
 		}
-		if(subtype == PrimitiveType.BOOLEAN) {
+		if (subtype == PrimitiveType.BOOLEAN) {
 			code.add(LoadC);
 		}
-		if(subtype == PrimitiveType.CHARACTER) {
+		if (subtype == PrimitiveType.CHARACTER) {
 			code.add(LoadC);
 		}
 		if (subtype == PrimitiveType.STRING) {
 			code.add(LoadI);
 		}
 		if (subtype instanceof ArrayType) {
+			code.add(LoadI);
+		}
+		if (subtype instanceof LambdaType) {
 			code.add(LoadI);
 		}
 																// [ &oldArr ithElem ]
@@ -268,6 +272,11 @@ public class Record {
 			code.add(Exchange);
 			code.add(StoreI);
 		}
+		if (subtype instanceof LambdaType) {
+			code.add(Exchange);
+			code.add(StoreI);
+		}
+		
 																// [ &oldArr ]
 		loadIFrom(code, iLabel);								// [ &oldArr i ]
 		code.add(PushI, 1);										// [ &oldArr i 1 ]
@@ -419,7 +428,6 @@ public class Record {
 		} else {
 			code.add(Pop);
 		}
-		
 
 		loadIFrom(code, iLabel); 								// [ ptr i ]
 		code.add(PushI, 1); 									// [ ptr i 1 ]

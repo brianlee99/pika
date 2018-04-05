@@ -13,6 +13,7 @@ import static semanticAnalyzer.types.PrimitiveType.*;
 import asmCodeGenerator.ArrayCloningCodeGenerator;
 import asmCodeGenerator.ArrayIndexingCodeGenerator;
 import asmCodeGenerator.ArrayLengthCodeGenerator;
+import asmCodeGenerator.ArrayReverseCodeGenerator;
 import asmCodeGenerator.CharStringConcatCodeGenerator;
 import asmCodeGenerator.CharacterToBooleanCodeGenerator;
 import asmCodeGenerator.FloatingDivideCodeGenerator;
@@ -32,12 +33,12 @@ import asmCodeGenerator.RationalMultiplicationCodeGenerator;
 import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
-import asmCodeGenerator.ReverseStringCodeGenerator;
 import asmCodeGenerator.ShortCircuitAndCodeGenerator;
 import asmCodeGenerator.ShortCircuitOrCodeGenerator;
 import asmCodeGenerator.StringCharConcatCodeGenerator;
 import asmCodeGenerator.StringIndexingCodeGenerator;
 import asmCodeGenerator.StringLengthCodeGenerator;
+import asmCodeGenerator.StringReverseCodeGenerator;
 import asmCodeGenerator.StringStringConcatCodeGenerator;
 import asmCodeGenerator.SubstringCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
@@ -282,7 +283,11 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		// Reverse
 		new FunctionSignatures(Keyword.REVERSE,
 			new FunctionSignature(
-				new ReverseStringCodeGenerator(), STRING, STRING
+				new StringReverseCodeGenerator(), STRING, STRING
+			),
+			new FunctionSignature(
+				new ArrayReverseCodeGenerator(), setS,
+				new ArrayType(S), new ArrayType(S)
 			)
 		);
 		

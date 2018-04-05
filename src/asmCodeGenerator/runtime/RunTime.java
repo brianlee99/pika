@@ -82,6 +82,10 @@ public class RunTime {
 	public static final String STRING_RESULT		= "$string-result";
 	public static final String STRING_TEMP_I		= "$string-temp-i";
 	
+	public static final String ARRAY_TEMP_1     	= "$arr-temp-1";
+	public static final String ARRAY_TEMP_1_LENGTH 	= "$arr-temp-1-len";
+	public static final String ARRAY_RESULT			= "$arr-result";
+	public static final String ARRAY_TEMP_I			= "$arr-temp-i";
 	
 	
 	private ASMCodeFragment environmentASM() {
@@ -143,6 +147,11 @@ public class RunTime {
 		declareI(frag, STRING_TEMP_2_LENGTH);
 		declareI(frag, STRING_RESULT);
 		declareI(frag, STRING_TEMP_I);
+		
+		declareI(frag, ARRAY_TEMP_1);
+		declareI(frag, ARRAY_TEMP_1_LENGTH);
+		declareI(frag, ARRAY_RESULT);
+		declareI(frag, ARRAY_TEMP_I);
 		
 		return frag;
 	}

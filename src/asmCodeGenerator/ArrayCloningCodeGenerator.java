@@ -13,7 +13,6 @@ public class ArrayCloningCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
-		// TODO Auto-generated method stub
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
 		int statusFlags = (node.child(0).getType() instanceof ArrayType || node.getType() == PrimitiveType.STRING) 
 				? ARRAY_SUBTYPE_REF_STATUS 

@@ -12,7 +12,7 @@ public class StringLengthCodeGenerator implements SimpleCodeGenerator {
 	public ASMCodeFragment generate(ParseNode node) {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);		// [ ... base]
 		
-		fragment.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+		fragment.add(PushI, Record.STRING_LENGTH_OFFSET);
 		fragment.add(Add);
 		fragment.add(LoadI);
 		

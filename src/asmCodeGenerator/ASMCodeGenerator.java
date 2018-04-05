@@ -738,7 +738,9 @@ public class ASMCodeGenerator {
 			else if (operator == Punctuator.NOT) {
 				visitNotOperatorNode(node);
 			}
-			else if (operator == Keyword.LENGTH || operator == Keyword.CLONE) {
+			else if (operator == Keyword.LENGTH 			|| 
+						operator == Keyword.CLONE			||
+						operator == Keyword.REVERSE) {
 				visitUnaryOperatorNode(node, operator);
 			}
 			else if (operator == Punctuator.CASTING) {
