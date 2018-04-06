@@ -115,7 +115,6 @@ public class StringStringConcatCodeGenerator implements SimpleCodeGenerator {
 		fragment.add(Label, endLabel2);
 		
 		loadIFrom(fragment, STRING_RESULT);
-		
 		return fragment;
 	}
 

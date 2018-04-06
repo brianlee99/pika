@@ -681,12 +681,22 @@ public class Parser {
 		while(nowReading.isLextant(Punctuator.OPEN_BRACKET, Punctuator.OPEN_PARENTHESES)) {
 			Token realToken = nowReading;
 
-			if (nowReading.isLextant(Punctuator.OPEN_BRACKET)) {
-				Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
+			if (nowReading.isLextant(Punctuator.OPEN_BRACKET)) {;
 				expect(Punctuator.OPEN_BRACKET);
 				ParseNode index = parseExpression();
-				expect(Punctuator.CLOSE_BRACKET);
-				base = OperatorNode.withChildren(indexToken, base, index);
+				
+				if (nowReading.isLextant(Punctuator.SEPARATOR)) {
+					expect(Punctuator.SEPARATOR);
+					ParseNode index2 = parseExpression();
+					expect(Punctuator.CLOSE_BRACKET);
+					Token indexToken = LextantToken.artificial(realToken, Punctuator.SUBSTRING);
+					base = OperatorNode.withChildren(indexToken, base, index, index2);
+					
+				} else {
+					expect(Punctuator.CLOSE_BRACKET);
+					Token indexToken = LextantToken.artificial(realToken, Punctuator.ARRAY_INDEXING);
+					base = OperatorNode.withChildren(indexToken, base, index);
+				}
 			}
 			else {
 				Token funcToken = LextantToken.artificial(realToken, Punctuator.FUNC_INVOCATION);

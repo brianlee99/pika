@@ -87,6 +87,10 @@ public class RunTime {
 	public static final String ARRAY_RESULT			= "$arr-result";
 	public static final String ARRAY_TEMP_I			= "$arr-temp-i";
 	
+	// String indexing and substring
+	public static final String SUBSTRING_INDEX_1	= "$substr-index-1";
+	public static final String SUBSTRING_INDEX_2	= "$substr-index-2";
+	
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -152,6 +156,9 @@ public class RunTime {
 		declareI(frag, ARRAY_TEMP_1_LENGTH);
 		declareI(frag, ARRAY_RESULT);
 		declareI(frag, ARRAY_TEMP_I);
+		
+		declareI(frag, SUBSTRING_INDEX_1);
+		declareI(frag, SUBSTRING_INDEX_2);
 		
 		return frag;
 	}

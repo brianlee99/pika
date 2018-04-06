@@ -749,8 +749,36 @@ public class ASMCodeGenerator {
 			else if (operator == Keyword.NEW) {
 				visitNewArrayNode(node);
 			}
+			else if (operator == Punctuator.SUBSTRING) {
+				visitSubstringNode(node);
+			}
 			else {
 				visitNormalBinaryOperatorNode(node);
+			}
+		}
+		
+		private void visitSubstringNode(OperatorNode node) {
+			newValueCode(node);
+			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+			ASMCodeFragment arg2 = removeValueCode(node.child(1));
+			ASMCodeFragment arg3 = removeValueCode(node.child(2));
+			
+			Object variant = node.getSignature().getVariant();
+			if (variant instanceof SimpleCodeGenerator) {
+				code.append(arg1);
+				code.append(arg2);
+				code.append(arg3);
+				
+				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
+				ASMCodeFragment fragment = generator.generate(node);
+				code.append(fragment);
+				
+				if (fragment.isAddress()) {
+					code.markAsAddress();
+				}
+			}
+			else {
+				assert false : "unknown variant in OperatorNode";
 			}
 		}
 		

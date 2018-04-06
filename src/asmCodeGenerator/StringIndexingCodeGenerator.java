@@ -15,42 +15,39 @@ public class StringIndexingCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
-		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_ADDRESS);
-
+		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
+		Labeller labeller = new Labeller("str-index");
+		String label = labeller.newLabel("in-bounds");
 		
-		storeITo(fragment, ARRAY_INDEXING_INDEX);
-		storeITo(fragment, ARRAY_INDEXING_ARRAY);
+		storeITo(fragment, SUBSTRING_INDEX_1);
+		storeITo(fragment, STRING_TEMP_1);
 		
 		// Check for a legal array
-		loadIFrom(fragment, ARRAY_INDEXING_ARRAY);
+		loadIFrom(fragment, STRING_TEMP_1);
 		fragment.add(JumpFalse, NULL_ARRAY_RUNTIME_ERROR);
-		
-		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
+
+		// check that i >= 0
+		loadIFrom(fragment, SUBSTRING_INDEX_1);
 		fragment.add(JumpNeg, INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR);
 		
-		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
-		loadIFrom(fragment, ARRAY_INDEXING_ARRAY);
-		readIOffset(fragment, STRING_LENGTH_OFFSET);
-		
+		// check that i < length
+		loadIFrom(fragment, SUBSTRING_INDEX_1);
+		loadIFrom(fragment, STRING_TEMP_1);
+		fragment.add(PushI, STRING_LENGTH_OFFSET);
+		fragment.add(Add);
+		fragment.add(LoadI);
 		fragment.add(Subtract);
-		
-		// Jump on non-negative values
-		Labeller labeller = new Labeller("array-indexing");
-		String label = labeller.newLabel("in-bounds");
 		fragment.add(JumpNeg, label);
 		fragment.add(Jump, INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR);
-		fragment.add(Label, label);
-		fragment.add(Nop);
 		
-		// last box
-		loadIFrom(fragment, ARRAY_INDEXING_ARRAY);
+		fragment.add(Label, label);
+		
+		loadIFrom(fragment, STRING_TEMP_1);			// [ str1 ]
 		fragment.add(PushI, STRING_HEADER_SIZE);
-		fragment.add(Add);
-		loadIFrom(fragment, ARRAY_INDEXING_INDEX);
-
-		fragment.add(PushI, 1);
-		fragment.add(Multiply);
-		fragment.add(Add);
+		fragment.add(Add); 							// [ strPtr ]
+		loadIFrom(fragment, SUBSTRING_INDEX_1);			// [ strPtr i ]
+		fragment.add(Add); 							// [ &ithLetter ]
+		fragment.add(LoadC); 						// [ ithLetter ]
 		
 		return fragment;
 	}
