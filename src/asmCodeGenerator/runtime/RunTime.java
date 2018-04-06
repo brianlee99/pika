@@ -98,6 +98,16 @@ public class RunTime {
 	public static final String MAP_I				= "$map-i";
 	public static final String MAP_ARRAY_RESULT		= "$map-arr-result";
 	
+	// Reduce
+
+	public static final String REDUCE_ARRAY 				= "$reduce-arr";
+	public static final String REDUCE_ARRAY_LENGTH 			= "$reduce-arr-len";
+	public static final String REDUCE_LAMBDA				= "$reduce-lambda";
+	public static final String REDUCE_I						= "$reduce-i";
+	public static final String REDUCE_J						= "$reduce-j";
+	public static final String REDUCE_ARRAY_RESULT_LENGTH 	= "$reduce-arr-result-len";
+	public static final String REDUCE_ARRAY_RESULT			= "$reduce-arr-result";
+	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
 		result.append(jumpToMain());

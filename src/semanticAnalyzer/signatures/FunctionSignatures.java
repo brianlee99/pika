@@ -35,6 +35,7 @@ import asmCodeGenerator.RationalMultiplicationCodeGenerator;
 import asmCodeGenerator.RationalRationalizeCodeGenerator;
 import asmCodeGenerator.RationalSubtractionCodeGenerator;
 import asmCodeGenerator.RationalToFloatingCodeGenerator;
+import asmCodeGenerator.ReduceCodeGenerator;
 import asmCodeGenerator.ShortCircuitAndCodeGenerator;
 import asmCodeGenerator.ShortCircuitOrCodeGenerator;
 import asmCodeGenerator.StringCharConcatCodeGenerator;
@@ -111,9 +112,14 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		TypeVariable T = new TypeVariable("T");
 		List<TypeVariable> setS = Arrays.asList(S);
 		
+		
+		// todo : change this part
 	    List<Type> parameter = new ArrayList<Type>();
 	    parameter.add(S);
-	    LambdaType lambdaTypeForMap = new LambdaType(parameter, T);
+	    LambdaType mapLambdaType = new LambdaType(parameter, T);
+	    LambdaType reduceLambdaType = new LambdaType(parameter, BOOLEAN);
+	    
+	    
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
 		// for this to work, you should statically import *
 
@@ -299,10 +305,16 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		
 		// Milestone 4 new operators
 		new FunctionSignatures(Keyword.MAP,
-				new FunctionSignature(
-					new MapCodeGenerator(), setS, new ArrayType(S), lambdaTypeForMap, new ArrayType(T)
-				)
-			);
+			new FunctionSignature(
+				new MapCodeGenerator(), setS, new ArrayType(S), mapLambdaType, new ArrayType(T)
+			)
+		);
+		new FunctionSignatures(Keyword.REDUCE,
+			new FunctionSignature(
+				new ReduceCodeGenerator(), setS, new ArrayType(S), reduceLambdaType, new ArrayType(S)
+			)
+		);
+		
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other
