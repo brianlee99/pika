@@ -283,7 +283,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		return findWhileStatement(node.getParent());
 	}
 	private boolean findForStatement(ParseNode node) {
-		if (node.getToken().isLextant(Keyword.FOR)) {
+		if (node instanceof ForStatementNode) {
 			return true;
 		}
 		else if (node instanceof ProgramNode) {

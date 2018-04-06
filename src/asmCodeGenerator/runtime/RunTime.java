@@ -91,6 +91,12 @@ public class RunTime {
 	public static final String SUBSTRING_INDEX_1	= "$substr-index-1";
 	public static final String SUBSTRING_INDEX_2	= "$substr-index-2";
 	
+	// Map
+	public static final String MAP_ARRAY 			= "$map-arr";
+	public static final String MAP_ARRAY_LENGTH 	= "$map-arr-len";
+	public static final String MAP_LAMBDA			= "$map-lambda";
+	public static final String MAP_I				= "$map-i";
+	public static final String MAP_ARRAY_RESULT		= "$map-arr-result";
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -159,6 +165,11 @@ public class RunTime {
 		
 		declareI(frag, SUBSTRING_INDEX_1);
 		declareI(frag, SUBSTRING_INDEX_2);
+		
+		declareI(frag, MAP_ARRAY);
+		declareI(frag, MAP_LAMBDA);
+		declareI(frag, MAP_I);
+		declareI(frag, MAP_ARRAY_LENGTH);
 		
 		return frag;
 	}

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import semanticAnalyzer.types.ArrayType;
+import semanticAnalyzer.types.LambdaType;
 
 import static semanticAnalyzer.types.PrimitiveType.*;
 
@@ -24,6 +25,7 @@ import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToBooleanCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
 import asmCodeGenerator.IntegerToRationalCodeGenerator;
+import asmCodeGenerator.MapCodeGenerator;
 import asmCodeGenerator.NewArrayCodeGenerator;
 import asmCodeGenerator.RationalAdditionCodeGenerator;
 import asmCodeGenerator.RationalDivisionCodeGenerator;
@@ -106,8 +108,12 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	
 	static {
 		TypeVariable S = new TypeVariable("S");
+		TypeVariable T = new TypeVariable("T");
 		List<TypeVariable> setS = Arrays.asList(S);
 		
+	    List<Type> parameter = new ArrayList<Type>();
+	    parameter.add(S);
+	    LambdaType lambdaTypeForMap = new LambdaType(parameter, T);
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
 		// for this to work, you should statically import *
 
@@ -290,6 +296,13 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 				new ArrayType(S), new ArrayType(S)
 			)
 		);
+		
+		// Milestone 4 new operators
+		new FunctionSignatures(Keyword.MAP,
+				new FunctionSignature(
+					new MapCodeGenerator(), setS, new ArrayType(S), lambdaTypeForMap, new ArrayType(T)
+				)
+			);
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other

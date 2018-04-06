@@ -16,8 +16,6 @@ public class StringReverseCodeGenerator implements SimpleCodeGenerator {
 	public ASMCodeFragment generate(ParseNode node) {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);			// [ str ]
 		
-
-
 		Labeller labeller = new Labeller("string-reverse");
 		String endLabel = labeller.newLabel("end");
 		String loopLabel = labeller.newLabel("loop");
@@ -43,7 +41,6 @@ public class StringReverseCodeGenerator implements SimpleCodeGenerator {
 		loadIFrom(fragment, STRING_TEMP_1_LENGTH);
 		fragment.add(Subtract);
 		fragment.add(JumpFalse, endLabel);
-		
 
 		// access str1[i]
 		loadIFrom(fragment, STRING_TEMP_1);			// [ str1 ]
@@ -64,21 +61,17 @@ public class StringReverseCodeGenerator implements SimpleCodeGenerator {
 		fragment.add(Subtract);
 		loadIFrom(fragment, STRING_TEMP_I);
 		fragment.add(Subtract);
-		
 		fragment.add(Add);
-		
-		
-
 		fragment.add(Exchange);						// [ &base+offset ithLetter ]
 		fragment.add(StoreC);
 		
 		incrementInteger(fragment, STRING_TEMP_I);
 		fragment.add(Jump, loopLabel);
 		
+		// end loop
 		fragment.add(Label, endLabel);
 
 		loadIFrom(fragment, STRING_RESULT);
-		
 		return fragment;
 	}
 

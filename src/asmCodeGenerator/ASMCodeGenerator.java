@@ -46,6 +46,7 @@ import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
 import symbolTable.Scope;
+import tokens.Token;
 
 import static asmCodeGenerator.codeStorage.ASMCodeFragment.CodeType.*;
 import static asmCodeGenerator.codeStorage.ASMOpcode.*;
@@ -369,7 +370,6 @@ public class ASMCodeGenerator {
 			int nChildren = node.nChildren();
 			for (int i = 1; i < nChildren; i++) {
 				loadIFrom(code, STACK_POINTER);	
-				
 				Type type = node.child(i).getType();
 				code.add(PushI, type.getSize());
 				code.add(Subtract);
@@ -547,16 +547,16 @@ public class ASMCodeGenerator {
 			return null;
 		}
 		private ASMOpcode opcodeForLoad(Type type) {
-			if(type == PrimitiveType.INTEGER) {
+			if (type == PrimitiveType.INTEGER) {
 				return LoadI;
 			}
-			if(type == PrimitiveType.FLOATING) {
+			if (type == PrimitiveType.FLOATING) {
 				return LoadF;
 			}
-			if(type == PrimitiveType.BOOLEAN) {
+			if (type == PrimitiveType.BOOLEAN) {
 				return LoadC;
 			}
-			if(type == PrimitiveType.CHARACTER) {
+			if (type == PrimitiveType.CHARACTER) {
 				return LoadC;
 			}
 			if (type == PrimitiveType.STRING) {
@@ -629,46 +629,154 @@ public class ASMCodeGenerator {
 			Labeller labeller 	= new Labeller("for");
 			String loopLabel 	= labeller.newLabel("loop");
 			String endLabel   	= labeller.newLabel("end");
+			String counter 		= labeller.newLabel("i");
+			String arrayDLabel	= labeller.newLabel("arr");
+			
 			node.setLoopLabel(loopLabel);
 			node.setEndLabel(endLabel);
+			node.setCounter(counter);
+			node.setArray(arrayDLabel);
 		}
+		
 		public void visitLeave(ForStatementNode node) {
-			if (!node.getToken().isLextant(Keyword.INDEX, Keyword.ELEM)) {
+			Token token = node.getToken();
+			if (!token.isLextant(Keyword.INDEX, Keyword.ELEM)) {
 				assert false;
 			}
 			
 			ASMCodeFragment identifier = removeAddressCode(node.child(0));
 			ASMCodeFragment array = removeValueCode(node.child(1));
 			ASMCodeFragment blockCode = removeVoidCode(node.child(2));
-//			
-			// here is the length
-			code.append(array);
-			
-			code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
-			code.add(Add);
-			code.add(LoadI);
-			
-			
 			String loopLabel = node.getLoopLabel();
 			String endLabel  = node.getEndLabel();
-//			
+			String counter = node.getCounter();
+			String arrayDLabel = node.getArray();
+			
+			Type type = node.child(1).getType();
+			
 			newVoidCode(node);
+			
+			// set i to 0
+			code.add(DLabel, counter);
+			code.add(DataZ, 4);
+			code.add(PushI, -1);
+			storeITo(code, counter);
+			
+			code.add(DLabel, arrayDLabel);
+			code.add(DataZ, 4);
+			
+			code.append(array);
+			storeITo(code, arrayDLabel);
+			
 			code.add(Label, loopLabel);
+			incrementInteger(code, counter);
 			
-			// increment i by 1
-			
-			// if i >= length then jump to end
-			code.add(JumpFalse, endLabel);
-			
-			code.append(blockCode);
-			
-			
-			// compare i to length
-			
-//			code.append(conditionCode);
-//			code.add(JumpFalse, endLabel);
-//			code.append(loopCode);
-			code.add(Jump, loopLabel);
+			if (token.isLextant(Keyword.INDEX)) {
+				loadIFrom(code, counter);	
+				loadIFrom(code, arrayDLabel);
+				if (type == PrimitiveType.STRING) {
+					code.add(PushI, Record.STRING_LENGTH_OFFSET);
+				}
+				else if (type instanceof ArrayType) {
+					code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+				}
+				code.add(Add);
+				code.add(LoadI);
+				code.add(Subtract);
+				code.add(JumpFalse, endLabel);
+				
+			    code.append(identifier);
+			    loadIFrom(code, counter);
+			    code.add(StoreI);
+			    
+				code.append(blockCode);
+				code.add(Jump, loopLabel);
+			}
+			else if (token.isLextant(Keyword.ELEM)) {
+				// bounds checking
+				loadIFrom(code, counter);
+				loadIFrom(code, arrayDLabel);	
+				if (type == PrimitiveType.STRING) {
+					code.add(PushI, Record.STRING_LENGTH_OFFSET);
+				}
+				else if (type instanceof ArrayType) {
+					code.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+				}
+				code.add(Add);
+				code.add(LoadI);
+				code.add(Subtract);
+				code.add(JumpFalse, endLabel);
+
+			    code.append(identifier);
+			    loadIFrom(code, arrayDLabel);
+			    
+				if (type == PrimitiveType.STRING) {
+					code.add(PushI, Record.STRING_HEADER_SIZE);
+				    code.add(Add);
+				    loadIFrom(code, counter);
+				    code.add(Add);
+				    code.add(LoadC);
+				    code.add(StoreC);
+				}
+				else if (type instanceof ArrayType) {
+					Type subtype = ((ArrayType) type).getSubtype();
+					code.add(PushI, Record.ARRAY_HEADER_SIZE);
+				    code.add(Add);
+				    loadIFrom(code, counter);
+				    code.add(PushI, subtype.getSize());
+				    code.add(Multiply);
+				    code.add(Add);
+				    if (subtype == PrimitiveType.INTEGER) {
+					    code.add(LoadI);
+					    code.add(StoreI);
+				    }
+				    if (subtype == PrimitiveType.FLOATING) {
+						code.add(LoadF);
+						code.add(StoreF);
+					}
+				    if (subtype == PrimitiveType.CHARACTER) {
+					    code.add(LoadC);
+					    code.add(StoreC);
+				    }
+				    if (subtype == PrimitiveType.STRING) {
+					    code.add(LoadI);
+					    code.add(StoreI);
+				    }
+				    if (subtype instanceof ArrayType) {
+					    code.add(LoadI);
+					    code.add(StoreI);
+				    }
+				    if (subtype instanceof LambdaType) {
+					    code.add(LoadI);
+					    code.add(StoreI);
+				    }
+					if (subtype == PrimitiveType.RATIONAL) {
+						code.add(Duplicate); 								// [ &oldArr &ithElem &ithElem ]
+						code.add(PushI, 4); 								// [ &oldArr &ithElem &ithElem 4 ]
+						code.add(Add);										// [ &oldArr &num &den ]
+						code.add(LoadI); 									// [ &oldArr &num den ]
+						storeITo(code, DENOMINATOR_1);						// [ &oldArr &num ]
+						code.add(LoadI); 									// [ &oldArr num ]
+						storeITo(code, NUMERATOR_1); 						// [ &oldArr ]
+
+						code.add(Duplicate);								// [ &oldArr &num &num ]
+						code.add(PushI, 4);									// [ &oldArr &num &num 4 ]
+						code.add(Add);										// [ &oldArr &num &den ]
+						loadIFrom(code, DENOMINATOR_1); 					// [ &oldArr &num &den den ] 
+						code.add(StoreI);									// [ &oldArr &num ] 
+						loadIFrom(code, NUMERATOR_1);						// [ &oldArr &num num ] 
+						code.add(StoreI); 									// [ &oldArr ] 
+					}
+					if (subtype == PrimitiveType.BOOLEAN) {
+						code.add(LoadC);
+						code.add(StoreC);
+					}
+
+				}
+			    
+				code.append(blockCode);
+				code.add(Jump, loopLabel);
+			}
 			code.add(Label, endLabel);
 		}
 		
