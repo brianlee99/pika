@@ -181,6 +181,14 @@ public class RunTime {
 		declareI(frag, MAP_I);
 		declareI(frag, MAP_ARRAY_LENGTH);
 		
+		declareI(frag, REDUCE_ARRAY);
+		declareI(frag, REDUCE_ARRAY_LENGTH);
+		declareI(frag, REDUCE_LAMBDA);
+		declareI(frag, REDUCE_I);
+		declareI(frag, REDUCE_J);
+		declareI(frag, REDUCE_ARRAY_RESULT);
+		declareI(frag, REDUCE_ARRAY_RESULT_LENGTH);
+		
 		return frag;
 	}
 	

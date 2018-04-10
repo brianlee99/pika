@@ -112,12 +112,18 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 		TypeVariable T = new TypeVariable("T");
 		List<TypeVariable> setS = Arrays.asList(S);
 		
-		
-		// todo : change this part
-	    List<Type> parameter = new ArrayList<Type>();
+	    List<Type> parameter = new ArrayList<>();
 	    parameter.add(S);
 	    LambdaType mapLambdaType = new LambdaType(parameter, T);
 	    LambdaType reduceLambdaType = new LambdaType(parameter, BOOLEAN);
+	    List<Type> parameter2 = new ArrayList<>();
+	    parameter2.add(S);
+	    parameter2.add(S);
+	    List<Type> parameter3 = new ArrayList<>();
+	    parameter2.add(T);
+	    parameter2.add(S);
+	    LambdaType foldLambdaType = new LambdaType(parameter2, S);
+	    LambdaType foldWithDefaultLambdaType = new LambdaType(parameter3, T);
 	    
 	    
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
@@ -314,7 +320,14 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 				new ReduceCodeGenerator(), setS, new ArrayType(S), reduceLambdaType, new ArrayType(S)
 			)
 		);
-		
+		new FunctionSignatures(Keyword.FOLD,
+			new FunctionSignature(
+				new FoldCodeGenerator(), setS, new ArrayType(S), foldLambdaType, S
+			),
+			new FunctionSignature(
+				new FoldCodeWithDefaultGenerator(), setS, new ArrayType(S), T, foldWithDefaultLambdaType, T
+			)
+		);
 		
 		// First, we use the operator itself (in this case the Punctuator ADD) as the key.
 		// Then, we give that key two signatures: one an (INT x INT -> INT) and the other
