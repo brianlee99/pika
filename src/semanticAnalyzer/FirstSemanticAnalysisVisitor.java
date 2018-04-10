@@ -1,14 +1,22 @@
 package semanticAnalyzer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import asmCodeGenerator.Labeller;
+import lexicalAnalyzer.Keyword;
+import logging.PikaLogger;
 import parseTree.ParseNode;
 import parseTree.ParseNodeVisitor;
 import parseTree.nodeTypes.BlockNode;
 import parseTree.nodeTypes.DeclarationNode;
+import parseTree.nodeTypes.ForStatementNode;
 import parseTree.nodeTypes.FunctionDefinitionNode;
 import parseTree.nodeTypes.IdentifierNode;
 import parseTree.nodeTypes.LambdaNode;
+import parseTree.nodeTypes.ParameterSpecificationNode;
 import parseTree.nodeTypes.ProgramNode;
+import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 import symbolTable.Binding;
 import symbolTable.Scope;
@@ -17,7 +25,28 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visitEnter(ProgramNode node) {
 		createProgramScope(node);
+		
+		// sort the children nodes
+		List<ParseNode> children = node.getChildren();
+		for (int i = 0; i < node.nChildren() ; i++) {
+			if (node.child(i) instanceof FunctionDefinitionNode) {
+				ParseNode targetNode = node.child(i);
+				children.remove(i);
+				children.add(targetNode);
+
+			}
+		}
+		for (int i = 0; i < node.nChildren() ; i++) {
+			if (node.child(i) instanceof BlockNode) {
+				ParseNode targetNode = node.child(i);
+				children.remove(i);
+				children.add(targetNode);
+				break;
+			}
+		}
+		
 	}
+
 
 	private void createProgramScope(ParseNode node) {
 		Scope scope = Scope.createProgramScope();
@@ -55,5 +84,5 @@ public class FirstSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		Binding binding = scope.createBinding(identifierNode, type, isMutable);
 		identifierNode.setBinding(binding);
 	}
-	                                        
+	
 }

@@ -130,7 +130,6 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 	@Override
 	public void visitLeave(LambdaNode node) {
 		leaveScope(node);
-		
 	}
 
 	@Override
@@ -240,7 +239,7 @@ class SecondSemanticAnalysisVisitor extends ParseNodeVisitor.Default {
 		return true;
 	}
 	///////////////////////////////////////////////////////////////////////////
-	// TypeList and stuff.
+	// TypeList
 	@Override
 	public void visitLeave(TypeListNode node) {
 		List<Type> paramListTypes = new ArrayList<>();
