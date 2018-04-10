@@ -99,7 +99,6 @@ public class RunTime {
 	public static final String MAP_ARRAY_RESULT		= "$map-arr-result";
 	
 	// Reduce
-
 	public static final String REDUCE_ARRAY 				= "$reduce-arr";
 	public static final String REDUCE_ARRAY_LENGTH 			= "$reduce-arr-len";
 	public static final String REDUCE_LAMBDA				= "$reduce-lambda";
@@ -107,6 +106,14 @@ public class RunTime {
 	public static final String REDUCE_J						= "$reduce-j";
 	public static final String REDUCE_ARRAY_RESULT_LENGTH 	= "$reduce-arr-result-len";
 	public static final String REDUCE_ARRAY_RESULT			= "$reduce-arr-result";
+	
+	// Fold
+	public static final String FOLD_ARRAY 					= "$fold-arr";
+	public static final String FOLD_ARRAY_LENGTH 			= "$fold-arr-len";
+	public static final String FOLD_LAMBDA					= "$fold-lambda";
+	public static final String FOLD_I						= "$fold-i";
+	public static final String FOLD_TEMP					= "$fold-result";
+	
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -188,6 +195,12 @@ public class RunTime {
 		declareI(frag, REDUCE_J);
 		declareI(frag, REDUCE_ARRAY_RESULT);
 		declareI(frag, REDUCE_ARRAY_RESULT_LENGTH);
+		
+		declareI(frag, FOLD_ARRAY);
+		declareI(frag, FOLD_ARRAY_LENGTH);
+		declareI(frag, FOLD_LAMBDA);
+		declareI(frag, FOLD_I);
+		declareI(frag, FOLD_TEMP);
 		
 		return frag;
 	}

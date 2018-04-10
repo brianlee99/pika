@@ -21,6 +21,8 @@ import asmCodeGenerator.FloatingDivideCodeGenerator;
 import asmCodeGenerator.FloatingExpressOverCodeGenerator;
 import asmCodeGenerator.FloatingRationalizeCodeGenerator;
 import asmCodeGenerator.FloatingToRationalCodeGenerator;
+import asmCodeGenerator.FoldCodeGenerator;
+import asmCodeGenerator.FoldCodeWithDefaultCodeGenerator;
 import asmCodeGenerator.IntegerDivideCodeGenerator;
 import asmCodeGenerator.IntegerToBooleanCodeGenerator;
 import asmCodeGenerator.IntegerToCharacterCodeGenerator;
@@ -110,19 +112,22 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	static {
 		TypeVariable S = new TypeVariable("S");
 		TypeVariable T = new TypeVariable("T");
-		List<TypeVariable> setS = Arrays.asList(S);
+		List<TypeVariable> setS = Arrays.asList(S, T);
 		
 	    List<Type> parameter = new ArrayList<>();
 	    parameter.add(S);
 	    LambdaType mapLambdaType = new LambdaType(parameter, T);
+	    
 	    LambdaType reduceLambdaType = new LambdaType(parameter, BOOLEAN);
+	    
 	    List<Type> parameter2 = new ArrayList<>();
 	    parameter2.add(S);
 	    parameter2.add(S);
-	    List<Type> parameter3 = new ArrayList<>();
-	    parameter2.add(T);
-	    parameter2.add(S);
 	    LambdaType foldLambdaType = new LambdaType(parameter2, S);
+	    
+	    List<Type> parameter3 = new ArrayList<>();
+	    parameter3.add(T);
+	    parameter3.add(S);
 	    LambdaType foldWithDefaultLambdaType = new LambdaType(parameter3, T);
 	    
 	    
@@ -309,7 +314,6 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			)
 		);
 		
-		// Milestone 4 new operators
 		new FunctionSignatures(Keyword.MAP,
 			new FunctionSignature(
 				new MapCodeGenerator(), setS, new ArrayType(S), mapLambdaType, new ArrayType(T)
@@ -325,7 +329,7 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 				new FoldCodeGenerator(), setS, new ArrayType(S), foldLambdaType, S
 			),
 			new FunctionSignature(
-				new FoldCodeWithDefaultGenerator(), setS, new ArrayType(S), T, foldWithDefaultLambdaType, T
+				new FoldCodeWithDefaultCodeGenerator(), setS, new ArrayType(S), T, foldWithDefaultLambdaType, T
 			)
 		);
 		

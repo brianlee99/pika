@@ -34,6 +34,57 @@ public class Macros {
 		frag.add(DataZ, 4);
 	}
 	
+	public static void loadFFrom(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(LoadF);
+	}
+	public static void storeFTo(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(Exchange);
+		frag.add(StoreF);
+	}	
+	public static void declareF(ASMCodeFragment frag, String variableName) {
+		frag.add(DLabel, variableName);
+		frag.add(DataZ, 8);
+	}
+	public static void loadCFrom(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(LoadC);
+	}
+	public static void storeCTo(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(Exchange);
+		frag.add(StoreC);
+	}
+	public static void declareC(ASMCodeFragment frag, String variableName) {
+		frag.add(DLabel, variableName);
+		frag.add(DataZ, 1);
+	}
+	
+	public static void loadNumFrom(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(LoadI);
+	}
+	public static void loadDenFrom(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(PushI, 4);
+		frag.add(Add);
+		frag.add(LoadI);
+	}
+	public static void storeNumTo(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(Exchange);
+		frag.add(StoreI);
+	}
+	public static void storeDenTo(ASMCodeFragment frag, String location) {
+		frag.add(PushD, location);
+		frag.add(PushI, 4);
+		frag.add(Add);
+		frag.add(Exchange);
+		frag.add(StoreI);
+	}
+	
+	
 	/** [... baseLocation] -> [... intValue]
 	 * @param frag ASMCodeFragment to add code to
 	 * @param offset amount to add to the base location before reading

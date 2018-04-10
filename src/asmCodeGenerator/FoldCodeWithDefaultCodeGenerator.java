@@ -16,51 +16,78 @@ import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 
-public class FoldCodeGenerator implements SimpleCodeGenerator {
+public class FoldCodeWithDefaultCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
-		Labeller labeller = new Labeller("fold");
+		
+		Labeller labeller = new Labeller("fold-default");
 		String endLabel = labeller.newLabel("end");
 		String loopLabel = labeller.newLabel("loop");
 		String label = labeller.newLabel("label");
 		String temp1 = labeller.newLabel("temp");
 		
-		
 		Type subtype = ((ArrayType) node.child(0).getType()).getSubtype();
+		Type baseType = node.child(1).getType();
 		int subtypeSize = subtype.getSize();
+		int baseTypeSize = baseType.getSize();
 		
 		// declare temp variable types
-		if (subtype == PrimitiveType.RATIONAL) {
+		if (baseType == PrimitiveType.RATIONAL) {
 			declareF(fragment, temp1);	
 		}
-		if (subtype == PrimitiveType.INTEGER) {
+		if (baseType == PrimitiveType.INTEGER) {
 			declareI(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.FLOATING) {	
+		if (baseType == PrimitiveType.FLOATING) {	
 			declareF(fragment, temp1);	
 		}
-		if (subtype == PrimitiveType.BOOLEAN) {
+		if (baseType == PrimitiveType.BOOLEAN) {
 			declareC(fragment, temp1);	
 		}
-		if (subtype == PrimitiveType.CHARACTER) {
+		if (baseType == PrimitiveType.CHARACTER) {
 			declareC(fragment, temp1);	
 		}
-		if (subtype == PrimitiveType.STRING) {
+		if (baseType == PrimitiveType.STRING) {
 			declareI(fragment, temp1);
 		}
-		if (subtype instanceof ArrayType) {
+		if (baseType instanceof ArrayType) {
 			declareI(fragment, temp1);
 		}
-		if (subtype instanceof LambdaType) {
+		if (baseType instanceof LambdaType) {
 			declareI(fragment, temp1);
 		}
-				
-		storeITo(fragment, FOLD_LAMBDA);
-		storeITo(fragment, FOLD_ARRAY);
 		
-		// create new array
+		storeITo(fragment, FOLD_LAMBDA);
+		
+		if (baseType == PrimitiveType.RATIONAL) {
+			storeDenTo(fragment, temp1);	
+			storeNumTo(fragment, temp1);	
+		}
+		if (baseType == PrimitiveType.INTEGER) {
+			storeITo(fragment, temp1);
+		}
+		if (baseType == PrimitiveType.FLOATING) {	
+			storeFTo(fragment, temp1);	
+		}
+		if (baseType == PrimitiveType.BOOLEAN) {
+			storeCTo(fragment, temp1);
+		}
+		if (baseType == PrimitiveType.CHARACTER) {
+			storeCTo(fragment, temp1);
+		}
+		if (baseType == PrimitiveType.STRING) {
+			storeITo(fragment, temp1);
+		}
+		if (baseType instanceof ArrayType) {
+			storeITo(fragment, temp1);
+		}
+		if (baseType instanceof LambdaType) {
+			storeITo(fragment, temp1);
+		}
+		
+		storeITo(fragment, FOLD_ARRAY);
 		loadIFrom(fragment, FOLD_ARRAY);
 		fragment.add(PushI, Record.ARRAY_LENGTH_OFFSET);
 		fragment.add(Add);
@@ -70,104 +97,12 @@ public class FoldCodeGenerator implements SimpleCodeGenerator {
 		// deal with corner cases
 		// length = 0
 		loadIFrom(fragment, FOLD_ARRAY_LENGTH);
-		fragment.add(JumpFalse, INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR);
+		fragment.add(JumpFalse, endLabel);
 		
-		// length = 1
-		loadIFrom(fragment, FOLD_ARRAY_LENGTH);
-		fragment.add(PushI, 1);
-		fragment.add(Subtract);
-		fragment.add(JumpTrue, label);
-		
-		loadIFrom(fragment, FOLD_ARRAY);
-		fragment.add(PushI, ARRAY_HEADER_SIZE);
-		fragment.add(Add); 
-		
-		if (subtype == PrimitiveType.RATIONAL) {
-			fragment.add(Duplicate);
-			fragment.add(PushI, 4);
-			fragment.add(Add);
-			fragment.add(LoadI);
-			storeITo(fragment, DENOMINATOR_1);
-			fragment.add(LoadI);
-			loadIFrom(fragment, DENOMINATOR_1);
-		}
-		if (subtype == PrimitiveType.INTEGER) {
-			fragment.add(LoadI);
-		}
-		if (subtype == PrimitiveType.FLOATING) {
-			fragment.add(LoadF);
-		}
-		if (subtype == PrimitiveType.BOOLEAN) {
-			fragment.add(LoadC);
-		}
-		if (subtype == PrimitiveType.CHARACTER) {
-			fragment.add(LoadC);
-		}
-		if (subtype == PrimitiveType.STRING) {
-			fragment.add(LoadI);
-		}
-		if (subtype instanceof ArrayType) {
-			fragment.add(LoadI);
-		}
-		if (subtype instanceof LambdaType) {
-			fragment.add(LoadI);
-		}
-		fragment.add(Jump, endLabel);
-		fragment.add(Label, label);
-		
-		// length > 1
+		// length > 0
 		// initialize i
-		fragment.add(PushI, 1);
+		fragment.add(PushI, 0);
 		storeITo(fragment, FOLD_I);
-		
-		// store A[0] into temp
-		loadIFrom(fragment, FOLD_ARRAY);
-		fragment.add(PushI, ARRAY_HEADER_SIZE);
-		fragment.add(Add);
-		
-		if (subtype == PrimitiveType.RATIONAL) {
-			fragment.add(Duplicate);
-			fragment.add(PushI, 4);
-			fragment.add(Add);
-			fragment.add(LoadI); 			// denominator
-			fragment.add(Exchange);
-			fragment.add(LoadI); 			// numerator
-			storeITo(fragment, temp1);
-			
-			fragment.add(PushD, temp1);
-			fragment.add(PushI, 4);
-			fragment.add(Add);
-			fragment.add(Exchange);
-			fragment.add(StoreI);
-		}
-		if (subtype == PrimitiveType.INTEGER) {
-			fragment.add(LoadI);
-			storeITo(fragment, temp1);
-		}
-		if (subtype == PrimitiveType.FLOATING) {
-			fragment.add(LoadF);
-			storeFTo(fragment, temp1);
-		}
-		if (subtype == PrimitiveType.BOOLEAN) {
-			fragment.add(LoadC);
-			storeCTo(fragment, temp1);
-		}
-		if (subtype == PrimitiveType.CHARACTER) {
-			fragment.add(LoadC);
-			storeCTo(fragment, temp1);
-		}
-		if (subtype == PrimitiveType.STRING) {
-			fragment.add(LoadI);
-			storeITo(fragment, temp1);
-		}
-		if (subtype instanceof ArrayType) {
-			fragment.add(LoadI);
-			storeITo(fragment, temp1);
-		}
-		if (subtype instanceof LambdaType) {
-			fragment.add(LoadI);
-			storeITo(fragment, temp1);
-		}
 		
 		// loop body
 		fragment.add(Label, loopLabel);
@@ -179,12 +114,12 @@ public class FoldCodeGenerator implements SimpleCodeGenerator {
 		///////////////////////////////////////////
 		// push temp onto the stack
 		loadIFrom(fragment, STACK_POINTER);
-		fragment.add(PushI, subtypeSize);
+		fragment.add(PushI, baseTypeSize);
 		fragment.add(Subtract);
 		storeITo(fragment, STACK_POINTER);
 		loadIFrom(fragment, STACK_POINTER);
 
-		if (subtype == PrimitiveType.RATIONAL) {
+		if (baseType == PrimitiveType.RATIONAL) {
 			fragment.add(Duplicate);
 			fragment.add(PushI, 4);
 			fragment.add(Add);
@@ -194,31 +129,31 @@ public class FoldCodeGenerator implements SimpleCodeGenerator {
 			loadNumFrom(fragment, temp1);
 			fragment.add(StoreI);
 		}
-		if (subtype == PrimitiveType.INTEGER) {
+		if (baseType == PrimitiveType.INTEGER) {
 			loadIFrom(fragment, temp1);
 			fragment.add(StoreI);
 		}
-		if (subtype == PrimitiveType.FLOATING) {
+		if (baseType == PrimitiveType.FLOATING) {
 			loadFFrom(fragment, temp1);
 			fragment.add(StoreF);
 		}
-		if (subtype == PrimitiveType.BOOLEAN) {
+		if (baseType == PrimitiveType.BOOLEAN) {
 			loadCFrom(fragment, temp1);
 			fragment.add(StoreC);
 		}
-		if (subtype == PrimitiveType.CHARACTER) {
+		if (baseType == PrimitiveType.CHARACTER) {
 			loadCFrom(fragment, temp1);
 			fragment.add(StoreC);
 		}
-		if (subtype == PrimitiveType.STRING) {
+		if (baseType == PrimitiveType.STRING) {
 			loadIFrom(fragment, temp1);
 			fragment.add(StoreI);
 		}
-		if (subtype instanceof ArrayType) {
+		if (baseType instanceof ArrayType) {
 			loadIFrom(fragment, temp1);
 			fragment.add(StoreI);
 		}
-		if (subtype instanceof LambdaType) {
+		if (baseType instanceof LambdaType) {
 			loadIFrom(fragment, temp1);
 			fragment.add(StoreI);
 		}
@@ -290,65 +225,65 @@ public class FoldCodeGenerator implements SimpleCodeGenerator {
 		
 		// retrieve the result
 		loadIFrom(fragment, STACK_POINTER);		
-		if (subtype == PrimitiveType.RATIONAL) {
+		if (baseType == PrimitiveType.RATIONAL) {
 			fragment.add(LoadI);
 			loadIFrom(fragment, STACK_POINTER);
 			fragment.add(PushI, 4);
 			fragment.add(Add);
 			fragment.add(LoadI);
 		} 
-		if (subtype == PrimitiveType.INTEGER) {
+		if (baseType == PrimitiveType.INTEGER) {
 			fragment.add(LoadI);
 		}
-		if (subtype == PrimitiveType.FLOATING) {
+		if (baseType == PrimitiveType.FLOATING) {
 			fragment.add(LoadF);
 		}
-		if (subtype == PrimitiveType.BOOLEAN) {
+		if (baseType == PrimitiveType.BOOLEAN) {
 			fragment.add(LoadC);
 		}
-		if (subtype == PrimitiveType.CHARACTER) {
+		if (baseType == PrimitiveType.CHARACTER) {
 			fragment.add(LoadC);
 		}
-		if (subtype == PrimitiveType.STRING) {
+		if (baseType == PrimitiveType.STRING) {
 			fragment.add(LoadI);
 		}
-		if (subtype instanceof ArrayType) {
+		if (baseType instanceof ArrayType) {
 			fragment.add(LoadI);
 		}
-		if (subtype instanceof LambdaType) {
+		if (baseType instanceof LambdaType) {
 			fragment.add(LoadI);
 		}
 
 		// restore the stack pointer
 		loadIFrom(fragment, STACK_POINTER);
-		fragment.add(PushI, subtypeSize);
+		fragment.add(PushI, baseTypeSize);
 		fragment.add(Add);
 		storeITo(fragment, STACK_POINTER);
 		
 		// store the result into temp
-		if (subtype == PrimitiveType.RATIONAL) {
+		if (baseType == PrimitiveType.RATIONAL) {
 			storeDenTo(fragment, temp1);
 			storeNumTo(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.INTEGER) {
+		if (baseType == PrimitiveType.INTEGER) {
 			storeITo(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.FLOATING) {
+		if (baseType == PrimitiveType.FLOATING) {
 			storeFTo(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.BOOLEAN) {
+		if (baseType == PrimitiveType.BOOLEAN) {
 			storeCTo(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.CHARACTER) {
+		if (baseType == PrimitiveType.CHARACTER) {
 			storeCTo(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.STRING) {
+		if (baseType == PrimitiveType.STRING) {
 			storeITo(fragment, temp1);
 		}
-		if (subtype instanceof ArrayType) {
+		if (baseType instanceof ArrayType) {
 			storeITo(fragment, temp1);
 		}
-		if (subtype instanceof LambdaType) {
+		if (baseType instanceof LambdaType) {
 			storeITo(fragment, temp1);
 		}
 		
@@ -358,30 +293,29 @@ public class FoldCodeGenerator implements SimpleCodeGenerator {
 		// end loop
 		fragment.add(Label, endLabel);
 		
-		
-		if (subtype == PrimitiveType.RATIONAL) {
+		if (baseType == PrimitiveType.RATIONAL) {
 			loadNumFrom(fragment, temp1);
 			loadDenFrom(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.INTEGER) {
+		if (baseType == PrimitiveType.INTEGER) {
 			loadIFrom(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.FLOATING) {
+		if (baseType == PrimitiveType.FLOATING) {
 			loadFFrom(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.BOOLEAN) {
+		if (baseType == PrimitiveType.BOOLEAN) {
 			loadCFrom(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.CHARACTER) {
+		if (baseType == PrimitiveType.CHARACTER) {
 			loadCFrom(fragment, temp1);
 		}
-		if (subtype == PrimitiveType.STRING) {
+		if (baseType == PrimitiveType.STRING) {
 			loadIFrom(fragment, temp1);
 		}
-		if (subtype instanceof ArrayType) {
+		if (baseType instanceof ArrayType) {
 			loadIFrom(fragment, temp1);
 		}
-		if (subtype instanceof LambdaType) {
+		if (baseType instanceof LambdaType) {
 			loadIFrom(fragment, temp1);
 		}
 		

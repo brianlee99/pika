@@ -1,6 +1,8 @@
 package asmCodeGenerator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import asmCodeGenerator.codeStorage.ASMCodeFragment;
@@ -861,7 +863,7 @@ public class ASMCodeGenerator {
 				visitSubstringNode(node);
 			}
 			else {
-				visitNormalBinaryOperatorNode(node);
+				visitNormalOperatorNode(node);
 			}
 		}
 		
@@ -1172,22 +1174,33 @@ public class ASMCodeGenerator {
 			}
 		}
 		
-		private void visitNormalBinaryOperatorNode(OperatorNode node) {
+		private void visitNormalOperatorNode(OperatorNode node) {
 			newValueCode(node);
-			ASMCodeFragment arg1 = removeValueCode(node.child(0));
-			ASMCodeFragment arg2 = removeValueCode(node.child(1));
+			List<ASMCodeFragment> args = new ArrayList<>();
+			for (int i = 0; i < node.nChildren(); i++) {
+				args.add(removeValueCode(node.child(i)));
+			}
+			
+//			ASMCodeFragment arg1 = removeValueCode(node.child(0));
+//			ASMCodeFragment arg2 = removeValueCode(node.child(1));
 			
 			Object variant = node.getSignature().getVariant();
 			if(variant instanceof ASMOpcode) {
-				code.append(arg1);
-				code.append(arg2);
+				for (int i = 0; i < node.nChildren(); i++) {
+					code.append(args.get(i));
+				}
+//				code.append(arg1);
+//				code.append(arg2);
 				
 				ASMOpcode opcode = (ASMOpcode) variant;
 				code.add(opcode);
 			}
 			else if (variant instanceof SimpleCodeGenerator) {
-				code.append(arg1);
-				code.append(arg2);
+				for (int i = 0; i < node.nChildren(); i++) {
+					code.append(args.get(i));
+				}
+//				code.append(arg1);
+//				code.append(arg2);
 				
 				SimpleCodeGenerator generator = (SimpleCodeGenerator) variant;
 				ASMCodeFragment fragment = generator.generate(node);
@@ -1199,6 +1212,8 @@ public class ASMCodeGenerator {
 			}
 			else if (variant instanceof FullCodeGenerator) {
 				FullCodeGenerator generator = (FullCodeGenerator) variant;
+				ASMCodeFragment arg1 = args.get(0);
+				ASMCodeFragment arg2 = args.get(1);
 				ASMCodeFragment fragment = generator.generate(node, arg1, arg2);
 				code.append(fragment);
 				
@@ -1207,7 +1222,7 @@ public class ASMCodeGenerator {
 				}
 			}
 			else {
-				assert false : "unknown variant in BinaryOperatorNode";
+				assert false : "unknown variant in OperatorNode";
 			}
 			
 //			ASMOpcode opcode = opcodeForOperator(node.getOperator());
