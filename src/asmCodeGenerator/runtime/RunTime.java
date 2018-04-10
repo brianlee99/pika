@@ -32,6 +32,7 @@ public class RunTime {
 	public static final String INDEX_OUT_OF_BOUNDS_RUNTIME_ERROR     = "$$index-out-of-bounds";
 	public static final String NULL_ARRAY_RUNTIME_ERROR				 = "$$null-array";
 	public static final String NO_RETURN_RUNTIME_ERROR 				 = "$$no-return";
+	public static final String ZIP_UNEQUAL_SIZE_RUNTIME_ERROR  		 = "$$zip-unequal-size";
 	
 	public static final String LOWEST_TERMS    = "$lowest-terms";
 	public static final String RETURN_ADDRESS  = "$return-address";
@@ -114,6 +115,13 @@ public class RunTime {
 	public static final String FOLD_I						= "$fold-i";
 	public static final String FOLD_TEMP					= "$fold-result";
 	
+	// Zip
+	public static final String ZIP_ARRAY_1 					= "$zip-arr1";
+	public static final String ZIP_ARRAY_2 					= "$zip-arr2";
+	public static final String ZIP_RESULT 					= "$zip-result";
+	public static final String ZIP_I						= "$zip-i";
+	public static final String ZIP_ARRAY_LENGTH				= "$zip-arr-len";
+	public static final String ZIP_LAMBDA					= "$zip-lambda";
 	
 	private ASMCodeFragment environmentASM() {
 		ASMCodeFragment result = new ASMCodeFragment(GENERATES_VOID);
@@ -202,6 +210,13 @@ public class RunTime {
 		declareI(frag, FOLD_I);
 		declareI(frag, FOLD_TEMP);
 		
+		declareI(frag, ZIP_ARRAY_1);
+		declareI(frag, ZIP_ARRAY_2);
+		declareI(frag, ZIP_RESULT);
+		declareI(frag, ZIP_I);
+		declareI(frag, ZIP_ARRAY_LENGTH);
+		declareI(frag, ZIP_LAMBDA);
+
 		return frag;
 	}
 	
@@ -661,6 +676,7 @@ public class RunTime {
 		indexOutOfBoundsError(frag);
 		nullArrayError(frag);
 		noReturnError(frag);
+		zipUnequalSizeError(frag);
 		
 		return frag;
 	}
@@ -742,6 +758,17 @@ public class RunTime {
 		frag.add(PushD, noReturnMessage);
 		frag.add(Jump, GENERAL_RUNTIME_ERROR);
 	}
+	private void zipUnequalSizeError(ASMCodeFragment frag) {
+		String zipMessage = "$errors-zip-unequal-size";
+		frag.add(DLabel, zipMessage);
+		frag.add(DataS, "zip arrays are not of equal length");
+		
+		frag.add(Label, ZIP_UNEQUAL_SIZE_RUNTIME_ERROR);
+		frag.add(PushD, zipMessage);
+		frag.add(Jump, GENERAL_RUNTIME_ERROR);
+	}
+
+	
 	public static ASMCodeFragment getEnvironment() {
 		RunTime rt = new RunTime();
 		return rt.environmentASM();

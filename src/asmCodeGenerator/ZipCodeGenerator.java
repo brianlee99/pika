@@ -16,64 +16,76 @@ import semanticAnalyzer.types.LambdaType;
 import semanticAnalyzer.types.PrimitiveType;
 import semanticAnalyzer.types.Type;
 
-public class MapCodeGenerator implements SimpleCodeGenerator {
+public class ZipCodeGenerator implements SimpleCodeGenerator {
 
 	@Override
 	public ASMCodeFragment generate(ParseNode node) {
 		ASMCodeFragment fragment = new ASMCodeFragment(CodeType.GENERATES_VALUE);
-		Labeller labeller = new Labeller("map");
+		Labeller labeller = new Labeller("zip");
 		String endLabel = labeller.newLabel("end");
 		String loopLabel = labeller.newLabel("loop");
 		
-		Type returnType = ((LambdaType) node.child(1).getType()).getReturnType();
+		Type firstType = ((ArrayType) node.child(0).getType()).getSubtype();
+		Type secondType = ((ArrayType) node.child(1).getType()).getSubtype();
+		Type returnType = ((LambdaType) node.child(2).getType()).getReturnType();
+		
+		int firstTypeSize = firstType.getSize();
+		int secondTypeSize = secondType.getSize();
+		int returnSize = returnType.getSize();
+		
 		int statusFlags = (returnType instanceof ArrayType || returnType == PrimitiveType.STRING) 
 				? ARRAY_SUBTYPE_REF_STATUS 
 				: ARRAY_SUBTYPE_NOT_REF_STATUS;
-		int returnSize = returnType.getSize();
 		
-		Type parameterType = ((ArrayType) node.child(0).getType()).getSubtype();
-		int parameterSize = parameterType.getSize();
+		storeITo(fragment, ZIP_LAMBDA);
+		storeITo(fragment, ZIP_ARRAY_2);
+		storeITo(fragment, ZIP_ARRAY_1);
 		
-		storeITo(fragment, MAP_LAMBDA);
-		storeITo(fragment, MAP_ARRAY);
-		
-		// create new array
-		loadIFrom(fragment, MAP_ARRAY);
+		// check that arr1 and arr2 have the same length
+		loadIFrom(fragment, ZIP_ARRAY_1);
 		fragment.add(PushI, Record.ARRAY_LENGTH_OFFSET);
 		fragment.add(Add);
 		fragment.add(LoadI);
-		storeITo(fragment, MAP_ARRAY_LENGTH);
-		
-		loadIFrom(fragment, MAP_ARRAY_LENGTH);
+		storeITo(fragment, ZIP_ARRAY_LENGTH);
+
+		loadIFrom(fragment, ZIP_ARRAY_LENGTH);
+		loadIFrom(fragment, ZIP_ARRAY_2);
+		fragment.add(PushI, Record.ARRAY_LENGTH_OFFSET);
+		fragment.add(Add);
+		fragment.add(LoadI);
+		fragment.add(Subtract);
+		fragment.add(JumpTrue, ZIP_UNEQUAL_SIZE_RUNTIME_ERROR);
+
+		loadIFrom(fragment, ZIP_ARRAY_LENGTH);
 		createEmptyArrayRecord(fragment, statusFlags, returnSize);
-		storeITo(fragment, MAP_ARRAY_RESULT);
+		storeITo(fragment, ZIP_RESULT);
 		
 		// initialize i
 		fragment.add(PushI, 0);
-		storeITo(fragment, MAP_I);
-		
+		storeITo(fragment, ZIP_I);
+
 		// loop body
 		fragment.add(Label, loopLabel);
-		loadIFrom(fragment, MAP_I);
-		loadIFrom(fragment, MAP_ARRAY_LENGTH);
+		loadIFrom(fragment, ZIP_I);
+		loadIFrom(fragment, ZIP_ARRAY_LENGTH);
 		fragment.add(Subtract);
 		fragment.add(JumpFalse, endLabel);
-		
+
 		loadIFrom(fragment, STACK_POINTER);
-		fragment.add(PushI, parameterSize);
+		fragment.add(PushI, firstTypeSize);
 		fragment.add(Subtract);
 		storeITo(fragment, STACK_POINTER);
-		loadIFrom(fragment, STACK_POINTER);
-		
-		loadIFrom(fragment, MAP_ARRAY);
+		loadIFrom(fragment, STACK_POINTER);				// [ SP ]
+
+		loadIFrom(fragment, ZIP_ARRAY_1);
 		fragment.add(PushI, ARRAY_HEADER_SIZE);
 		fragment.add(Add); 
-		loadIFrom(fragment, MAP_I);	
-		fragment.add(PushI, parameterSize);
+		loadIFrom(fragment, ZIP_I);	
+		fragment.add(PushI, firstTypeSize);
 		fragment.add(Multiply);
 		fragment.add(Add);
 		
-		if (parameterType == PrimitiveType.RATIONAL) {
+		if (firstType == PrimitiveType.RATIONAL) {
 			fragment.add(Duplicate);
 			fragment.add(PushI, 4);
 			fragment.add(Add);
@@ -90,36 +102,98 @@ public class MapCodeGenerator implements SimpleCodeGenerator {
 			loadIFrom(fragment, NUMERATOR_1);
 			fragment.add(StoreI);
 		}
-		if (parameterType == PrimitiveType.INTEGER) {
+		if (firstType == PrimitiveType.INTEGER) {
 			fragment.add(LoadI);
 			fragment.add(StoreI);
 		}
-		if (parameterType == PrimitiveType.FLOATING) {
+		if (firstType == PrimitiveType.FLOATING) {
 			fragment.add(LoadF);
 			fragment.add(StoreF);
 		}
-		if (parameterType == PrimitiveType.BOOLEAN) {
+		if (firstType == PrimitiveType.BOOLEAN) {
 			fragment.add(LoadC);
 			fragment.add(StoreC);
 		}
-		if (parameterType == PrimitiveType.CHARACTER) {
+		if (firstType == PrimitiveType.CHARACTER) {
 			fragment.add(LoadC);
 			fragment.add(StoreC);
 		}
-		if (parameterType == PrimitiveType.STRING) {
+		if (firstType == PrimitiveType.STRING) {
 			fragment.add(LoadI);
 			fragment.add(StoreI);
 		}
-		if (parameterType instanceof ArrayType) {
+		if (firstType instanceof ArrayType) {
 			fragment.add(LoadI);
 			fragment.add(StoreI);
 		}
-		if (parameterType instanceof LambdaType) {
+		if (firstType instanceof LambdaType) {
 			fragment.add(LoadI);
 			fragment.add(StoreI);
 		}
+		
+		/////////////////////////////////////////
+		// second parameter
+		loadIFrom(fragment, STACK_POINTER);
+		fragment.add(PushI, secondTypeSize);
+		fragment.add(Subtract);
+		storeITo(fragment, STACK_POINTER);
+		loadIFrom(fragment, STACK_POINTER);				// [ SP ]
 
-		loadIFrom(fragment, MAP_LAMBDA);
+		loadIFrom(fragment, ZIP_ARRAY_2);
+		fragment.add(PushI, ARRAY_HEADER_SIZE);
+		fragment.add(Add); 
+		loadIFrom(fragment, ZIP_I);	
+		fragment.add(PushI, secondTypeSize);
+		fragment.add(Multiply);
+		fragment.add(Add);
+		
+		if (secondType == PrimitiveType.RATIONAL) {
+			fragment.add(Duplicate);
+			fragment.add(PushI, 4);
+			fragment.add(Add);
+			fragment.add(LoadI);
+			storeITo(fragment, DENOMINATOR_1);
+			fragment.add(LoadI);
+			storeITo(fragment, NUMERATOR_1);
+			
+			fragment.add(Duplicate);
+			fragment.add(PushI, 4);
+			fragment.add(Add);
+			loadIFrom(fragment, DENOMINATOR_1);
+			fragment.add(StoreI);
+			loadIFrom(fragment, NUMERATOR_1);
+			fragment.add(StoreI);
+		}
+		if (secondType == PrimitiveType.INTEGER) {
+			fragment.add(LoadI);
+			fragment.add(StoreI);
+		}
+		if (secondType == PrimitiveType.FLOATING) {
+			fragment.add(LoadF);
+			fragment.add(StoreF);
+		}
+		if (secondType == PrimitiveType.BOOLEAN) {
+			fragment.add(LoadC);
+			fragment.add(StoreC);
+		}
+		if (secondType == PrimitiveType.CHARACTER) {
+			fragment.add(LoadC);
+			fragment.add(StoreC);
+		}
+		if (secondType == PrimitiveType.STRING) {
+			fragment.add(LoadI);
+			fragment.add(StoreI);
+		}
+		if (secondType instanceof ArrayType) {
+			fragment.add(LoadI);
+			fragment.add(StoreI);
+		}
+		if (secondType instanceof LambdaType) {
+			fragment.add(LoadI);
+			fragment.add(StoreI);
+		}
+		
+		loadIFrom(fragment, ZIP_LAMBDA);
 		fragment.add(CallV);
 		loadIFrom(fragment, STACK_POINTER);
 		
@@ -158,25 +232,25 @@ public class MapCodeGenerator implements SimpleCodeGenerator {
 		fragment.add(Add);
 		storeITo(fragment, STACK_POINTER);
 		
-		loadIFrom(fragment, MAP_ARRAY_RESULT);
+		loadIFrom(fragment, ZIP_RESULT);
 		fragment.add(PushI, ARRAY_HEADER_SIZE);
 		fragment.add(Add);
-		loadIFrom(fragment, MAP_I);	
+		loadIFrom(fragment, ZIP_I);	
 		fragment.add(PushI, returnSize);
 		fragment.add(Multiply);
 		fragment.add(Add);
 		
-		if (returnType == PrimitiveType.RATIONAL) {
+		if (returnType == PrimitiveType.RATIONAL) {		
 			// denominator
 			fragment.add(PushI, 4);
 			fragment.add(Add);
 			fragment.add(Exchange);
 			fragment.add(StoreI);
 			// numerator
-			loadIFrom(fragment, MAP_ARRAY_RESULT);
+			loadIFrom(fragment, ZIP_RESULT);
 			fragment.add(PushI, ARRAY_HEADER_SIZE);
 			fragment.add(Add);
-			loadIFrom(fragment, MAP_I);	
+			loadIFrom(fragment, ZIP_I);	
 			fragment.add(PushI, returnSize);
 			fragment.add(Multiply);
 			fragment.add(Add);
@@ -211,13 +285,13 @@ public class MapCodeGenerator implements SimpleCodeGenerator {
 			fragment.add(Exchange);
 			fragment.add(StoreI);
 		}
-		
-		incrementInteger(fragment, MAP_I);
+	
+		incrementInteger(fragment, ZIP_I);
 		fragment.add(Jump, loopLabel);
-		
+
 		// end loop
 		fragment.add(Label, endLabel);
-		loadIFrom(fragment, MAP_ARRAY_RESULT);
+		loadIFrom(fragment, ZIP_RESULT);
 		return fragment;
 	}
 

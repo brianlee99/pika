@@ -653,6 +653,9 @@ public class Parser {
 		if (startsArrayIndexingOrFunctionInvocation(nowReading)) {
 			return parseArrayIndexingOrFunctionInvocation();
 		}
+		if (startsZipExpression(nowReading)) {
+			return parseZipExpression();
+		}
 		
 		Token token = nowReading;
 		readToken();
@@ -667,6 +670,30 @@ public class Parser {
 				token.isLextant(Keyword.REVERSE)				||
 				token.isLextant(Keyword.ZIP);
 	}
+	
+	////////////////////////////////////////////////////////////
+	// zip
+	private ParseNode parseZipExpression() {
+		if(!startsZipExpression(nowReading)) {
+			return syntaxErrorNode("zip");
+		}
+		
+		
+		Token token = nowReading;
+		expect(Keyword.ZIP);
+		
+		ParseNode child1 = parseExpression();
+		expect(Punctuator.SEPARATOR);
+		ParseNode child2 = parseExpression();
+		expect(Punctuator.SEPARATOR);
+		ParseNode child3 = parseExpression();
+		
+		return OperatorNode.withChildren(token, child1, child2, child3);
+	}
+	private boolean startsZipExpression(Token token) {
+		return token.isLextant(Keyword.ZIP);
+	}
+	
 	
 	////////////////////////////////////////////////////////////
 	// ArrayIndexing or FunctionInvocation : 

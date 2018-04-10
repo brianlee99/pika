@@ -46,6 +46,7 @@ import asmCodeGenerator.StringLengthCodeGenerator;
 import asmCodeGenerator.StringReverseCodeGenerator;
 import asmCodeGenerator.StringStringConcatCodeGenerator;
 import asmCodeGenerator.SubstringCodeGenerator;
+import asmCodeGenerator.ZipCodeGenerator;
 import asmCodeGenerator.codeStorage.ASMOpcode;
 import lexicalAnalyzer.Keyword;
 import lexicalAnalyzer.Punctuator;
@@ -112,23 +113,29 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 	static {
 		TypeVariable S = new TypeVariable("S");
 		TypeVariable T = new TypeVariable("T");
-		List<TypeVariable> setS = Arrays.asList(S, T);
+		TypeVariable U = new TypeVariable("U");
+		List<TypeVariable> setS = Arrays.asList(S, T, U);
 		
-	    List<Type> parameter = new ArrayList<>();
-	    parameter.add(S);
-	    LambdaType mapLambdaType = new LambdaType(parameter, T);
+	    List<Type> mapParamTypes = new ArrayList<>();
+	    mapParamTypes.add(S);
+	    LambdaType mapLambdaType = new LambdaType(mapParamTypes, T);
 	    
-	    LambdaType reduceLambdaType = new LambdaType(parameter, BOOLEAN);
+	    LambdaType reduceLambdaType = new LambdaType(mapParamTypes, BOOLEAN);
 	    
-	    List<Type> parameter2 = new ArrayList<>();
-	    parameter2.add(S);
-	    parameter2.add(S);
-	    LambdaType foldLambdaType = new LambdaType(parameter2, S);
+	    List<Type> foldParamTypes = new ArrayList<>();
+	    foldParamTypes.add(S);
+	    foldParamTypes.add(S);
+	    LambdaType foldLambdaType = new LambdaType(foldParamTypes, S);
 	    
-	    List<Type> parameter3 = new ArrayList<>();
-	    parameter3.add(T);
-	    parameter3.add(S);
-	    LambdaType foldWithDefaultLambdaType = new LambdaType(parameter3, T);
+	    List<Type> foldDefaultParamTypes = new ArrayList<>();
+	    foldDefaultParamTypes.add(T);
+	    foldDefaultParamTypes.add(S);
+	    LambdaType foldWithDefaultLambdaType = new LambdaType(foldDefaultParamTypes, T);
+	    
+	    List<Type> zipParamTypes = new ArrayList<>();
+	    zipParamTypes.add(S);
+	    zipParamTypes.add(T);
+	    LambdaType zipLambdaType = new LambdaType(zipParamTypes, U);
 	    
 	    
 		// here's one example to get you started with FunctionSignatures: the signatures for addition.		
@@ -330,6 +337,11 @@ public class FunctionSignatures extends ArrayList<FunctionSignature> {
 			),
 			new FunctionSignature(
 				new FoldCodeWithDefaultCodeGenerator(), setS, new ArrayType(S), T, foldWithDefaultLambdaType, T
+			)
+		);
+		new FunctionSignatures(Keyword.ZIP,
+			new FunctionSignature(
+				new ZipCodeGenerator(), setS, new ArrayType(S), new ArrayType(T), zipLambdaType, new ArrayType(U)
 			)
 		);
 		
